@@ -27,7 +27,7 @@ contact me and I'll put it right.
 * CrocoDS: CPC Emulator for the DS - Copyright (c) 2013 Miguel Vanhove (Kyuran)
 * Win-CPC: Amstrad CPC Emulator - Copyright (c) 2012 Ludovic Deplanque.
 * Caprice32: Amstrad CPC Emulator - Copyright (c) 1997-2004 Ulrich Doewich.
-* Arnold: Amstrad CPC Emulator - Copyright (c) 1995-2002 Andreas Micklei and Kevin Thacker
+* Arnold: Amstrad CPC Emulator - Copyright (c) 1995-2002, 2007 Andreas Micklei and Kevin Thacker
 
 As far as I'm concerned, you can use this code in whatever way suits you provided you 
 continue to release the sources under the original copyright notice (see below) which
