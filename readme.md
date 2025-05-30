@@ -24,7 +24,7 @@ as such, the SugarDS emulator follows suit.
 If I've misrepresented any pervious authors work here, please 
 contact me and I'll put it right.
 
-* CrocoDS Copyright (c) 2013 Miguel Vanhove (Kyuran)
+* CrocoDS: CPC Emulator for the DS - Copyright (c) 2013 Miguel Vanhove (Kyuran)
 * Win-CPC: Amstrad CPC Emulator - Copyright (c) 2012 Ludovic Deplanque.
 * Caprice32: Amstrad CPC Emulator - Copyright (c) 1997-2004 Ulrich Doewich.
 * Arnold: Amstrad CPC Emulator - Copyright (c) 1995-2002 Andreas Micklei and Kevin Thacker
