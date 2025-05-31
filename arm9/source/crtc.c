@@ -218,7 +218,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             vsync_off_count = 16; // And turn off in 16 scanlines
         }
 
-        if (VCC == (CRTC[4]+1)) // Full "Screen" rendered?
+        if (VCC >= (CRTC[4]+1)) // Full "Screen" rendered?
         {
             VTAC = 1;   // Assume no extra lines... may adjust below
             VCC = 0;    // Start counting characters again

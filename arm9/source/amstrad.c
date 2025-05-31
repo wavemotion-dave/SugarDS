@@ -253,6 +253,15 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                     
                         switch (portC & 0xF)
                         {
+                            case 0x00:
+                                if (kbd_key == KBD_KEY_F3)  keyBits |= 0x20;
+                                break;
+
+                            case 0x01:
+                                if (kbd_key == KBD_KEY_F1)  keyBits |= 0x20;
+                                if (kbd_key == KBD_KEY_F2)  keyBits |= 0x40;
+                                break;
+                                
                             case 0x02:
                                 if (kbd_key == KBD_KEY_CTL) keyBits |= 0x80;
                                 if (kbd_key == KBD_KEY_SFT) keyBits |= 0x20;
@@ -776,7 +785,7 @@ ITCM_CODE u32 amstrad_run(void)
     if (myConfig.waveDirect) processDirectAudio();
     
     // Execute 1 scanline worth of CPU instructions ... Z80 at 4MHz
-    ExecZ80_Speccy((256+CPU_ADJUST[myConfig.cpuAdjust]) * scanline_count);
+    ExecZ80((256+CPU_ADJUST[myConfig.cpuAdjust]) * scanline_count);
 
     if (inks_changed)
     {

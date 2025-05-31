@@ -162,6 +162,10 @@ u16 keyCoresp[MAX_KEY_OPTIONS] __attribute__((section(".dtcm"))) = {
     META_KBD_SPACE,
     META_KBD_RETURN, //50
     
+    META_KBD_F1,
+    META_KBD_F2,
+    META_KBD_F3,
+    
     META_KBD_PAN_UP16,
     META_KBD_PAN_UP24,
     META_KBD_PAN_UP32,
@@ -887,7 +891,7 @@ u8 __attribute__((noinline)) handle_meta_key(u8 meta_key)
 
         case MENU_CHOICE_CONFIG_GAME:
             SoundPause();
-            SpeccySEGameOptions(false);
+            SugarDSGameOptions(false);
             BottomScreenKeyboard();
             SoundUnPause();
             break;
@@ -917,7 +921,7 @@ static u8 dampen = 0;
 // ------------------------------------------------------------------------
 // The main emulation loop is here... call into the Z80 and render frame
 // ------------------------------------------------------------------------
-void SpeccySE_main(void)
+void SugarDS_main(void)
 {
   u16 iTx,  iTy;
   u32 ucDEUX;
@@ -1052,9 +1056,9 @@ void SpeccySE_main(void)
         }
         emuActFrames++;
 
-        // -------------------------------------------------------------------
-        // We only support PAL 50 frames as this is a ZED-X Speccy!
-        // -------------------------------------------------------------------
+        // --------------------------------------------------------------------
+        // We only support PAL 50 frames as this is an Amstrad CPC from the UK
+        // --------------------------------------------------------------------
         if (++timingFrames == 50)
         {
             TIMER2_CR=0;
@@ -1307,6 +1311,9 @@ void SpeccySE_main(void)
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_COLON)     kbd_key  = ':';
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_SEMI)      kbd_key  = ';';
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_ATSIGN)    kbd_key  = '@';
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F1)        kbd_key  = KBD_KEY_F1;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F2)        kbd_key  = KBD_KEY_F2;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F3)        kbd_key  = KBD_KEY_F3;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_SHIFT)     kbd_key  = KBD_KEY_SFT;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_RETURN)    kbd_key  = KBD_KEY_RET;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP16)  {temp_offset = -16;slide_dampen = 15;}
@@ -1375,7 +1382,7 @@ void useVRAM(void)
 /*********************************************************************************
  * Init DS Emulator - setup VRAM banks and background screen rendering banks
  ********************************************************************************/
-void speccySEInit(void)
+void SugarDSInit(void)
 {
   //  Init graphic mode (bitmap mode)
   videoSetMode(MODE_0_2D | DISPLAY_BG0_ACTIVE);
@@ -1468,7 +1475,7 @@ void BottomScreenKeyboard(void)
 /*********************************************************************************
  * Init CPU for the current game
  ********************************************************************************/
-void speccySEInitCPU(void)
+void SugarDSInitCPU(void)
 {
     //  -----------------------------------------
     //  Init Main Memory for the Amstrad CPC
@@ -1608,7 +1615,7 @@ int main(int argc, char **argv)
   //  ------------------------------------------------------------
   while(1)
   {
-    speccySEInit();
+    SugarDSInit();
     
     while(1)
     {
@@ -1624,13 +1631,13 @@ int main(int argc, char **argv)
       }
       else
       {
-          speccySEInit();
+          SugarDSInit();
           sugarDSChangeOptions();
       }
 
       //  Run Machine
-      speccySEInitCPU();
-      SpeccySE_main();
+      SugarDSInitCPU();
+      SugarDS_main();
     }
   }
   return(0);

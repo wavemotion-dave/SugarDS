@@ -1,5 +1,5 @@
 /******************************************************************************
-*  SpeccySE Z80 CPU 
+*  SugarDS Z80 CPU 
 *
 * Note: Most of this file is from the ColEm emulator core by Marat Fayzullin
 *       but heavily modified for specific NDS use. If you want to use this
@@ -122,7 +122,7 @@ void ResetZ80(register Z80 *R);
 /** negative, and current register values in R.             **/
 /*************************************************************/
 #ifdef EXECZ80
-void ExecZ80_Speccy(u32 RunToCycles);
+void ExecZ80(u32 RunToCycles);
 #endif
 
 /** IntZ80() *************************************************/

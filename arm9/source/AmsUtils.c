@@ -124,11 +124,15 @@ const char szKeyName[MAX_KEY_OPTIONS][16] = {
   "KEYBOARD SPACE",
   "KEYBOARD RETURN", // 50
   
+  "KEYBOARD F1",
+  "KEYBOARD F2",
+  "KEYBOARD F3",
+  
   "PAN UP 16",
-  "PAN UP 24",
+  "PAN UP 24",  // 55
   "PAN UP 32",
   "PAN DN 16",
-  "PAN DN 24",  // 55
+  "PAN DN 24",
   "PAN DN 32",
 };
 
@@ -723,7 +727,7 @@ void SetDefaultGlobalConfig(void)
     // A few global defaults...
     memset(&myGlobalConfig, 0x00, sizeof(myGlobalConfig));
     myGlobalConfig.showFPS        = 0;    // Don't show FPS counter by default
-    myGlobalConfig.lastDir        = 0;    // Default is to start in /roms/speccy
+    myGlobalConfig.lastDir        = 0;    // Default is to start in /roms/cpc
     myGlobalConfig.debugger       = 0;    // Debugger is not shown by default
 }
 
@@ -885,7 +889,7 @@ u8 display_options_list(bool bFullDisplay)
 //*****************************************************************************
 // Change Game Options for the current game
 //*****************************************************************************
-void SpeccySEGameOptions(bool bIsGlobal)
+void SugarDSGameOptions(bool bIsGlobal)
 {
     u8 optionHighlighted;
     u8 idx;
@@ -1139,7 +1143,7 @@ void SugarDSChangeKeymap(void)
             ;
         WAITVBL
     }
-    swiWaitForVBlank();
+    swiWaitForVBlank();swiWaitForVBlank();
   }
   while (keysCurrent() & KEY_B);
 }
@@ -1357,7 +1361,7 @@ void sugarDSChangeOptions(void)
           case 13 :     // GAME OPTIONS
             if (ucGameChoice != -1)
             {
-                SpeccySEGameOptions(false);
+                SugarDSGameOptions(false);
                 BottomScreenOptions();
                 dispInfoOptions(ucY);
                 DisplayFileName();
@@ -1369,7 +1373,7 @@ void sugarDSChangeOptions(void)
             break;
 
           case 15 :     // GLOBAL OPTIONS
-            SpeccySEGameOptions(true);
+            SugarDSGameOptions(true);
             BottomScreenOptions();
             dispInfoOptions(ucY);
             DisplayFileName();

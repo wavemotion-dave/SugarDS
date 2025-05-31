@@ -8,8 +8,8 @@
 //
 // The SugarDS emulator is offered as-is, without any warranty. Please see readme.md
 // =====================================================================================
-#ifndef _SPECCY_UTILS_H_
-#define _SPECCY_UTILS_H_
+#ifndef _AMSUTILS_H_
+#define _AMSUTILS_H_
 #include <nds.h>
 #include "SugarDS.h"
 #include "cpu/z80/Z80_interface.h"
@@ -168,4 +168,4 @@ extern void SugarDSChangeKeymap(void);
 extern void pok_select(void);
 extern void pok_init();
 
-#endif // _SPECCY_UTILS_H_
+#endif // _AMSUTILS_H_

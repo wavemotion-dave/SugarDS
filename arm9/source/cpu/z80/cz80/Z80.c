@@ -1,5 +1,5 @@
 /******************************************************************************
-*  SpeccySE Z80 CPU
+*  SugarDS Z80 CPU
 *
 * Note: Most of this file is from the ColEm emulator core by Marat Fayzullin
 *       but heavily modified for specific NDS use. If you want to use this
@@ -443,7 +443,7 @@ ITCM_CODE void IntZ80(Z80 *R,word Vector)
 }
 
 
-static void CodesCB_Speccy(void)
+static void CodesCB(void)
 {
   register byte I;
 
@@ -462,7 +462,7 @@ static void CodesCB_Speccy(void)
   }
 }
 
-ITCM_CODE static void CodesDDCB_Speccy(void)
+ITCM_CODE static void CodesDDCB(void)
 {
   register pair J;
   register byte I;
@@ -482,7 +482,7 @@ ITCM_CODE static void CodesDDCB_Speccy(void)
 #undef XX
 }
 
-ITCM_CODE static void CodesFDCB_Speccy(void)
+ITCM_CODE static void CodesFDCB(void)
 {
   register pair J;
   register byte I;
@@ -502,7 +502,7 @@ ITCM_CODE static void CodesFDCB_Speccy(void)
 #undef XX
 }
 
-ITCM_CODE static void CodesED_Speccy(void)
+ITCM_CODE static void CodesED(void)
 {
   register byte I;
   register pair J;
@@ -524,7 +524,7 @@ ITCM_CODE static void CodesED_Speccy(void)
   }
 }
 
-static void CodesDD_Speccy(void)
+static void CodesDD(void)
 {
   register byte I;
   register pair J;
@@ -544,14 +544,14 @@ static void CodesDD_Speccy(void)
     case PFX_DD:
       CPU.PC.W--;break;
     case PFX_CB:
-      CodesDDCB_Speccy();break;
+      CodesDDCB();break;
     default:
       if(CPU.TrapBadOps)  Trap_Bad_Ops(" DD ", I, CPU.PC.W-2);
   }
 #undef XX
 }
 
-static void CodesFD_Speccy(void)
+static void CodesFD(void)
 {
   register byte I;
   register pair J;
@@ -571,7 +571,7 @@ static void CodesFD_Speccy(void)
     case PFX_DD:
       CPU.PC.W--;break;
     case PFX_CB:
-      CodesFDCB_Speccy();break;
+      CodesFDCB();break;
     default:
         if(CPU.TrapBadOps)  Trap_Bad_Ops(" FD ", I, CPU.PC.W-2);
   }
@@ -600,10 +600,10 @@ void ExecOneInstruction(void)
   switch(I)
   {
 #include "Codes.h"
-    case PFX_CB: CodesCB_Speccy();break;
-    case PFX_ED: CodesED_Speccy();break;
-    case PFX_FD: CodesFD_Speccy();break;
-    case PFX_DD: CodesDD_Speccy();break;
+    case PFX_CB: CodesCB();break;
+    case PFX_ED: CodesED();break;
+    case PFX_FD: CodesFD();break;
+    case PFX_DD: CodesDD();break;
   }
 }
   
@@ -627,7 +627,7 @@ void EI_Enable(void)
 // The main Z80 instruction loop. We put this 15K chunk into fast memory as we 
 // want to make the Z80 run as quickly as possible - this is the heart of the system.
 // -----------------------------------------------------------------------------------
-ITCM_CODE void ExecZ80_Speccy(u32 RunToCycles)
+ITCM_CODE void ExecZ80(u32 RunToCycles)
 {
   register byte I;
   register pair J;
@@ -644,10 +644,10 @@ ITCM_CODE void ExecZ80_Speccy(u32 RunToCycles)
       switch(I)
       {
 #include "Codes.h"
-        case PFX_CB: CodesCB_Speccy();break;
-        case PFX_ED: CodesED_Speccy();break;
-        case PFX_FD: CodesFD_Speccy();break;
-        case PFX_DD: CodesDD_Speccy();break;
+        case PFX_CB: CodesCB();break;
+        case PFX_ED: CodesED();break;
+        case PFX_FD: CodesFD();break;
+        case PFX_DD: CodesDD();break;
       }
   }
 }

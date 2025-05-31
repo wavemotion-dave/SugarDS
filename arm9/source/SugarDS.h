@@ -8,8 +8,8 @@
 //
 // The SugarDS emulator is offered as-is, without any warranty. Please see readme.md
 // =====================================================================================
-#ifndef _SPECCYSE_H_
-#define _SPECCYSE_H_
+#ifndef _SUGARSE_H_
+#define _SUGARSE_H_
 
 #include <nds.h>
 #include <string.h>
@@ -100,6 +100,9 @@ extern u32 border_color;
 #define META_KBD_ATSIGN     0xF02A
 #define META_KBD_SPACE      0xF02B
 #define META_KBD_RETURN     0xF02C
+#define META_KBD_F1         0xF02D
+#define META_KBD_F2         0xF02E
+#define META_KBD_F3         0xF02F
 
 #define META_KBD_PAN_UP16   0xF030
 #define META_KBD_PAN_UP24   0xF031
@@ -108,7 +111,7 @@ extern u32 border_color;
 #define META_KBD_PAN_DN24   0xF034
 #define META_KBD_PAN_DN32   0xF035
 
-#define MAX_KEY_OPTIONS     57
+#define MAX_KEY_OPTIONS     60
 
 // -----------------------------
 // For the Full Keyboard...
@@ -118,6 +121,9 @@ extern u32 border_color;
 #define KBD_KEY_CAPS        3
 #define KBD_KEY_CTL         4
 #define KBD_KEY_TAB         5
+#define KBD_KEY_F1          6
+#define KBD_KEY_F2          7
+#define KBD_KEY_F3          8
 #define KBD_KEY_RET         13
 #define KBD_KEY_ESC         27
 
@@ -190,7 +196,7 @@ extern u32 last_file_size;
 extern u8 crtc_rupture;
 extern u8 b32K_Mode;
 
-extern void SpeccySEGameOptions(bool bIsGlobal);
+extern void SugarDSGameOptions(bool bIsGlobal);
 extern void processDirectAudio(void);
 extern u8 crtc_render_screen_line(void);
 extern void crtc_reset(void);
@@ -210,4 +216,4 @@ extern void debug_init();
 extern void debug_save();
 extern void debug_printf(const char * str, ...);
 
-#endif // _SPECCYSE_H_
+#endif // _SUGARSE_H_

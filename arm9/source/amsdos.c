@@ -406,8 +406,6 @@ BOOL    AMSDOS_DoesDirectoryEntryQualifyForAutorun(const amsdos_directory_entry 
         return FALSE;
     }
     
-    debug[1]++;
-
     /* check the filename can actually be typed */
     if (!AMSDOS_CheckValidFilename(entry))
         return FALSE;
