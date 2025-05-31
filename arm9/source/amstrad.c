@@ -439,17 +439,11 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                 break;
                 
             case 0x01:
+                CRTC[CRT_Idx] = Value;
                 if ((CRT_Idx == 7) && (Value == 0))
                 {
                     crtc_rupture = 1; // RUPTURE!
-                    debug[15] = 0x7777;
                 }
-                if ((CRTC[CRT_Idx] == 255) && Value != 255)
-                {
-                    crtc_rupture = 1; // RUPTURE!
-                    debug[15] = 0x8888;
-                }
-                CRTC[CRT_Idx] = Value;
                 break;
         }
     }

@@ -479,8 +479,8 @@ void ShowDebugZ80(void)
         {
             sprintf(tmp, "D%X %-7lu %04X", i, debug[i], (u16)debug[i]); DSPrint(17,idx++, 7, tmp);
         }
-        sprintf(tmp, "DX %-7lu", DX); DSPrint(17,idx++, 7, tmp);
-        sprintf(tmp, "DY %-7lu", DY); DSPrint(17,idx++, 7, tmp);
+        sprintf(tmp, "DX %-9lu", DX); DSPrint(17,idx++, 7, tmp);
+        sprintf(tmp, "DY %-9lu", DY); DSPrint(17,idx++, 7, tmp);
     }
     else
     {
@@ -501,30 +501,28 @@ void ShowDebugZ80(void)
 // ------------------------------------------------------------
 void DisplayStatusLine(bool bForce)
 {
+    if (myGlobalConfig.debugger == 3) return; // If full debugger, skip this
+
     if (floppy_sound)
     {
-        // If we are showing any sort of keyboard... update the floppy label
-        if (myGlobalConfig.debugger != 3)
+        if (floppy_sound == 2) 
         {
-            if (floppy_sound == 2) 
-            {
-                mmEffect(SFX_FLOPPY3);  // Play short floppy sound for feedback
-            }
+            mmEffect(SFX_FLOPPY3);  // Play short floppy sound for feedback
+        }
 
-            if (--floppy_sound == 0)
+        if (--floppy_sound == 0)
+        {
+            DSPrint(25, 21, 2, (char*)"HI");   // White Idle Label
+        }
+        else
+        {
+            if (floppy_action == 1)
             {
-                DSPrint(25, 21, 2, (char*)"HI");   // White Idle Label
+                DSPrint(25, 21, 2, (char*)"*+");   // Blue Write Label
             }
             else
             {
-                if (floppy_action == 1)
-                {
-                    DSPrint(25, 21, 2, (char*)"*+");   // Blue Write Label
-                }
-                else
-                {
-                    DSPrint(25, 21, 2, (char*)"()");   // Green Read Label
-                }
+                DSPrint(25, 21, 2, (char*)"()");   // Green Read Label
             }
         }
     }

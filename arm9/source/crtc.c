@@ -42,7 +42,6 @@
 //R16   Light Pen Address (High)                    0      Hold the MSB of the cursor position when the lightpen was ON
 //R17   Light Pen Address (Low)                     0      Hold the LSB of the cursor position when the lightpen was ON
 
-
 u32 HCC     __attribute__((section(".dtcm"))) = 0;                // Horizontal Character Counter
 u32 HSC     __attribute__((section(".dtcm"))) = 0;                // Horizontal Sync Counter
 u32 VCC     __attribute__((section(".dtcm"))) = 0;                // Vertical Character Counter
@@ -161,8 +160,8 @@ ITCM_CODE u8 crtc_render_screen_line(void)
     // -------------------------------------------
     if ((++R52 & 0x3F) >= 52)
     {
-        crtc_r52_int();
-        R52 = 0;
+        crtc_r52_int();     // Our ~300Hz timer
+        R52 = 0;            // And reset the R52 counter
     }
 
     // ----------------------------------------------
@@ -174,7 +173,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
         {
             // According to spec, must be above 31 to fire interrupt here
             if (R52 >= R52_INT_ON_VSYNC[myConfig.r52IntVsync]) crtc_r52_int();
-            R52 = 0;            
+            R52 = 0;                // Always reset the R52 counter on VSync+2
             vSyncDS = 1;            // Inform caller of frame end - our DS 'vSync' if you will...
             escapeClause = 320;     // Reset watchdog
             vSyncSeen = 1;          // We've seen a vertical sync this frame
@@ -281,6 +280,15 @@ ITCM_CODE u8 crtc_render_screen_line(void)
     // emulation on a 60Hz DSi LCD refresh... but good enough!
     // ----------------------------------------------------------
     vidBufDS = (u32*)(0x06000000 + (current_ds_line * 512));
+    
+    // ------------------------------------------------------------------------
+    // This is a poor-mans horizontal sync "scroll trick". Some CPC games
+    // will modify the HSync width to produce smoother scrolling horizontal
+    // effects... we do a very simplified version of that by shifting 2 pixels
+    // when we are 'odd' and normal display when we are 'even'. Games like
+    // Super Edge Grinder will now scroll perfectly smoothly... 
+    // ------------------------------------------------------------------------
+    if (CRTC[3] & 1) vidBufDS++;
 
     // If the display is enabled... render screen.
     if ((current_ds_line & 0xFFFFFF00) == 0) // If we are in the 256 visible lines...
