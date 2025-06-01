@@ -142,7 +142,8 @@ extern u32 border_color;
 
 // What format is the input file?
 #define MODE_DSK            1
-#define MODE_SNA            2
+#define MODE_CPR            2
+#define MODE_SNA            3
 
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
@@ -150,6 +151,7 @@ extern unsigned char BASIC_6128[16384];
 extern unsigned char OS_6128[16384];
 extern unsigned char AMSDOS[16384];
 extern unsigned char PARADOS[16384];
+extern u8 DISK_IMAGE_BUFFER[];
 
 extern u8 CRTC[];
 extern u8 CRT_Idx;
@@ -209,6 +211,7 @@ extern int bg0, bg1, bg0b, bg1b;
 extern u32 last_file_size;
 extern u8 b32K_Mode;
 
+extern void CartLoad(void);
 extern void ConfigureMemory(void);
 extern void compute_pre_inked(u8 mode);
 extern void SugarDSGameOptions(bool bIsGlobal);

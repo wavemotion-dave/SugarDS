@@ -384,7 +384,7 @@ ITCM_CODE void IntZ80(Z80 *R,word Vector)
 
     if((CPU.IFF&IFF_1)||(Vector==INT_NMI))
     {
-      CPU.TStates += 20; // Z80 takes 19 cycles to acknowledge interrupt, setup stack and read vector
+      CPU.TStates += ((CPU.IFF&IFF_IM1) ? 5:19); // Z80 takes 5 cycles in IM1 mode and 19 cycles to acknowledge in IM2 mode
 
       /* Save PC on stack */
       M_PUSH(PC);

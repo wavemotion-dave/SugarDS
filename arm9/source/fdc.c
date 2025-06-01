@@ -91,7 +91,7 @@ static int Inter;
 static int Motor;
 int IndexSecteur = 0;
 
-u8 DISK_IMAGE_BUFFER[512*1024]; // Big enough for any 3" disk format
+u8 DISK_IMAGE_BUFFER[1024*1024]; // Big enough for any 3" or 3.5" disk format
 
 
 int SeekSector( int newSect, int * pos )

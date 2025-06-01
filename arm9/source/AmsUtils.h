@@ -17,7 +17,7 @@
 
 #define MAX_FILES                   2048
 #define MAX_FILENAME_LEN            160
-#define MAX_ROM_SIZE               (512*1024) // 512K is big enough for any disk / cart / snapshot
+#define MAX_ROM_SIZE               (1024*1024) // 1024K is big enough for any disk / cart / snapshot
 
 #define MAX_CONFIGS                 890
 #define CONFIG_VERSION              0x0004

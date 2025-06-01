@@ -104,6 +104,53 @@ ITCM_CODE void compute_pre_inked(u8 mode)
     }
 }
 
+// --------------------------------------------------------------------
+// We use the back-end 512K of the DISK IMAGE BUFFER as the place
+// to store our 32 banks (0..31) of 16K each. This buffer is otherwise
+// unused when we have a cartridge inserted. In theory, we could still
+// keep the disk active for loading and limit ourselves to 512K worth 
+// of .dsk which is plenty for this emulation.
+// --------------------------------------------------------------------
+u8 *CartBankPtr[32] = {0}; // The 32 banks of 16K ROM cart chunks
+void CartLoad(void)
+{
+    u8 *cart_buffer = (u8 *) (DISK_IMAGE_BUFFER + (512 * 1024));
+    
+    memset(cart_buffer, 0x00, (512 * 1024)); // Nothing out there to start...
+
+    if ((ROM_Memory[0] == 'R') && (ROM_Memory[1] == 'I') && (ROM_Memory[2] == 'F') && (ROM_Memory[3] == 'F') &&
+        (ROM_Memory[8] == 'A') && (ROM_Memory[9] == 'M') && (ROM_Memory[10] == 'S') && (ROM_Memory[11] == '!'))
+    {
+        u32 total_len = (ROM_Memory[7] << 24) | (ROM_Memory[6] << 16) | (ROM_Memory[5] << 8) | (ROM_Memory[4] << 0);
+        
+        // ---------------------------------------------------------------------------
+        // Set the 32 banks of CART memory. Not all banks need to be present and will
+        // contain 0x00 values for any part of the cart not present in the .CPR file
+        // ---------------------------------------------------------------------------
+        for (u8 bank=0; bank<32; bank++)
+        {
+            CartBankPtr[bank] = (u8 *) (cart_buffer + (0x4000 * bank));
+        }
+        
+        u32 idx = 0x0C; // The first chunk is here...
+        
+        while (idx < (total_len-4))
+        {
+            if ((ROM_Memory[idx] == 'c') && (ROM_Memory[idx+1] == 'b'))
+            {
+                u8  bank        = ((ROM_Memory[idx+2] - '0') * 10) + (ROM_Memory[idx+3] - '0');
+                u16 chunk_size  = (ROM_Memory[idx+5] << 8) | (ROM_Memory[idx+4] << 0);
+                for (int i=0; i<chunk_size; i++)
+                {
+                    CartBankPtr[bank][i] = ROM_Memory[idx+8+i];            
+                }
+                idx += 8 + chunk_size;
+            }
+            else break;
+        }
+    }
+}
+
 // -Address-     0      1      2      3      4      5      6      7
 // 0000-3FFF   RAM_0  RAM_0  RAM_4  RAM_0  RAM_0  RAM_0  RAM_0  RAM_0
 // 4000-7FFF   RAM_1  RAM_1  RAM_5  RAM_3  RAM_4  RAM_5  RAM_6  RAM_7
@@ -111,7 +158,8 @@ ITCM_CODE void compute_pre_inked(u8 mode)
 // C000-FFFF   RAM_3  RAM_7  RAM_7  RAM_7  RAM_3  RAM_3  RAM_3  RAM_3
 ITCM_CODE void ConfigureMemory(void)
 {
-    u8 *UROM_Ptr = (u8 *)BASIC_6128;
+    u8 *LROM_Ptr = (u8 *) OS_6128;
+    u8 *UROM_Ptr = (u8 *) BASIC_6128;
     if (UROM == 7) // AMSDOS or PARADOS (Disk ROM)
     {
         if (myGlobalConfig.diskROM)
@@ -120,10 +168,33 @@ ITCM_CODE void ConfigureMemory(void)
             UROM_Ptr = (u8 *)AMSDOS;
     }
     
+    // ------------------------------------------------------------
+    // Cartridge Support... This is not a full CPC+ implementation
+    // but is good enough for using CPR as a storage medium.
+    // ------------------------------------------------------------
+    if (amstrad_mode == MODE_CPR)
+    {
+        // ------------------------------------------------------
+        // CPC+ map their logical cart banks starting at 128... 
+        // There are, at most 32 banks supported for 512K total.
+        // ------------------------------------------------------
+        if (UROM & 0x80)
+        {
+            UROM_Ptr = CartBankPtr[UROM & 0x1F];
+        }
+        else
+        {
+            if (UROM == 3) UROM_Ptr = (u8 *)AMSDOS;
+            else UROM_Ptr = (u8 *) BASIC_6128;
+        }
+        
+        LROM_Ptr = CartBankPtr[0];
+    }
+    
     switch (MMR & 0x7)
     {
       case 0x00: // 0-1-2-3
-        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : OS_6128;    // Lower ROM
+        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
         MemoryMapR[1] = RAM_Memory + 0x4000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
         MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0xC000) : UROM_Ptr;   // Upper ROM
@@ -135,7 +206,7 @@ ITCM_CODE void ConfigureMemory(void)
         break;
 
       case 0x01: // 0-1-2-7
-        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : OS_6128;    // Lower ROM
+        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
         MemoryMapR[1] = RAM_Memory + 0x4000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
         MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0x1C000) : UROM_Ptr;  // Upper ROM
@@ -147,7 +218,7 @@ ITCM_CODE void ConfigureMemory(void)
         break;
 
       case 0x02: // 4-5-6-7
-        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x10000) : OS_6128;    // Lower ROM
+        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x10000) : LROM_Ptr;   // Lower ROM
         MemoryMapR[1] = RAM_Memory + 0x14000;
         MemoryMapR[2] = RAM_Memory + 0x18000;
         MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0x1C000) : UROM_Ptr;   // Upper ROM
@@ -159,7 +230,7 @@ ITCM_CODE void ConfigureMemory(void)
         break;
 
       case 0x03: // 0-3-2-7
-        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : OS_6128;    // Lower ROM
+        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
         MemoryMapR[1] = RAM_Memory + 0xC000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
         MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0x1C000) : UROM_Ptr;  // Upper ROM
@@ -171,7 +242,7 @@ ITCM_CODE void ConfigureMemory(void)
         break;
 
       case 0x04: // 0-4-2-3
-        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : OS_6128;    // Lower ROM
+        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
         MemoryMapR[1] = RAM_Memory + 0x10000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
         MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0xC000) : UROM_Ptr;   // Upper ROM
@@ -183,7 +254,7 @@ ITCM_CODE void ConfigureMemory(void)
         break;
 
       case 0x05: // 0-5-2-3
-        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : OS_6128;    // Lower ROM
+        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
         MemoryMapR[1] = RAM_Memory + 0x14000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
         MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0xC000) : UROM_Ptr;   // Upper ROM
@@ -195,7 +266,7 @@ ITCM_CODE void ConfigureMemory(void)
         break;
         
       case 0x06: // 0-6-2-3
-        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : OS_6128;    // Lower ROM
+        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
         MemoryMapR[1] = RAM_Memory + 0x18000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
         MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0xC000) : UROM_Ptr;   // Upper ROM
@@ -207,7 +278,7 @@ ITCM_CODE void ConfigureMemory(void)
         break;
 
       case 0x07: // 0-7-2-3
-        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : OS_6128;    // Lower ROM
+        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
         MemoryMapR[1] = RAM_Memory + 0x1C000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
         MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0xC000) : UROM_Ptr;   // Upper ROM
@@ -251,7 +322,6 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
 
     if ((Port & 0x4200) == 0x0200) // CRTC Register Read
     {
-        //return CRTC[10+(CRT_Idx & 7)];
         return CRTC[CRT_Idx];
     }
     
@@ -597,6 +667,8 @@ void amstrad_reset(void)
     ink_map[0x11] = 30;
     ink_map[0x09] = 31;
     
+    for (int i=0; i<32; i++) CartBankPtr[i] = (u8*)0;
+    
     crtc_reset();
     
     memset(RAM_Memory, 0x00, sizeof(RAM_Memory));
@@ -624,6 +696,10 @@ void amstrad_reset(void)
         compute_pre_inked(2);
         
         DiskInsert(initial_file, false);
+    }
+    else if (amstrad_mode == MODE_CPR)
+    {
+        CartLoad();
     }
     else // Must be SNA snapshot 
     {   
@@ -812,7 +888,7 @@ ITCM_CODE u32 amstrad_run(void)
         if (++refresh_tstates & 0x100) // Every 256 Frames, reset counters
         {
             CPU.TStates = CPU.TStates - ((256+CPU_ADJUST[myConfig.cpuAdjust]) * scanline_count);
-            scanline_count = 0;
+            scanline_count = 0; // Will be incremented to 1 directly below
         }
         scanline_count++;
         return 0; // End of frame (start of VSYNC)

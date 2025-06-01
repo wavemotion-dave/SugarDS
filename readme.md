@@ -7,7 +7,8 @@ SugarDS is an Amstrad CPC 646 and 6128 Emulator for the DS/DSi
 Features :
 -----------------------
 * Emulates CPC 464 (64K) and CPC 6128 (128K)
-* Loads .SNA and .DSK files up to 512K total length
+* Loads .SNA and .DSK files up to 1024K total length
+* Plus2CPC Cartridge Support to load .CPR files up to 512K
 * Emulates CRTC Type 3 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll
 * Save / Load state so you can pick up where you left off
 
@@ -90,8 +91,34 @@ Configuration :
 -----------------------
 Coming soon - and there's LOTs to talk about!
 
+Key Mapping :
+-----------------------
+Shoulder button L + D-Pad for offset
+Shoulder button R + D-Pad for scale (turn off auto-scale)
+
+DISK Support :
+-----------------------
+.DSK files up to the maximum allowed by 3.5" drives using PARADOS is roughly 720K.
+
+Cartridge Support :
+-----------------------
+Although .CPR cartridges up to 512K are supported, this is not a CPC+ (plus) emulator.
+
+SNA Support :
+-----------------------
+TBD
+
+Known Issues :
+-----------------------
+Prehistorik II has major graphical glitches.
+Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay is fine.
+
 
 Version History :
 -----------------------
+
+Version 0.6 - 02-Jun-2025 by wavemotion-dave
+* Cartridge .CPR support up to 512K
+
 Version 0.5 - 01-Jun-2025 by wavemotion-dave
 * First public beta. Enjoy!

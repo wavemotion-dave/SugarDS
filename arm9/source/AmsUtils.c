@@ -357,6 +357,13 @@ void sugarDSFindFiles(u8 bTapeOnly)
           countFiles++;
         }
 
+        if ( (strcasecmp(strrchr(szFile, '.'), ".cpr") == 0) )  {
+          strcpy(gpFic[uNbFile].szName,szFile);
+          gpFic[uNbFile].uType = AMSTRAD_FILE;
+          uNbFile++;
+          countFiles++;
+        }
+
         if ( (strcasecmp(strrchr(szFile, '.'), ".dsk") == 0) )  {
           strcpy(gpFic[uNbFile].szName,szFile);
           gpFic[uNbFile].uType = AMSTRAD_FILE;
@@ -1232,6 +1239,8 @@ void ReadFileCRCAndConfig(void)
 
     if (strstr(gpFic[ucGameChoice].szName, ".dsk") != 0) amstrad_mode = MODE_DSK;
     if (strstr(gpFic[ucGameChoice].szName, ".DSK") != 0) amstrad_mode = MODE_DSK;
+    if (strstr(gpFic[ucGameChoice].szName, ".cpr") != 0) amstrad_mode = MODE_CPR;
+    if (strstr(gpFic[ucGameChoice].szName, ".CPR") != 0) amstrad_mode = MODE_CPR;
     if (strstr(gpFic[ucGameChoice].szName, ".sna") != 0) amstrad_mode = MODE_SNA;
     if (strstr(gpFic[ucGameChoice].szName, ".SNA") != 0) amstrad_mode = MODE_SNA;
 
