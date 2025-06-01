@@ -1,3 +1,19 @@
+// Following in the footsteps of virtually all other Amstrad CPC emulators, the BIOS
+// files are included in the emulator and don't need to be sourced by the user. This
+// is according to a note from Cliff Lawson:
+// 
+// "If you are the author of such an emulator then you don't need to write and ask me for 
+// Amstrad's permission to distribute copies of the CPC ROMs. Amstrad's stance on this is
+// that we are happy for you to redistribute copies of our copyrighted code as long as 
+// a) copyright messages are not changed and 
+// b) either in the program or the documentation you acknowledge that "Amstrad has kindly 
+// given it's permission for it's copyrighted material to be redistributed but Amstrad 
+// retains it's copyright."
+// 
+// So the Amstrad CPC BIOS files are still copyrighted by Amstrad - in whatever form
+// that may exist. If you are in an official capacity as the copyright owner of the 
+// BIOS files and wish these stripped from the emulator, please contact me and I'm 
+// happy to do so!  Otherwise - many thanks for the indirect permission to use them.
 
 
 unsigned char BASIC_6128[16384] = {

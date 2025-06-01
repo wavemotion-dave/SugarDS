@@ -34,6 +34,20 @@ As far as I'm concerned, you can use this code in whatever way suits you provide
 continue to release the sources under the original copyright notice (see below) which
 appeared to be the intention of all the pioneers who came before me.
 
+The sound driver (ay38910) are libraries from FluBBa (Fredrik Ahlström) 
+and those copyrights remain his.
+
+Royalty Free Music for the opening jingle provided by Anvish Parker
+
+lzav compression (for save states) is Copyright (c) 2023-2025 Aleksey 
+Vaneev and used by permission of the generous MIT license.
+
+The Amstrad CPC logo is used without permission but with the maximum
+of respect and love.
+
+The SugarDS emulator is offered as-is, without any warranty.
+
+
 BIOS Files :
 -----------------------
 Following in the footsteps of virtually all other Amstrad CPC emulators, the BIOS
