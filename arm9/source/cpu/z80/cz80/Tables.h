@@ -24,10 +24,14 @@
 /*************************************************************/
 
 // -----------------------------------------------------------------
-// Note, this table builds in the assumption that the jump is taken
+// Note: These are all compensated for by the waits incurred by 
+// the Amstrad CPC for Gate Access to memory. Basically everything
+// in this system is a multiple of 4 cycles (one NOP) in length.
+//
+// Note: This table builds in the assumption that the jump is taken
 // and we will compensate the cycles if the jump is not taken. 
 // -----------------------------------------------------------------
-static const byte Cycles_NoM1Wait[256] __attribute__((section(".dtcm"))) =
+static const byte Cycles[256] __attribute__((section(".dtcm"))) =
 {
   //00 01  02  03  04  05  06  07       08  09  0A  0B   0C  0D  0E  0F
     4, 12,  8,  8,  4,  4,  8,  4,       4, 12,  8,  8,  4,  4,  8,  4,  // 0x00
@@ -78,7 +82,7 @@ static const byte CyclesED[256] __attribute__((section(".dtcm"))) =
    0,  0,  0,  0,  0,  0,  0,   0,        0,  0,  0,  0,  0,  0,  0,  0,   // 0x30
   12, 12, 20, 20,  8, 16,  8,   12,      12, 12, 20, 20,  0, 16,  0, 12,   // 0x40
   12, 12, 20, 20,  0,  0,  8,   12,      12, 12, 20, 20,  0,  0,  8, 12,   // 0x50
-  12, 12, 20, 20,  0,  0,  0,  20,       12, 12, 20, 20,  0,  0,  0, 20,   // 0x60
+  12, 12, 20, 20,  0,  0,  0,   20,      12, 12, 20, 20,  0,  0,  0, 20,   // 0x60
   12, 12, 20, 20,  0,  0,  0,   0,       12, 12, 20, 20,  0,  0,  0,  0,   // 0x70
    0,  0,  0,  0,  0,  0,  0,   0,        0,  0,  0,  0,  0,  0,  0,  0,   // 0x80
    0,  0,  0,  0,  0,  0,  0,   0,        0,  0,  0,  0,  0,  0,  0,  0,   // 0x90

@@ -450,6 +450,8 @@ static void CodesCB(void)
   /* Read opcode and count cycles */
   I=OpZ80(CPU.PC.W++);
   CPU.TStates += CyclesCB[I];
+  
+  if (CyclesCB[I] == 0) debug[5]++;
 
   /* R register incremented on each M1 cycle */
   INCR(1);
@@ -472,6 +474,7 @@ ITCM_CODE static void CodesDDCB(void)
   J.W=CPU.XX.W+(offset)OpZ80(CPU.PC.W++);
   I=OpZ80(CPU.PC.W++);
   CPU.TStates += CyclesXXCB[I];
+  if (CyclesXXCB[I] == 0) debug[6]++;
 
   switch(I)
   {
@@ -492,6 +495,7 @@ ITCM_CODE static void CodesFDCB(void)
   J.W=CPU.XX.W+(offset)OpZ80(CPU.PC.W++);
   I=OpZ80(CPU.PC.W++);
   CPU.TStates += CyclesXXCB[I];
+  if (CyclesXXCB[I] == 0) debug[6]++;
 
   switch(I)
   {
@@ -591,7 +595,7 @@ void ExecOneInstruction(void)
   register pair J;
 
   I=OpZ80(CPU.PC.W++);
-  CPU.TStates += Cycles_NoM1Wait[I];
+  CPU.TStates += Cycles[I];
 
   /* R register incremented on each M1 cycle */
   INCR(1);
@@ -635,7 +639,7 @@ ITCM_CODE void ExecZ80(u32 RunToCycles)
   while (CPU.TStates < RunToCycles)
   {
       I=OpZ80(CPU.PC.W++);
-      CPU.TStates += Cycles_NoM1Wait[I];
+      CPU.TStates += Cycles[I];
 
       /* R register incremented on each M1 cycle */
       INCR(1);

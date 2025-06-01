@@ -41,13 +41,24 @@ u32 border_color        __attribute__((section(".dtcm"))) = 0;
 u8 CRTC[0x20]           __attribute__((section(".dtcm"))) = {0};
 u8 CRT_Idx              __attribute__((section(".dtcm"))) = 0;
 u8 inks_changed         __attribute__((section(".dtcm"))) = 0;
-
+u32 refresh_tstates     __attribute__((section(".dtcm"))) = 0;
 u8 ink_map[256]         __attribute__((section(".dtcm"))) = {0};
 
 u32  pre_inked_mode0[256] __attribute__((section(".dtcm"))) = {0};
 u32  pre_inked_mode1[256] __attribute__((section(".dtcm"))) = {0};
-u32  pre_inked_mode2a[256]  = {0};
-u32  pre_inked_mode2b[256]  = {0};
+u32  pre_inked_mode2a[256]  = {0};  // Not used often enough to soak up fast memory
+u32  pre_inked_mode2b[256]  = {0};  // Not used often enough to soak up fast memory
+
+u8 CRTC_MASKS[0x20] = {0xFF, 0xFF, 0xFF, 0x0F, 
+                       0x7F, 0x1F, 0x7F, 0x7F, 
+                       0x03, 0x1F, 0x7F, 0x1F, 
+                       0x3F, 0xFF, 0x3F, 0xFF, 
+                       0x00, 0x00, 0x00, 0x00,
+                       0x00, 0x00, 0x00, 0x00,
+                       0x00, 0x00, 0x00, 0x00,
+                       0x00, 0x00, 0x00, 0x00};
+
+s16 CPU_ADJUST[] __attribute__((section(".dtcm"))) = {0, 2, 4, 8, -8, -4, -2};
 
 extern u8 last_special_key;
 
@@ -98,7 +109,7 @@ ITCM_CODE void compute_pre_inked(u8 mode)
 // 4000-7FFF   RAM_1  RAM_1  RAM_5  RAM_3  RAM_4  RAM_5  RAM_6  RAM_7
 // 8000-BFFF   RAM_2  RAM_2  RAM_6  RAM_2  RAM_2  RAM_2  RAM_2  RAM_2
 // C000-FFFF   RAM_3  RAM_7  RAM_7  RAM_7  RAM_3  RAM_3  RAM_3  RAM_3
-void ConfigureMemory(void)
+ITCM_CODE void ConfigureMemory(void)
 {
     u8 *UROM_Ptr = (u8 *)BASIC_6128;
     if (UROM == 7) // AMSDOS or PARADOS (Disk ROM)
@@ -237,6 +248,12 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
     {
         return ReadFDC(Port);
     }
+
+    if ((Port & 0x4200) == 0x0200) // CRTC Register Read
+    {
+        //return CRTC[10+(CRT_Idx & 7)];
+        return CRTC[CRT_Idx];
+    }
     
     if (!(Port & 0x0800)) // PPI - PSG
     {
@@ -254,10 +271,15 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                         switch (portC & 0xF)
                         {
                             case 0x00:
+                                if (kbd_key == KBD_KEY_CUP) keyBits |= 0x01;
+                                if (kbd_key == KBD_KEY_CRT) keyBits |= 0x02;
+                                if (kbd_key == KBD_KEY_CDN) keyBits |= 0x04;
                                 if (kbd_key == KBD_KEY_F3)  keyBits |= 0x20;
                                 break;
 
                             case 0x01:
+                                if (kbd_key == KBD_KEY_CLT) keyBits |= 0x01;
+                                if (kbd_key == KBD_KEY_CPY) keyBits |= 0x02;                                
                                 if (kbd_key == KBD_KEY_F1)  keyBits |= 0x20;
                                 if (kbd_key == KBD_KEY_F2)  keyBits |= 0x40;
                                 break;
@@ -265,6 +287,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                             case 0x02:
                                 if (kbd_key == KBD_KEY_CTL) keyBits |= 0x80;
                                 if (kbd_key == KBD_KEY_SFT) keyBits |= 0x20;
+                                if (kbd_key == KBD_KEY_F4)  keyBits |= 0x10;                                
                                 if (kbd_key == ']')         keyBits |= 0x08;
                                 if (kbd_key == KBD_KEY_RET) keyBits |= 0x04;
                                 if (kbd_key == '[')         keyBits |= 0x02;
@@ -444,15 +467,11 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
         switch ((Port >> 8) & 0x03)
         {
             case 0x00:
-                CRT_Idx = Value & 0xF;
+                CRT_Idx = Value & 0x1F;
                 break;
                 
             case 0x01:
-                CRTC[CRT_Idx] = Value;
-                if ((CRT_Idx == 7) && (Value == 0))
-                {
-                    crtc_rupture = 1; // RUPTURE!
-                }
+                CRTC[CRT_Idx] = Value & CRTC_MASKS[CRT_Idx];                
                 break;
         }
     }
@@ -492,7 +511,6 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                 if (RMR & 0x10)
                 {
                     R52 = 0; // Force R52 counter to zero...
-                    debug[14] = 0x3333;
                 }
                 ConfigureMemory();
                 break;
@@ -778,31 +796,25 @@ void amstrad_reset(void)
 // We also process 1 line worth of Audio and render one screen line for
 // the CRTC display controller.
 // -----------------------------------------------------------------------------
-s16 CPU_ADJUST[] __attribute__((section(".dtcm"))) = {0, 4, 8, -4, -8};
 ITCM_CODE u32 amstrad_run(void)
 {
     // Process 1 scanline worth of AY audio
     if (myConfig.waveDirect) processDirectAudio();
     
+    // Process 1 scanline for the mighty CRTC controller chip
+    u8 vsync = crtc_render_screen_line();
+
     // Execute 1 scanline worth of CPU instructions ... Z80 at 4MHz
     ExecZ80((256+CPU_ADJUST[myConfig.cpuAdjust]) * scanline_count);
 
-    if (inks_changed)
+    if (vsync) // Will return non-zero if VSYNC started
     {
-        compute_pre_inked(RMR & 0x03);
-        inks_changed = 0;
-    }
-
-    // Process 1 scanline for the mighty CRTC controller chip
-    if (crtc_render_screen_line()) // Will return non-zero if VSYNC started
-    {
-        static int refresh_tstates=0;
-        
-        if (++refresh_tstates & 0x100) // Every 256 Frames
+        if (++refresh_tstates & 0x100) // Every 256 Frames, reset counters
         {
             CPU.TStates = CPU.TStates - ((256+CPU_ADJUST[myConfig.cpuAdjust]) * scanline_count);
-            scanline_count = 1;
+            scanline_count = 0;
         }
+        scanline_count++;
         return 0; // End of frame (start of VSYNC)
     }
     else

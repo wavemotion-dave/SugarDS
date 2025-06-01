@@ -27,9 +27,6 @@
 
 #define SUGAR_SAVE_VER   0x0001       // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
 
-extern void ConfigureMemory(void);
-extern void compute_pre_inked(u8 mode);
-
 /*********************************************************************************
  * Save the current state - save everything we need to a single .sav file.
  ********************************************************************************/
@@ -96,7 +93,7 @@ void amstradSaveState()
     if (retVal) retVal = fwrite(&current_ds_line,   sizeof(current_ds_line),    1, handle);
     if (retVal) retVal = fwrite(&vsync_plus_two,    sizeof(vsync_plus_two),     1, handle);
     if (retVal) retVal = fwrite(&r12_screen_offset, sizeof(r12_screen_offset),  1, handle);
-    if (retVal) retVal = fwrite(&crtc_rupture,      sizeof(crtc_rupture),       1, handle);
+    if (retVal) retVal = fwrite(&crtc_force_vsync,  sizeof(crtc_force_vsync),   1, handle);
     if (retVal) retVal = fwrite(&vsync_off_count,   sizeof(vsync_off_count),    1, handle);
     if (retVal) retVal = fwrite(&escapeClause,      sizeof(escapeClause),       1, handle);
     if (retVal) retVal = fwrite(&vSyncSeen,         sizeof(vSyncSeen),          1, handle);
@@ -113,6 +110,7 @@ void amstradSaveState()
     if (retVal) retVal = fwrite(INK,                sizeof(INK),                1, handle);
     if (retVal) retVal = fwrite(ink_map,            sizeof(ink_map),            1, handle);
     if (retVal) retVal = fwrite(&inks_changed,      sizeof(inks_changed),       1, handle);
+    if (retVal) retVal = fwrite(&refresh_tstates,   sizeof(refresh_tstates),    1, handle);
 
     if (retVal) retVal = fwrite(&portA,             sizeof(portA),              1, handle);
     if (retVal) retVal = fwrite(&portB,             sizeof(portB),              1, handle);
@@ -211,7 +209,7 @@ void amstradLoadState()
             if (retVal) retVal = fread(&current_ds_line,   sizeof(current_ds_line),    1, handle);
             if (retVal) retVal = fread(&vsync_plus_two,    sizeof(vsync_plus_two),     1, handle);
             if (retVal) retVal = fread(&r12_screen_offset, sizeof(r12_screen_offset),  1, handle);
-            if (retVal) retVal = fread(&crtc_rupture,      sizeof(crtc_rupture),       1, handle);
+            if (retVal) retVal = fread(&crtc_force_vsync,  sizeof(crtc_force_vsync),   1, handle);
             if (retVal) retVal = fread(&vsync_off_count,   sizeof(vsync_off_count),    1, handle);
             if (retVal) retVal = fread(&escapeClause,      sizeof(escapeClause),       1, handle);
             if (retVal) retVal = fread(&vSyncSeen,         sizeof(vSyncSeen),          1, handle);
@@ -228,6 +226,7 @@ void amstradLoadState()
             if (retVal) retVal = fread(INK,                sizeof(INK),                1, handle);
             if (retVal) retVal = fread(ink_map,            sizeof(ink_map),            1, handle);
             if (retVal) retVal = fread(&inks_changed,      sizeof(inks_changed),       1, handle);
+            if (retVal) retVal = fread(&refresh_tstates,   sizeof(refresh_tstates),    1, handle);
 
             if (retVal) retVal = fread(&portA,             sizeof(portA),              1, handle);
             if (retVal) retVal = fread(&portB,             sizeof(portB),              1, handle);

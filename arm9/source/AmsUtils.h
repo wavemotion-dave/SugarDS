@@ -20,7 +20,7 @@
 #define MAX_ROM_SIZE               (512*1024) // 512K is big enough for any disk / cart / snapshot
 
 #define MAX_CONFIGS                 890
-#define CONFIG_VERSION              0x0002
+#define CONFIG_VERSION              0x0004
 
 #define AMSTRAD_FILE                0x01
 #define DIRECTORY                   0x02

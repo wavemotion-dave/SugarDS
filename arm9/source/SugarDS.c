@@ -159,18 +159,25 @@ u16 keyCoresp[MAX_KEY_OPTIONS] __attribute__((section(".dtcm"))) = {
     META_KBD_COLON,
     META_KBD_SEMI,
     META_KBD_ATSIGN,
-    META_KBD_SPACE,
-    META_KBD_RETURN, //50
+    META_KBD_SLASH,
+    META_KBD_SPACE,  //50
+    META_KBD_RETURN,
     
     META_KBD_F1,
     META_KBD_F2,
     META_KBD_F3,
+    META_KBD_F4,      // 55
+    META_KBD_CURS_UP,
+    META_KBD_CURS_DN,
+    META_KBD_CURS_LF,
+    META_KBD_CURS_RT,
+    META_KBD_CURS_CPY, // 60    
     
     META_KBD_PAN_UP16,
     META_KBD_PAN_UP24,
     META_KBD_PAN_UP32,
     META_KBD_PAN_DN16,
-    META_KBD_PAN_DN24,
+    META_KBD_PAN_DN24, // 65
     META_KBD_PAN_DN32
 };
 
@@ -824,11 +831,11 @@ u8 handle_debugger_overlay(u16 iTx, u16 iTy)
     {
         if      ((iTx >= 0)   && (iTx <  22))  kbd_key = 'Z';
         if      ((iTx >= 22)  && (iTx <  41))  kbd_key = 'X';
-        if      ((iTx >= 41)  && (iTx <  60))  kbd_key = 'C';
-        if      ((iTx >= 60)  && (iTx <  80))  kbd_key = 'V';
-        if      ((iTx >= 80)  && (iTx <  98))  kbd_key = 'B';
-        if      ((iTx >= 98)  && (iTx < 117))  kbd_key = 'N';
-        if      ((iTx >= 117) && (iTx < 137))  kbd_key = '1';
+        if      ((iTx >= 41)  && (iTx <  60))  kbd_key = 'S';
+        if      ((iTx >= 60)  && (iTx <  80))  kbd_key = 'Y';
+        if      ((iTx >= 80)  && (iTx <  98))  kbd_key = 'N';
+        if      ((iTx >= 98)  && (iTx < 117))  kbd_key = '1';
+        if      ((iTx >= 117) && (iTx < 137))  kbd_key = '2';
         if      ((iTx >= 137) && (iTx < 168))  kbd_key = KBD_KEY_RET;
         if      ((iTx >= 168) && (iTx < 205))  return MENU_CHOICE_MENU;
         if      ((iTx >= 205) && (iTx < 230))  {debugger_pause = 2; WAITVBL;}
@@ -1221,7 +1228,7 @@ void SugarDS_main(void)
             if (nds_key & KEY_DOWN)
             {
                 dampen = 2;
-                if (myConfig.scaleY > 140) myConfig.scaleY--;
+                if (myConfig.scaleY > 110) myConfig.scaleY--;
             }
             if (nds_key & KEY_LEFT)
             {
@@ -1311,11 +1318,20 @@ void SugarDS_main(void)
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_COLON)     kbd_key  = ':';
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_SEMI)      kbd_key  = ';';
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_ATSIGN)    kbd_key  = '@';
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_SLASH)     kbd_key  = '/';
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F1)        kbd_key  = KBD_KEY_F1;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F2)        kbd_key  = KBD_KEY_F2;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F3)        kbd_key  = KBD_KEY_F3;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F4)        kbd_key  = KBD_KEY_F4;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_SHIFT)     kbd_key  = KBD_KEY_SFT;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_RETURN)    kbd_key  = KBD_KEY_RET;
+                      
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_UP)   kbd_key  = KBD_KEY_CUP;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_DN)   kbd_key  = KBD_KEY_CDN;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_LF)   kbd_key  = KBD_KEY_CLT;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_RT)   kbd_key  = KBD_KEY_CRT;
+                      
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_CPY)  kbd_key  = KBD_KEY_CPY;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP16)  {temp_offset = -16;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP24)  {temp_offset = -24;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP32)  {temp_offset = -32;slide_dampen = 15;}

@@ -98,20 +98,27 @@ extern u32 border_color;
 #define META_KBD_COLON      0xF028
 #define META_KBD_SEMI       0xF029
 #define META_KBD_ATSIGN     0xF02A
-#define META_KBD_SPACE      0xF02B
-#define META_KBD_RETURN     0xF02C
-#define META_KBD_F1         0xF02D
-#define META_KBD_F2         0xF02E
-#define META_KBD_F3         0xF02F
+#define META_KBD_SLASH      0xF02B
+#define META_KBD_SPACE      0xF02C
+#define META_KBD_RETURN     0xF02D
+#define META_KBD_F1         0xF02E
+#define META_KBD_F2         0xF02F
+#define META_KBD_F3         0xF030
+#define META_KBD_F4         0xF031
+#define META_KBD_CURS_UP    0xF032
+#define META_KBD_CURS_DN    0xF033
+#define META_KBD_CURS_LF    0xF034
+#define META_KBD_CURS_RT    0xF035
+#define META_KBD_CURS_CPY   0xF036
 
-#define META_KBD_PAN_UP16   0xF030
-#define META_KBD_PAN_UP24   0xF031
-#define META_KBD_PAN_UP32   0xF032
-#define META_KBD_PAN_DN16   0xF033
-#define META_KBD_PAN_DN24   0xF034
-#define META_KBD_PAN_DN32   0xF035
+#define META_KBD_PAN_UP16   0xF037
+#define META_KBD_PAN_UP24   0xF038
+#define META_KBD_PAN_UP32   0xF039
+#define META_KBD_PAN_DN16   0xF03A
+#define META_KBD_PAN_DN24   0xF03B
+#define META_KBD_PAN_DN32   0xF03C
 
-#define MAX_KEY_OPTIONS     60
+#define MAX_KEY_OPTIONS     67
 
 // -----------------------------
 // For the Full Keyboard...
@@ -124,7 +131,13 @@ extern u32 border_color;
 #define KBD_KEY_F1          6
 #define KBD_KEY_F2          7
 #define KBD_KEY_F3          8
+#define KBD_KEY_F4          9
 #define KBD_KEY_RET         13
+#define KBD_KEY_CUP         14
+#define KBD_KEY_CRT         15
+#define KBD_KEY_CDN         16
+#define KBD_KEY_CLT         17
+#define KBD_KEY_CPY         18
 #define KBD_KEY_ESC         27
 
 // What format is the input file?
@@ -153,6 +166,7 @@ extern u32 border_color;
 extern u8 CRTC[0x20];
 extern u8 CRT_Idx;
 extern u8 inks_changed;
+extern u32 refresh_tstates;
 extern u8 ink_map[256];
 
 extern u32 HCC;
@@ -167,7 +181,7 @@ extern u8  DISPEN;
 extern int current_ds_line;
 extern u32 vsync_plus_two;
 extern u32 r12_screen_offset;
-extern u8  crtc_rupture;
+extern u8  crtc_force_vsync;
 extern u8  vsync_off_count;
 extern u8  *cpc_ScreenPage;
 extern u16 escapeClause;
@@ -193,9 +207,10 @@ extern u16 NDS_keyMap[];
 extern u8 soundEmuPause;
 extern int bg0, bg1, bg0b, bg1b;
 extern u32 last_file_size;
-extern u8 crtc_rupture;
 extern u8 b32K_Mode;
 
+extern void ConfigureMemory(void);
+extern void compute_pre_inked(u8 mode);
 extern void SugarDSGameOptions(bool bIsGlobal);
 extern void processDirectAudio(void);
 extern u8 crtc_render_screen_line(void);

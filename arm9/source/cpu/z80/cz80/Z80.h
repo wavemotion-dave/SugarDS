@@ -103,7 +103,7 @@ typedef struct
   byte Trace;                       /* Set Trace=1 to start tracing         */
   byte R_HighBit;                   /* Used to preserve the high bit for R  */
   u32  R;                           /* Refresh register - masked on read    */
-  u32  TStates;                     /* Total CPU Cycles - reset each frame  */
+  u32  TStates;                     /* Total CPU Cycles - reset 256 frames  */
   word EI_Delay;                    /* Enable Interrupt instruction delay   */
   u32  Reserved;                    /* For future use...                    */
 } Z80;

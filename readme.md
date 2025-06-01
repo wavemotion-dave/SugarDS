@@ -6,9 +6,10 @@ SugarDS is an Amstrad CPC 646 and 6128 Emulator for the DS/DSi
 
 Features :
 -----------------------
-* Loads .SNA and .DSK files up to 200K in length
 * Emulates CPC 464 (64K) and CPC 6128 (128K)
-* More - coming soon!
+* Loads .SNA and .DSK files up to 512K total length
+* Emulates CRTC Type 3 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll
+* Save / Load state so you can pick up where you left off
 
 Copyright :
 -----------------------
@@ -33,7 +34,27 @@ As far as I'm concerned, you can use this code in whatever way suits you provide
 continue to release the sources under the original copyright notice (see below) which
 appeared to be the intention of all the pioneers who came before me.
 
-## Original Copyright Notice
+BIOS Files :
+-----------------------
+Following in the footsteps of virtually all other Amstrad CPC emulators, the BIOS
+files are included in the emulator and don't need to be sourced by the user. This
+is according to a note from Cliff Lawson:
+
+"If you are the author of such an emulator then you don't need to write and ask me for 
+Amstrad's permission to distribute copies of the CPC ROMs. Amstrad's stance on this is
+that we are happy for you to redistribute copies of our copyrighted code as long as 
+a) copyright messages are not changed and 
+b) either in the program or the documentation you acknowledge that "Amstrad has kindly 
+given it's permission for it's copyrighted material to be redistributed but Amstrad 
+retains it's copyright."
+
+So the Amstrad CPC BIOS files are still copyrighted by Amstrad - in whatever form
+that may exist. If you are in an official capacity as the copyright owner of the 
+BIOS files and wish these stripped from the emulator, please contact me and I'm 
+happy to do so!  Otherwise - many thanks for the indirect permission to use them.
+
+
+## Original Copyright Notice for the Software (not BIOS files)
 ```
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -50,3 +71,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ```
 
+
+Configuration :
+-----------------------
+Coming soon - and there's LOTs to talk about!
+
+
+Version History :
+-----------------------
+Version 0.5 - 01-Jun-2025 by wavemotion-dave
+* First public beta. Enjoy!

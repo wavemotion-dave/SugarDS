@@ -121,18 +121,26 @@ const char szKeyName[MAX_KEY_OPTIONS][16] = {
   "KEYBOARD COLON",
   "KEYBOARD SEMI",
   "KEYBOARD ATSIGN",
-  "KEYBOARD SPACE",
-  "KEYBOARD RETURN", // 50
+  "KEYBOARD SLASH",
+  "KEYBOARD SPACE",  // 50
+  "KEYBOARD RETURN", // 51
   
   "KEYBOARD F1",
   "KEYBOARD F2",
   "KEYBOARD F3",
+  "KEYBOARD F4", // 55
   
+  "CURSOR UP",
+  "CURSOR DOWN",
+  "CURSOR LEFT",
+  "CURSOR RIGHT",
+  "CURSOR CLEAR", // 60
+    
   "PAN UP 16",
-  "PAN UP 24",  // 55
+  "PAN UP 24",
   "PAN UP 32",
   "PAN DN 16",
-  "PAN DN 24",
+  "PAN DN 24",   // 65
   "PAN DN 32",
 };
 
@@ -673,8 +681,8 @@ void MapPlayer1(void)
     myConfig.keymap[4]   = 4;    // NDS A Button mapped to Joystick Fire
 
     myConfig.keymap[5]   = 0;    // NDS B Button mapped to Joystick UP (jump)
-    myConfig.keymap[6]   = 49;   // NDS X Button mapped to SPACE
-    myConfig.keymap[7]   = 50;   // NDS Y Button mapped to RETURN
+    myConfig.keymap[6]   = 50;   // NDS X Button mapped to SPACE
+    myConfig.keymap[7]   = 51;   // NDS Y Button mapped to RETURN
     myConfig.keymap[8]   = 42;   // NDS START mapped to '0'
     myConfig.keymap[9]   = 33;   // NDS SELECT mapped to '1'
 }
@@ -689,7 +697,7 @@ void MapAllJoy(void)
     myConfig.keymap[5]   = 5;    // NDS B Button mapped to Joystick Fire 2
     myConfig.keymap[6]   = 6;    // NDS X Button mapped to Joystick Fire 3
     
-    myConfig.keymap[7]   = 50;   // NDS Y Button mapped to RETURN
+    myConfig.keymap[7]   = 51;   // NDS Y Button mapped to RETURN
     myConfig.keymap[8]   = 42;   // NDS START mapped to '0'
     myConfig.keymap[9]   = 33;   // NDS SELECT mapped to '1'
 }
@@ -700,8 +708,8 @@ void MapQAOP(void)
     myConfig.keymap[1]   =  7;   // A
     myConfig.keymap[2]   = 21;   // O
     myConfig.keymap[3]   = 22;   // P
-    myConfig.keymap[4]   = 49;   // Space
-    myConfig.keymap[5]   = 49;   // Space
+    myConfig.keymap[4]   = 50;   // Space
+    myConfig.keymap[5]   = 50;   // Space
     myConfig.keymap[6]   = 32;   // Z
     myConfig.keymap[7]   = 32;   // Z
     myConfig.keymap[8]   = 42;   // NDS START mapped to '0'
@@ -714,10 +722,10 @@ void MapZXSpace(void)
     myConfig.keymap[1]   = 20;   // N
     myConfig.keymap[2]   = 32;   // Z
     myConfig.keymap[3]   = 30;   // X
-    myConfig.keymap[4]   = 49;   // Space
-    myConfig.keymap[5]   = 49;   // Space
-    myConfig.keymap[6]   = 50;   // Return
-    myConfig.keymap[7]   = 50;   // Return
+    myConfig.keymap[4]   = 50;   // Space
+    myConfig.keymap[5]   = 50;   // Space
+    myConfig.keymap[6]   = 51;   // Return
+    myConfig.keymap[7]   = 51;   // Return
     myConfig.keymap[8]   = 42;   // NDS START mapped to '0'
     myConfig.keymap[9]   = 33;   // NDS SELECT mapped to '1'
 }
@@ -840,8 +848,9 @@ const struct options_t Option_Table[2][20] =
         {"SCREEN TOP",     {"+0","+1","+2","+3","+4","+5","+6","+7","+8","+9","+10"},           &myConfig.screenTop,         11},        
         {"NDS D-PAD",      {"NORMAL", "DIAGONALS", "SLIDE-N-GLIDE"},                            &myConfig.dpad,              3},
         {"GAME SPEED",     {"100%", "110%", "120%", "90%", "80%"},                              &myConfig.gameSpeed,         5},
-        {"R52  VSYC",      {"NORMAL", "FORGIVING", "LOOSE", "STRICT"},                          &myConfig.r52IntVsync,       4},
-        {"CPU ADJUST",     {"+0 (NONE)", "+4 CYCLES", "+8 CYCLES", "-4 CYCLES", "-8 CYCLES"},   &myConfig.cpuAdjust,         5},
+        {"R52  VSYNC",     {"NORMAL", "FORGIVING", "STRICT"},                                   &myConfig.r52IntVsync,       3},
+        {"CPU ADJUST",     {"+0 (NONE)", "+2 CYCLES", "+4 CYCLES", "+8 CYCLES", 
+                            "-8 CYCLES", "-4 CYCLES", "-2 CYCLES"},                             &myConfig.cpuAdjust,         7},
         {"SOUND DRV",      {"NORMAL", "WAVE DIRECT"},                                           &myConfig.waveDirect,        2},        
         {NULL,             {"",      ""},                                                       NULL,                        1},
     },
@@ -1011,11 +1020,11 @@ void SwapKeymap(void)
     {
         case 0: MapPlayer1();  DSPrint(10,17,0,(" JOYSTICK 1 ")); break;
         case 1: MapAllJoy();   DSPrint(10,17,0,("JOY FIRE 123")); break;
-        case 2: MapQAOP();     DSPrint(10,17,0,("   QAOP     ")); break;
-        case 3: MapZXSpace();  DSPrint(10,17,0,(" ZX SPACE   ")); break;
+        case 2: MapQAOP();     DSPrint(10,17,0,("    QAOP    ")); break;
+        case 3: MapZXSpace();  DSPrint(10,17,0,("  ZX SPACE  ")); break;
     }
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-    DSPrint(10,17,0,("           "));
+    DSPrint(10,17,0,("            "));
 }
 
 
@@ -1143,7 +1152,7 @@ void SugarDSChangeKeymap(void)
             ;
         WAITVBL
     }
-    swiWaitForVBlank();swiWaitForVBlank();
+    swiWaitForVBlank();
   }
   while (keysCurrent() & KEY_B);
 }
@@ -1488,6 +1497,8 @@ void ProcessBufferedKeys(void)
     static u8 dampen = 0;
     static u8 buf_held = 0;
 
+    if (BufferedKeysReadIdx == BufferedKeysWriteIdx) return;
+    
     if (++dampen >= next_dampen_time) // Roughly 50ms... experimentally good enough for all systems.
     {
         if (BufferedKeysReadIdx != BufferedKeysWriteIdx)
@@ -1513,6 +1524,7 @@ void ProcessBufferedKeys(void)
     else if (dampen >= (next_dampen_time/2))
     {
         buf_held = 0;
+        last_special_key = 0;
     }
     
     if (buf_held) {kbd_keys[kbd_keys_pressed++] = buf_held;}

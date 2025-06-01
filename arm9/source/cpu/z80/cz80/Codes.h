@@ -43,14 +43,14 @@ case JP_M:    if(CPU.AF.B.l&S_FLAG) { M_JP; } else CPU.PC.W+=2; break;
 // For the RET instructions, the Cycle[] table builds in assuming the return will NOT be
 // taken and so we must consume the additional cycles if the condition proves to be TRUE...
 // -----------------------------------------------------------------------------------------
-case RET_NZ:  if(!(CPU.AF.B.l&Z_FLAG)) { CPU.TStates+=4;M_RET; } break;
-case RET_NC:  if(!(CPU.AF.B.l&C_FLAG)) { CPU.TStates+=4;M_RET; } break;
-case RET_PO:  if(!(CPU.AF.B.l&P_FLAG)) { CPU.TStates+=4;M_RET; } break;
-case RET_P:   if(!(CPU.AF.B.l&S_FLAG)) { CPU.TStates+=4;M_RET; } break;
-case RET_Z:   if(CPU.AF.B.l&Z_FLAG)    { CPU.TStates+=4;M_RET; } break;
-case RET_C:   if(CPU.AF.B.l&C_FLAG)    { CPU.TStates+=4;M_RET; } break;
-case RET_PE:  if(CPU.AF.B.l&P_FLAG)    { CPU.TStates+=4;M_RET; } break;
-case RET_M:   if(CPU.AF.B.l&S_FLAG)    { CPU.TStates+=4;M_RET; } break;
+case RET_NZ:  if(!(CPU.AF.B.l&Z_FLAG)) { CPU.TStates+=8;M_RET; } break;
+case RET_NC:  if(!(CPU.AF.B.l&C_FLAG)) { CPU.TStates+=8;M_RET; } break;
+case RET_PO:  if(!(CPU.AF.B.l&P_FLAG)) { CPU.TStates+=8;M_RET; } break;
+case RET_P:   if(!(CPU.AF.B.l&S_FLAG)) { CPU.TStates+=8;M_RET; } break;
+case RET_Z:   if(CPU.AF.B.l&Z_FLAG)    { CPU.TStates+=8;M_RET; } break;
+case RET_C:   if(CPU.AF.B.l&C_FLAG)    { CPU.TStates+=8;M_RET; } break;
+case RET_PE:  if(CPU.AF.B.l&P_FLAG)    { CPU.TStates+=8;M_RET; } break;
+case RET_M:   if(CPU.AF.B.l&S_FLAG)    { CPU.TStates+=8;M_RET; } break;
 
 case CALL_NZ: if(CPU.AF.B.l&Z_FLAG) CPU.PC.W+=2; else { CPU.TStates+=8;M_CALL; } break;
 case CALL_NC: if(CPU.AF.B.l&C_FLAG) CPU.PC.W+=2; else { CPU.TStates+=8;M_CALL; } break;
