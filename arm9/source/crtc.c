@@ -62,7 +62,7 @@ u8  *cpc_ScreenPage      __attribute__((section(".dtcm"))) = 0;    // Screen Mem
 u16 escapeClause         __attribute__((section(".dtcm"))) = 0;    // To ensure we never let the DS get stuck 
 u32 cpc_scanline_counter __attribute__((section(".dtcm"))) = 0;    // This is where we are in the CPC graphics memory 
 
-int R52_INT_ON_VSYNC[]   __attribute__((section(".dtcm"))) = {20, 10, 32};
+int R52_INT_ON_VSYNC[]   __attribute__((section(".dtcm"))) = {28, 16, 32};
 u8 vSyncSeen             __attribute__((section(".dtcm"))) = 0;
 u8 display_disable_in    __attribute__((section(".dtcm"))) = 0;
 u8 b32K_Mode             __attribute__((section(".dtcm"))) = 0;
