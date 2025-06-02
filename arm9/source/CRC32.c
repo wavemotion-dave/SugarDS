@@ -113,6 +113,6 @@ u32 getFileCrc(const char* filename)
         }
         fclose(file2);
    } while (crc1 != crc2);
-
+   
     return ~crc1;
 }

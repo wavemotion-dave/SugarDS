@@ -541,7 +541,7 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                 break;
                 
             case 0x01:
-                CRTC[CRT_Idx] = Value & CRTC_MASKS[CRT_Idx];                
+                CRTC[CRT_Idx] = Value & CRTC_MASKS[CRT_Idx];
                 break;
         }
     }

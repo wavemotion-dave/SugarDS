@@ -142,7 +142,7 @@ extern int ucGameChoice;
 
 extern void LoadConfig(void);
 extern u8   showMessage(char *szCh1, char *szCh2);
-extern void sugarDSFindFiles(u8 bTapeOnly);
+extern void sugarDSFindFiles();
 extern void sugarDSChangeOptions(void);
 extern u8   sugarDSLoadFile(u8 bTapeOnly);
 extern void DSPrint(int iX,int iY,int iScr,char *szMessage);

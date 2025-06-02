@@ -119,6 +119,9 @@ Version History :
 
 Version 0.6 - 02-Jun-2025 by wavemotion-dave
 * Cartridge .CPR support up to 512K
+* Disk support is now up to 3.5" 80-track maximums (720K)
+* Multi-disk support added - you can swap disks mid-game via the menu
+* Cleanup of Z80 timings so more games run more correctly with fewer graphical glitching
 
 Version 0.5 - 01-Jun-2025 by wavemotion-dave
 * First public beta. Enjoy!

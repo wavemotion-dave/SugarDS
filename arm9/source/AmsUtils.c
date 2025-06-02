@@ -134,7 +134,7 @@ const char szKeyName[MAX_KEY_OPTIONS][16] = {
   "CURSOR DOWN",
   "CURSOR LEFT",
   "CURSOR RIGHT",
-  "CURSOR CLEAR", // 60
+  "CURSOR COPY", // 60
     
   "PAN UP 16",
   "PAN UP 24",
@@ -317,9 +317,9 @@ int Filescmp (const void *c1, const void *c2)
 }
 
 /*********************************************************************************
- * Find files (DSK/SNA) available - sort them for display.
+ * Find files (DSK/CPR/SNA) available - sort them for display.
  ********************************************************************************/
-void sugarDSFindFiles(u8 bTapeOnly)
+void sugarDSFindFiles(void)
 {
   u32 uNbFile;
   DIR *dir;
@@ -384,10 +384,10 @@ void sugarDSFindFiles(u8 bTapeOnly)
   }
 }
 
-// ----------------------------------------------------------------
-// Let the user select a new game (rom) file and load it up!
-// ----------------------------------------------------------------
-u8 sugarDS(u8 bTapeOnly)
+// ----------------------------------------------------------------------
+// Let the user select a new game (.dsk, .cpr, etc) file and load it up!
+// ----------------------------------------------------------------------
+u8 SugarDSChooseGame(u8 bDiskOnly)
 {
   bool bDone=false;
   u16 ucHaut=0x00, ucBas=0x00,ucSHaut=0x00, ucSBas=0x00, romSelected= 0, firstRomDisplay=0,nbRomPerPage, uNbRSPage;
@@ -398,7 +398,7 @@ u8 sugarDS(u8 bTapeOnly)
 
   BottomScreenOptions();
 
-  sugarDSFindFiles(bTapeOnly);
+  sugarDSFindFiles();
 
   ucGameChoice = -1;
 
@@ -551,14 +551,19 @@ u8 sugarDS(u8 bTapeOnly)
     {
       if (gpFic[ucGameAct].uType != DIRECTORY)
       {
-        bDone=true;
-        ucGameChoice = ucGameAct;
-        WAITVBL;
+          // If we are disk-only fetching, only allow a .dsk choice!
+          if (bDiskOnly && ((strcasecmp(strrchr(gpFic[ucGameAct].szName, '.'), ".dsk") != 0)))
+          {
+              continue;
+          }
+          bDone=true;
+          ucGameChoice = ucGameAct;
+          WAITVBL;
       }
       else
       {
         chdir(gpFic[ucGameAct].szName);
-        sugarDSFindFiles(bTapeOnly);
+        sugarDSFindFiles();
         ucGameAct = 0;
         nbRomPerPage = (countFiles>=14 ? 14 : countFiles);
         uNbRSPage = (countFiles>=5 ? 5 : countFiles);
@@ -722,6 +727,21 @@ void MapQAOP(void)
     myConfig.keymap[8]   = 42;   // NDS START mapped to '0'
     myConfig.keymap[9]   = 33;   // NDS SELECT mapped to '1'
 }
+
+void MapCursors(void)
+{
+    myConfig.keymap[0]   = 56;   // Cursor UP
+    myConfig.keymap[1]   = 57;   // Cursor DOWN
+    myConfig.keymap[2]   = 58;   // Cursor LEFT
+    myConfig.keymap[3]   = 59;   // Cursor RIGHT
+    myConfig.keymap[4]   = 50;   // Space
+    myConfig.keymap[5]   = 50;   // Space
+    myConfig.keymap[6]   = 60;   // Cursor Copy
+    myConfig.keymap[7]   = 32;   // Z
+    myConfig.keymap[8]   = 42;   // NDS START mapped to '0'
+    myConfig.keymap[9]   = 33;   // NDS SELECT mapped to '1'
+}
+
 
 void MapZXSpace(void)
 {
@@ -1022,13 +1042,15 @@ void DisplayKeymapName(u32 uY)
 u8 keyMapType = 0;
 void SwapKeymap(void)
 {
-    keyMapType = (keyMapType+1) % 4;
+    keyMapType = (keyMapType+1) % 5;
     switch (keyMapType)
     {
         case 0: MapPlayer1();  DSPrint(10,17,0,(" JOYSTICK 1 ")); break;
         case 1: MapAllJoy();   DSPrint(10,17,0,("JOY FIRE 123")); break;
         case 2: MapQAOP();     DSPrint(10,17,0,("    QAOP    ")); break;
         case 3: MapZXSpace();  DSPrint(10,17,0,("  ZX SPACE  ")); break;
+        case 4: MapCursors();  DSPrint(10,17,0,("  CURSORS   ")); break;
+        
     }
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;
     DSPrint(10,17,0,("            "));
@@ -1234,15 +1256,15 @@ void ReadFileCRCAndConfig(void)
     // ----------------------------------------------------------------------------------
     memset(ROM_Memory, 0xFF, MAX_ROM_SIZE);
 
-    // Grab the all-important file CRC - this also loads the file into ROM_Memory[]
-    getfile_crc(gpFic[ucGameChoice].szName);
-
     if (strstr(gpFic[ucGameChoice].szName, ".dsk") != 0) amstrad_mode = MODE_DSK;
     if (strstr(gpFic[ucGameChoice].szName, ".DSK") != 0) amstrad_mode = MODE_DSK;
     if (strstr(gpFic[ucGameChoice].szName, ".cpr") != 0) amstrad_mode = MODE_CPR;
     if (strstr(gpFic[ucGameChoice].szName, ".CPR") != 0) amstrad_mode = MODE_CPR;
     if (strstr(gpFic[ucGameChoice].szName, ".sna") != 0) amstrad_mode = MODE_SNA;
     if (strstr(gpFic[ucGameChoice].szName, ".SNA") != 0) amstrad_mode = MODE_SNA;
+
+    // Grab the all-important file CRC - this also loads the file into ROM_Memory[]
+    getfile_crc(gpFic[ucGameChoice].szName);
 
     FindConfig();    // Try to find keymap and config for this file...
 }
@@ -1286,7 +1308,7 @@ u32 ReadFileCarefully(char *filename, u8 *buf, u32 buf_size, u32 buf_offset)
             fclose(file2);
         }
    } while (crc1 != crc2); // If the file couldn't be read, file_size will be 0 and the CRCs will both be 0xFFFFFFFF
-
+   
    return fileSize;
 }
 
@@ -1343,7 +1365,7 @@ void sugarDSChangeOptions(void)
         ucA = 0x01;
         switch (ucY) {
           case 7 :      // LOAD GAME
-            sugarDS(0);
+            SugarDSChooseGame(false);
             BottomScreenOptions();
             if (ucGameChoice != -1)
             {
@@ -1673,7 +1695,19 @@ void getfile_crc(const char *filename)
 {
     DSPrint(11,13,6, "LOADING...");
 
-    file_crc = getFileCrc(filename);        // The CRC is used as a unique ID to save out High Scores and Configuration...
+    // ---------------------------------------------------------------
+    // The CRC is used as a unique ID to save out configuration data.
+    // ---------------------------------------------------------------
+    file_crc = getFileCrc(filename);
+    
+    // --------------------------------------------------------------------
+    // Since we are a disk-based system that might write back to the disk,
+    // we have to base the master file CRC on the name of the .dsk file.
+    // --------------------------------------------------------------------
+    if (amstrad_mode == MODE_DSK)
+    {
+        file_crc = getCRC32((u8*)filename, strlen(filename));
+    }
     
     DSPrint(11,13,6, "          ");
 }

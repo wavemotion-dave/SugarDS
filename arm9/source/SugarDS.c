@@ -667,6 +667,7 @@ void MiniMenuShow(bool bClearScreen, u8 sel)
     DSPrint(8,9+mini_menu_items,(sel==mini_menu_items)?2:0,  " LOAD   STATE  ");  mini_menu_items++;
     DSPrint(8,9+mini_menu_items,(sel==mini_menu_items)?2:0,  " CONFIG GAME   ");  mini_menu_items++;
     DSPrint(8,9+mini_menu_items,(sel==mini_menu_items)?2:0,  " DEFINE KEYS   ");  mini_menu_items++;
+    DSPrint(8,9+mini_menu_items,(sel==mini_menu_items)?2:0,  " SWAP   DISK   ");  mini_menu_items++;
     DSPrint(8,9+mini_menu_items,(sel==mini_menu_items)?2:0,  " EXIT   MENU   ");  mini_menu_items++;
 }
 
@@ -706,7 +707,8 @@ u8 MiniMenu(void)
             else if (menuSelection == 3) retVal = MENU_CHOICE_LOAD_GAME;
             else if (menuSelection == 4) retVal = MENU_CHOICE_CONFIG_GAME;
             else if (menuSelection == 5) retVal = MENU_CHOICE_DEFINE_KEYS;
-            else if (menuSelection == 6) retVal = MENU_CHOICE_NONE;
+            else if (menuSelection == 6) retVal = MENU_CHOICE_SWAP_DISK;
+            else if (menuSelection == 7) retVal = MENU_CHOICE_NONE;
             else retVal = MENU_CHOICE_NONE;
             break;
         }
@@ -906,6 +908,17 @@ u8 __attribute__((noinline)) handle_meta_key(u8 meta_key)
         case MENU_CHOICE_DEFINE_KEYS:
             SoundPause();
             SugarDSChangeKeymap();
+            BottomScreenKeyboard();
+            SoundUnPause();
+            break;
+        case MENU_CHOICE_SWAP_DISK:
+            SoundPause();
+            SugarDSChooseGame(true);
+            if (ucGameChoice != -1)
+            {
+                // Load in disk but do not re-read config file nor re-compute CRC32
+                DiskInsert(gpFic[ucGameChoice].szName, true);
+            }
             BottomScreenKeyboard();
             SoundUnPause();
             break;
@@ -1423,7 +1436,7 @@ void SugarDSInit(void)
   BottomScreenOptions();
 
   //  Find the files
-  sugarDSFindFiles(0);
+  sugarDSFindFiles();
 }
 
 void BottomScreenOptions(void)

@@ -32,9 +32,9 @@ extern u32 border_color;
 #define MENU_CHOICE_END_GAME    0x02
 #define MENU_CHOICE_SAVE_GAME   0x03
 #define MENU_CHOICE_LOAD_GAME   0x04
-#define MENU_CHOICE_HI_SCORE    0x05
-#define MENU_CHOICE_DEFINE_KEYS 0x06
-#define MENU_CHOICE_CONFIG_GAME 0x07
+#define MENU_CHOICE_DEFINE_KEYS 0x05
+#define MENU_CHOICE_CONFIG_GAME 0x06
+#define MENU_CHOICE_SWAP_DISK   0x07
 #define MENU_CHOICE_MENU        0xFF        // Special brings up a mini-menu of choices
 
 // ------------------------------------------------------------------------------
@@ -211,6 +211,7 @@ extern int bg0, bg1, bg0b, bg1b;
 extern u32 last_file_size;
 extern u8 b32K_Mode;
 
+extern u8 SugarDSChooseGame(u8 bDiskOnly);
 extern void CartLoad(void);
 extern void ConfigureMemory(void);
 extern void compute_pre_inked(u8 mode);
