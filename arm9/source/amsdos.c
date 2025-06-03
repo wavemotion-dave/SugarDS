@@ -60,15 +60,8 @@ static BOOL AMSDOS_HasDirectory(int nDrive, const AMSDOS_FORMAT *pFormat);
 static BOOL AMSDOS_GetSector(int nDrive, int nTrack, int nSector, unsigned char *pBuffer);
 static BOOL AMSDOS_DoesFileQualifyForAutorun(const AMSDOS_FORMAT *pFormat, const amsdos_directory_entry *entry, unsigned char *pBuffer);
 static BOOL AMSDOS_IsBootable(int nDrive, unsigned char *pBuffer);
-static int AMSDOS_GetPrefixPriority(const char *pFilename);
+static int AMSDOS_GetExtPriority(const char *pFilename);
 static int AMSDOS_GetFilenamePriority(const char *pFilename);
-
-// from fdc.c
-extern int R,C,H,N;
-extern int IndexSecteur;
-extern unsigned char *ImgDsk;
-extern CPCEMUTrack CurrTrackDatasDSK;
-extern int PosData;
 
 /*--------------------------------------------------------------------------------------*/
 /* calculate checksum as AMSDOS would for the first 66 bytes of a datablock */
@@ -169,7 +162,6 @@ static BOOL AMSDOS_CheckValidFilename(const amsdos_directory_entry *entry)
         {
             if (!AMSDOS_IsValidFilenameCharacter(ch))
             {
-                debug[0] = 1111;
                 return FALSE;
             }
         }
@@ -179,7 +171,6 @@ static BOOL AMSDOS_CheckValidFilename(const amsdos_directory_entry *entry)
     /* filename with space as first character?*/
     if (nPos==1)
     {
-        debug[0] = 2222;
         return FALSE;
     }
 
@@ -202,7 +193,6 @@ static BOOL AMSDOS_CheckValidFilename(const amsdos_directory_entry *entry)
 
         if (nPos!=8)
         {
-            debug[0] = 3333;
             return FALSE;
         }
     }
@@ -221,7 +211,6 @@ static BOOL AMSDOS_CheckValidFilename(const amsdos_directory_entry *entry)
         {
             if (!AMSDOS_IsValidFilenameCharacter(ch))
             {
-                debug[0] = 4444;
                 return FALSE;
             }
         }
@@ -247,7 +236,6 @@ static BOOL AMSDOS_CheckValidFilename(const amsdos_directory_entry *entry)
         position will not be at the end of the filename part! */
         if (nPos!=3)
         {
-            debug[0] = 5555;
             return FALSE;
         }
     }
@@ -427,11 +415,11 @@ int AMSDOS_GetSectorIndex(int nDrive, int nTrack, int nID)
     ChangeCurrTrack(nTrack);
 
     do {
-        if ((N == 0x02) && (R == nID) && (H==0)) {
-            return IndexSecteur;
+        if ((fdc.N == 0x02) && (fdc.R == nID) && (fdc.H==0)) {
+            return fdc.sector_index;
         }
         ReadCHRN();
-    } while(IndexSecteur != 0);
+    } while(fdc.sector_index != 0);
 
     return -1;
 }
@@ -447,14 +435,14 @@ BOOL AMSDOS_GetSector(int nDrive, int nTrack, int nSector, unsigned char *pBuffe
 
     if (nSectorIndex==-1) return FALSE;
 
-    TailleSect = 128 << CurrTrackDatasDSK.Sect[ nSectorIndex ].N;
+    TailleSect = 128 << fdc.CurrTrackDatasDSK.Sect[ nSectorIndex ].N;
     if ( ! newPos )
-        cntdata = ( nSectorIndex * CurrTrackDatasDSK.SectSize ) << 8;
+        cntdata = ( nSectorIndex * fdc.CurrTrackDatasDSK.SectSize ) << 8;
     else
         cntdata = newPos;
 
     ChangeCurrTrack(nTrack);
-    memcpy(pBuffer, ImgDsk + cntdata + PosData, TailleSect);
+    memcpy(pBuffer, fdc.ImgDsk + cntdata + fdc.PosData, TailleSect);
     return TRUE;
 }
 
@@ -511,15 +499,16 @@ BOOL AMSDOS_DoesFileQualifyForAutorun(const AMSDOS_FORMAT *pFormat, const amsdos
 
     /* read sector into buffer */
     if (!AMSDOS_GetSector(nDrive,TSS.nTrack, TSS.nSector, pBuffer))
+    {
         return FALSE;
+    }
 
     /* has a header? */
 
-    /* it is possible to run BASIC programs written as ASCII, but we'll ignore these
-    for now as these are unlikely */
+    /* it is possible to run BASIC programs written as ASCII. We accept those... */
     if (!AMSDOS_HasAmsdosHeader((const unsigned char *)pBuffer))
     {
-        return FALSE;
+        return TRUE;
     }
     else
     {
@@ -529,9 +518,11 @@ BOOL AMSDOS_DoesFileQualifyForAutorun(const AMSDOS_FORMAT *pFormat, const amsdos
         nLength = (pHeader->LogicalLengthLow&0x0ff) |
             ((pHeader->LogicalLengthHigh&0x0ff)<<8);
 
-        /* if header reports length as 0, then there is nothing to run. */
+        /* if header reports length as 0, just accept it... no further check */
         if (nLength==0)
-            return FALSE;
+        {
+            return TRUE;
+        }
 
         /* check additional parameters based on file type */
         switch (pHeader->FileType&0x0fe)
@@ -559,10 +550,14 @@ BOOL AMSDOS_DoesFileQualifyForAutorun(const AMSDOS_FORMAT *pFormat, const amsdos
                 nLoadAddress = ((pHeader->LocationLow&0x0ff) | ((pHeader->LocationHigh & 0x0ff)<<8));
 
                 if (nExecutionAddress<nLoadAddress)
+                {
                     return FALSE;
+                }
 
                 if ((nExecutionAddress-nLoadAddress)>nLength)
+                {
                     return FALSE;
+                }
             }
             break;
 
@@ -580,7 +575,7 @@ BOOL AMSDOS_DoesFileQualifyForAutorun(const AMSDOS_FORMAT *pFormat, const amsdos
 /* If no prefix is given, then AMSDOS will try to match a file using
 3 default prefixes '   ','BAS','BIN'. Give these prefixes a higher priority
 compared to other prefixes */
-int AMSDOS_GetPrefixPriority(const char *pFilename)
+int AMSDOS_GetExtPriority(const char *pFilename)
 {
     int i;
     int nLength = strlen(pFilename);
@@ -603,6 +598,10 @@ int AMSDOS_GetPrefixPriority(const char *pFilename)
         /* default prefixes in order searched for by AMSDOS */
         /* assign higher priority to order prefixes are used */
         if (strcmp(pExtension,"   ")==0)
+            return 3;
+        if (strcmp(pExtension,"  ")==0)
+            return 3;
+        if (strcmp(pExtension," ")==0)
             return 3;
         if (strcmp(pExtension,"BAS")==0)
             return 2;
@@ -642,14 +641,19 @@ int AMSDOS_GetFilenamePriority(const char *pFilename)
         return 6;
     if (strncmp(pFilename,"MENU",nFilenameLength)==0)
         return 1;
+    if (strncmp(pFilename,"LOADER",nFilenameLength)==0)
+        return 1;
 
     /* Now check to see if this is part of our master .dsk filename */
     extern char initial_file[];
     char justFilename[16];
-    strncpy(justFilename, pFilename, nFilenameLength);
-    justFilename[nFilenameLength] = 0;
-    if (strcasestr(initial_file, justFilename)!=0)
-        return 7;
+    if (nFilenameLength >= 3)
+    {
+        strncpy(justFilename, pFilename, nFilenameLength);
+        justFilename[nFilenameLength] = 0;
+        if (strcasestr(initial_file, justFilename)!=0)
+            return 7;
+    }
 
     return 0;
 }
@@ -706,7 +710,6 @@ int AMSDOS_ProcessFiles(const AMSDOS_FORMAT *pFormat,unsigned char *pBuffer, cha
     if (nValidEntries==0)
     {
         /* can't find a file to run, so tell the user */
-        debug[5] = 3333;
         return AUTORUN_NO_FILES_QUALIFY;
     }
 
@@ -730,9 +733,15 @@ int AMSDOS_ProcessFiles(const AMSDOS_FORMAT *pFormat,unsigned char *pBuffer, cha
 
             AMSDOS_GetFilenameFromEntry(entry, Filename);
 
-            nPriority += AMSDOS_GetPrefixPriority(Filename);
+            nPriority += AMSDOS_GetExtPriority(Filename);
             nPriority += (AMSDOS_GetFilenamePriority(Filename)*3);
 
+#if 0
+            static int zzz=0;
+            char tmp[33];
+            sprintf(tmp, "%3d %s", nPriority, Filename);
+            DSPrint(0, zzz++, 6, tmp);
+#endif            
             ValidEntries[i].nPriority = nPriority;
         }
 
@@ -743,7 +752,6 @@ int AMSDOS_ProcessFiles(const AMSDOS_FORMAT *pFormat,unsigned char *pBuffer, cha
         if there is then we can't autorun the disc :( */
         if (ValidEntries[0].nPriority==ValidEntries[1].nPriority)
         {
-            debug[5] = 1111;
             return AUTORUN_TOO_MANY_POSSIBILITIES;
         }
 
@@ -764,7 +772,6 @@ int AMSDOS_ProcessFiles(const AMSDOS_FORMAT *pFormat,unsigned char *pBuffer, cha
         return AUTORUN_OK;
     }
 
-    debug[5] = 2222;
     return AUTORUN_NO_FILES_QUALIFY;
 }
 

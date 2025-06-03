@@ -58,21 +58,21 @@ void    ReadDiskMem(u8 *rom, u32 romsize);
 typedef struct
 {
     char  debut[ 0x30 ]; // "MV - CPCEMU Disk-File\r\nDisk-Info\r\n"
-    UBYTE NbTracks;
-    UBYTE NbHeads;
-    SHORT DataSize; // 0x1300 = 256 + ( 512 * nbsecteurs )
+    UBYTE NumTracks;
+    UBYTE NumHeads;
+    SHORT DataSize; // 0x1300 = 256 + ( 512 * NumberOfSectors )
     UBYTE Unused[ 0xCC ];
-} CPCEMUEnt;
+} CPCEMUHeader;
 
 typedef struct
 {
     UBYTE C;                // track
-    UBYTE H;                // head
-    UBYTE R;                // sect
-    UBYTE N;                // size
-    UBYTE ST1;              // Valeur ST1
-    UBYTE ST2;              // Valeur ST2
-    SHORT SectSize;         // Taille du secteur en octets
+    UBYTE H;                // head (side)
+    UBYTE R;                // sect ID
+    UBYTE N;                // sect size
+    UBYTE ST1;              // FDC Status ST1
+    UBYTE ST2;              // FDC Status ST2
+    SHORT SectSize;         // Size of sectors
 } CPCEMUSect;
 
 typedef struct
@@ -84,9 +84,51 @@ typedef struct
     UBYTE       SectSize; // 2
     UBYTE       NbSect;   // 9
     UBYTE       Gap3;     // 0x4E
-    UBYTE       OctRemp;  // 0xE5
+    UBYTE       PadByte;  // 0xE5
     CPCEMUSect  Sect[ 29 ];
 } CPCEMUTrack;
 #pragma pack()
+
+
+typedef struct
+{
+    int disk_size;
+    int state;
+    CPCEMUTrack CurrTrackDatasDSK;
+    CPCEMUHeader Infos;
+    int FlagWrite;
+    int Image;
+    int PosData;
+    int DriveBusy;
+    int Status;
+    int ST0;
+    int ST1;
+    int ST2;
+    int ST3;
+    int C;
+    int H;
+    int R;
+    int N;
+    int Drive;
+    int EOT;
+    int Busy;
+    int Inter;
+    int Motor;
+    int sector_index;
+    int function;
+	int rd_sect;
+    int rd_cntdata;
+    int rd_newPos;
+	int rd_SectorSize;
+    int wr_sect;
+    int wr_cntdata;
+    int wr_newPos;
+	int wr_SectorSize;
+    int dirty_counter;
+    u8  bDirtyFlags[256]; // one flag for each of 256 possible 4K SD flash blocks (1024K max)
+    u8 *ImgDsk;
+} FDC_t;
+
+extern FDC_t fdc;
 
 #endif // FDC_H

@@ -22,10 +22,10 @@
 #include "cpu/z80/Z80_interface.h"
 #include "AmsUtils.h"
 #include "printf.h"
-
+#include "fdc.h"
 #include "lzav.h"
 
-#define SUGAR_SAVE_VER   0x0001       // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
+#define SUGAR_SAVE_VER   0x0002       // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
 
 /*********************************************************************************
  * Save the current state - save everything we need to a single .sav file.
@@ -74,6 +74,9 @@ void amstradSaveState()
 
     // Write AY Chip info
     if (retVal) retVal = fwrite(&myAY, sizeof(myAY), 1, handle);
+    
+    // Write the FDC floppy struct
+    if (retVal) retVal = fwrite(&fdc, sizeof(fdc), 1, handle);
     
     // Write CRTC info
     if (retVal) retVal = fwrite(CRTC,  sizeof(CRTC), 1, handle);
@@ -172,7 +175,7 @@ void amstradLoadState()
 
         if (save_ver == SUGAR_SAVE_VER)
         {
-            // Write Last Directory Path / Disk File
+            // Read Last Directory Path / Disk File
             if (retVal) retVal = fread(last_path, sizeof(last_path), 1, handle);
             if (retVal) retVal = fread(last_file, sizeof(last_file), 1, handle);
             
@@ -185,13 +188,17 @@ void amstradLoadState()
                 DiskInsert(last_file, true);
             }
 
-            // Write CZ80 CPU
+            // Read CZ80 CPU
             if (retVal) retVal = fread(&CPU, sizeof(CPU), 1, handle);
 
-            // Write AY Chip info
+            // Read AY Chip info
             if (retVal) retVal = fread(&myAY, sizeof(myAY), 1, handle);
             
-            // Write CRTC info
+            // Read the FDC floppy struct
+            if (retVal) retVal = fread(&fdc, sizeof(fdc), 1, handle);
+            if (fdc.ImgDsk) fdc.ImgDsk = DISK_IMAGE_BUFFER;
+            
+            // Read CRTC info
             if (retVal) retVal = fread(CRTC,  sizeof(CRTC), 1, handle);
             if (retVal) retVal = fread(&CRT_Idx, sizeof(CRT_Idx), 1, handle);
             

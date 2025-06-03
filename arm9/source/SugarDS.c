@@ -538,6 +538,40 @@ void DisplayStatusLine(bool bForce)
         }
     }
     
+    if (fdc.dirty_counter)
+    {
+        // Persist the the disk image to the SD card
+        if (--fdc.dirty_counter == 0)
+        {
+            DSPrint(19, 0, 6, "DISK WRITE");
+            chdir(last_path);
+            FILE *outfile = fopen(last_file, "rb+");
+            if (outfile)
+            {
+                // Always skip over the 256 byte .dsk header... that never changes
+                fseek(outfile, sizeof(fdc.Infos), SEEK_SET);
+                
+                // And write out all changed 4K blocks
+                for (u8 i=0; i < ((fdc.disk_size / 4096)+1); i++)
+                {
+                    if (fdc.bDirtyFlags[i])
+                    {
+                        fwrite(DISK_IMAGE_BUFFER + (4096 * i), 1024, 1, outfile);
+                        fdc.bDirtyFlags[i] = 0;
+                    }
+                    else
+                    {
+                        fseek(outfile, 4096, SEEK_CUR);  // Skip to the next 4K block
+                    }
+                }
+                
+                fflush(outfile);
+                fclose(outfile);
+            }
+            DSPrint(19, 0, 6, "          ");
+        }
+    }
+    
     if (last_special_key)
     {
         if (last_special_key == KBD_KEY_SFT)
@@ -1017,7 +1051,9 @@ void SugarDS_main(void)
         {
                  if (CRTC[1] <= 34)  myConfig.scaleX = 320;
             else if (CRTC[1] <= 37)  myConfig.scaleX = 288;
-            else  myConfig.scaleX = 256;
+            else if (CRTC[1] <= 41)  myConfig.scaleX = 256;
+            else if (CRTC[1] <= 43)  myConfig.scaleX = 224;
+            else  myConfig.scaleX = 200;
         }
         
         // -------------------------------------------------------------

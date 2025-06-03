@@ -30,14 +30,8 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include  <nds.h>
+#include "SugarDS.h"
 #include "fdc.h"
-
-extern u32 debug[];
-extern u8 floppy_sound, floppy_action;
-
-// General Disk Defines
-#define SECTSIZE        512
-#define NBSECT          9
 
 // Status Bits
 #define STATUS_CB       0x10
@@ -60,36 +54,9 @@ extern u8 floppy_sound, floppy_action;
 #define ST3_T0          0x10
 #define ST3_RY          0x20
 
-u8 *ImgDsk=NULL;
-int LongFic;
-
 typedef int ( * pfctFDC )( int );
 
-static int Nothing( int );
-
-static pfctFDC fct = Nothing;
-static int state;
-CPCEMUTrack CurrTrackDatasDSK;
-static CPCEMUEnt Infos;
-static int FlagWrite;
-int Image;
-int PosData;
-int DriveBusy;
-static int Status;
-static int ST0;
-static int ST1;
-static int ST2;
-static int ST3;
-int C;
-int H;
-int R;
-int N;
-static int Drive;
-static int EOT;
-static int Busy;
-static int Inter;
-static int Motor;
-int IndexSecteur = 0;
+FDC_t fdc;
 
 u8 DISK_IMAGE_BUFFER[1024*1024]; // Big enough for any 3" or 3.5" disk format
 
@@ -102,110 +69,129 @@ int SeekSector( int newSect, int * pos )
     floppy_action = 0;
     
 	* pos = 0;
-	for ( i = 0; i < CurrTrackDatasDSK.NbSect; i++ )
-	if ( CurrTrackDatasDSK.Sect[ i ].R == newSect )
-	return( ( UBYTE )i );
-	else
-	* pos += CurrTrackDatasDSK.Sect[ i ].SectSize;
+	for ( i = 0; i < fdc.CurrTrackDatasDSK.NbSect; i++ )
+    {
+        if ( fdc.CurrTrackDatasDSK.Sect[ i ].R == newSect )
+        {
+            return( ( UBYTE )i );
+        }
+        else
+        {
+            * pos += fdc.CurrTrackDatasDSK.Sect[ i ].SectSize;
+        }
+    }
 
-	ST0 |= ST0_IC1;
-	ST1 |= ST1_ND;
+	fdc.ST0 |= ST0_IC1;
+	fdc.ST1 |= ST1_ND;
 	return( -1 );
 }
 
 
 void ReadCHRN( void )
 {
-	C = CurrTrackDatasDSK.Sect[ IndexSecteur ].C;
-	H = CurrTrackDatasDSK.Sect[ IndexSecteur ].H;
-	R = CurrTrackDatasDSK.Sect[ IndexSecteur ].R;
-	N = CurrTrackDatasDSK.Sect[ IndexSecteur ].N;
-	if ( ++IndexSecteur == CurrTrackDatasDSK.NbSect )
-	IndexSecteur = 0;
+	fdc.C = fdc.CurrTrackDatasDSK.Sect[ fdc.sector_index ].C;
+	fdc.H = fdc.CurrTrackDatasDSK.Sect[ fdc.sector_index ].H;
+	fdc.R = fdc.CurrTrackDatasDSK.Sect[ fdc.sector_index ].R;
+	fdc.N = fdc.CurrTrackDatasDSK.Sect[ fdc.sector_index ].N;
+	if ( ++fdc.sector_index == fdc.CurrTrackDatasDSK.NbSect )
+    {
+        fdc.sector_index = 0;
+    }
 }
 
 
 static void SetST0( void )
 {
-	ST0 = 0; // drive A
-	if ( ! Motor || Drive || ! Image )
-	ST0 |= ST0_IC1 | ST0_NR;
+	fdc.ST0 = 0; // drive A
+	if ( ! fdc.Motor || fdc.Drive || ! fdc.Image )
+    {
+        fdc.ST0 |= ST0_IC1 | ST0_NR;
+    }
 
-	ST1 = 0;
-	ST2 = 0;
+	fdc.ST1 = 0;
+	fdc.ST2 = 0;
 }
 
 static int Nothing( int val )
 {
-	Status &= ~STATUS_CB & ~STATUS_DIO;
-	state = 0;
-	ST0 = ST0_IC2;
-	return( Status );
+	fdc.Status &= ~STATUS_CB & ~STATUS_DIO;
+	fdc.state = 0;
+	fdc.ST0 = ST0_IC2;
+	return( fdc.Status );
 }
 
 static int ReadST0( int val )
 {
-	if ( ! Inter )
-	ST0 = ST0_IC2;
+	if ( ! fdc.Inter )
+    {
+        fdc.ST0 = ST0_IC2;
+    }
 	else
 	{
-		Inter = 0;
-		if ( Busy )
+		fdc.Inter = 0;
+		if ( fdc.Busy )
 		{
-			ST0 = ST0_SE;
-			Busy = 0;
+			fdc.ST0 = ST0_SE;
+			fdc.Busy = 0;
 		}
-		else
-		ST0 |= ST0_IC1 | ST0_IC2;
+		else fdc.ST0 |= ST0_IC1 | ST0_IC2;
 	}
-	if ( Motor && Image && ! Drive )
-	ST0 &= ~ST0_NR;
+	if ( fdc.Motor && fdc.Image && ! fdc.Drive )
+    {
+        fdc.ST0 &= ~ST0_NR;
+    }
 	else
 	{
-		ST0 |= ST0_NR;
-		if ( ! Image )
-		ST0 |= ( ST0_IC1 | ST0_IC2 );
+		fdc.ST0 |= ST0_NR;
+		if ( ! fdc.Image )
+		fdc.ST0 |= ( ST0_IC1 | ST0_IC2 );
 	}
 
-	if ( state++ == 1 )
+	if ( fdc.state++ == 1 )
 	{
-		Status |= STATUS_DIO;
-		return( ST0 );
+		fdc.Status |= STATUS_DIO;
+		return( fdc.ST0 );
 	}
 
-	state = val = 0;
-	Status &= ~STATUS_CB & ~STATUS_DIO;
-	ST0 &= ~ST0_IC1 & ~ST0_IC2;
-	ST1 &= ~ST1_ND;
-	return( C );
+	fdc.state = val = 0;
+	fdc.Status &= ~STATUS_CB & ~STATUS_DIO;
+	fdc.ST0 &= ~ST0_IC1 & ~ST0_IC2;
+	fdc.ST1 &= ~ST1_ND;
+	return( fdc.C );
 }
 
 static int ReadST3( int val )
 {
-	if ( state++ == 1 )
+	if ( fdc.state++ == 1 )
 	{
-		Drive = val;
-		Status |= STATUS_DIO;
+		fdc.Drive = val & 3;
+		fdc.Status |= STATUS_DIO;
 		return( 0 );
 	}
-	state = 0;
-	Status &= ~STATUS_CB & ~STATUS_DIO;
-	if ( Motor && ! Drive )
-	ST3 |= ST3_RY;
+	fdc.state = 0;
+	fdc.Status &= ~STATUS_CB & ~STATUS_DIO;
+	if ( fdc.Motor && ! fdc.Drive )
+    {
+        fdc.ST3 |= ST3_RY;
+    }
 	else
-	ST3 &= ~ST3_RY;
+    {
+        fdc.ST3 &= ~ST3_RY;
+    }
 
-	return( ST3 );
+	return( fdc.ST3 );
 }
 
 
 static int Specify( int val )
 {
-	if ( state++ == 1 )
-	return( 0 );
+	if ( fdc.state++ == 1 )
+    {
+        return( 0 );
+    }
 
-	state = val = 0;
-	Status &= ~STATUS_CB & ~STATUS_DIO;
+	fdc.state = val = 0;
+	fdc.Status &= ~STATUS_CB & ~STATUS_DIO;
 	return( 0 );
 }
 
@@ -213,36 +199,37 @@ static int Specify( int val )
 
 static int ReadID( int val )
 {
-	switch( state++ )  {
+	switch( fdc.state++ )
+    {
 	case 1 :
-		Drive = val;
-		Status |= STATUS_DIO;
-		Inter = 1;
+		fdc.Drive = val & 3;
+		fdc.Status |= STATUS_DIO;
+		fdc.Inter = 1;
 		break;
 
 	case 2 :
-		return( 0 /*ST0*/ );
+		return( fdc.ST0 );
 
 	case 3 :
-		return( ST1 );
+		return( fdc.ST1 );
 
 	case 4 :
-		return( ST2 );
+		return( fdc.ST2 );
 
 	case 5 :
 		ReadCHRN();
-		return( C );
+		return( fdc.C );
 
 	case 6 :
-		return( H );
+		return( fdc.H );
 
 	case 7 :
-		return( R );
+		return( fdc.R );
 
 	case 8 :
-		state = 0;
-		Status &= ~STATUS_CB & ~STATUS_DIO;
-		return( N );
+		fdc.state = 0;
+		fdc.Status &= ~STATUS_CB & ~STATUS_DIO;
+		return( fdc.N );
 	}
 	return( 0 );
 }
@@ -254,15 +241,15 @@ static int FormatTrack( int val )
     floppy_sound = 2;
     floppy_action = 1;
 
-	state = val = 0;
-	Status &= ~STATUS_CB & ~STATUS_DIO;
+	fdc.state = val = 0;
+	fdc.Status &= ~STATUS_CB & ~STATUS_DIO;
 	return( 0 );
 }
 
 
 static int Scan( int val )
 {
-	state = val = 0;
+	fdc.state = val = 0;
 	return( 0 );
 }
 
@@ -271,50 +258,57 @@ void ChangeCurrTrack( int newTrack )
 	ULONG Pos = 0;
 	int t, s;
 
-	if ( ! Infos.DataSize )
-	{
-		memcpy( &CurrTrackDatasDSK, ImgDsk, sizeof( CurrTrackDatasDSK ) );
+    // If we are double-sided... handle the math for tracks
+    newTrack = (newTrack * fdc.Infos.NumHeads) + fdc.H;
+    
+	if (!fdc.Infos.DataSize) // If no Data Size set... Extended Disk
+    {
+		memcpy( &fdc.CurrTrackDatasDSK, fdc.ImgDsk, sizeof( fdc.CurrTrackDatasDSK ) );
 		for ( t = 0; t < newTrack; t++ )
 		{
-			for ( s = 0; s < CurrTrackDatasDSK.NbSect; s++ )
-			Pos += CurrTrackDatasDSK.Sect[ s ].SectSize;
+			for ( s = 0; s < fdc.CurrTrackDatasDSK.NbSect; s++ )
+            {
+                Pos += fdc.CurrTrackDatasDSK.Sect[ s ].SectSize;
+            }
 
-			Pos += sizeof( CurrTrackDatasDSK );
-			memcpy( &CurrTrackDatasDSK, &ImgDsk[ Pos ], sizeof( CurrTrackDatasDSK ) );
+			Pos += sizeof( fdc.CurrTrackDatasDSK );
+			memcpy( &fdc.CurrTrackDatasDSK, &fdc.ImgDsk[ Pos ], sizeof( fdc.CurrTrackDatasDSK ) );
 		}
 	}
 	else
-	Pos += Infos.DataSize * newTrack;
+    {
+        Pos += fdc.Infos.DataSize * newTrack;
+    }
 
-	memcpy( &CurrTrackDatasDSK, &ImgDsk[ Pos ], sizeof( CurrTrackDatasDSK ) );
+	memcpy( &fdc.CurrTrackDatasDSK, &fdc.ImgDsk[ Pos ], sizeof( fdc.CurrTrackDatasDSK ) );
 
-	PosData = Pos + sizeof( CurrTrackDatasDSK );
-	IndexSecteur = 0;
+	fdc.PosData = Pos + sizeof( fdc.CurrTrackDatasDSK );
+	fdc.sector_index = 0;
 	ReadCHRN();
 
 	if ( ! newTrack )
-	ST3 |= ST3_T0;
+	  fdc.ST3 |= ST3_T0;
 	else
-	ST3 &= ~ST3_T0;
+	  fdc.ST3 &= ~ST3_T0;
 }
 
 
 static int MoveTrack( int val )
 {
-	switch( state++ )
+	switch( fdc.state++ )
 	{
 	case 1 :
-		Drive = val;
+		fdc.Drive = val & 3;
 		SetST0();            
-		Status |= STATUS_NDM;
+		fdc.Status |= STATUS_NDM;
 		break;
 
 	case 2 :
-		ChangeCurrTrack( C = val );
-		state = 0;
-		Status &= ~STATUS_CB & ~STATUS_DIO & ~STATUS_NDM;
-		Busy = 1;
-		Inter = 1;
+		ChangeCurrTrack( fdc.C = val );
+		fdc.state = 0;
+		fdc.Status &= ~STATUS_CB & ~STATUS_DIO & ~STATUS_NDM;
+		fdc.Busy = 1;
+		fdc.Inter = 1;
 		break;
 	}
 	return( 0 );
@@ -323,331 +317,377 @@ static int MoveTrack( int val )
 
 static int MoveTrack0( int val )
 {
-	Drive = val;
-	ChangeCurrTrack( C = 0 );
-	state = 0;
-	Status &= ~STATUS_CB & ~STATUS_DIO & ~STATUS_NDM;
+	fdc.Drive = val & 3;
+	ChangeCurrTrack( fdc.C = 0 );
+	fdc.state = 0;
+	fdc.Status &= ~STATUS_CB & ~STATUS_DIO & ~STATUS_NDM;
 	SetST0();
-	Busy = 1;
-	Inter = 1;
+	fdc.Busy = 1;
+	fdc.Inter = 1;
 	return( 0 );
 }
 
 static int ReadData( int val )
 {
-	static int sect = 0, cntdata = 0, newPos;
-	static signed int TailleSect;
-
-	switch( state++ )
+	switch( fdc.state++ )
 	{
 	case 1 :
-		Drive = val;
+		fdc.Drive = val & 3;
 		SetST0();            
 		break;
 
 	case 2 :
-		C = val;
+		fdc.C = val;
 		break;
 
 	case 3 :
-		H = val;
+		fdc.H = val;
 		break;
 
 	case 4 :
-		R = val;
+		fdc.R = val;
 		break;
 
 	case 5 :
-		N = val;
+		fdc.N = val;
 		break;
 
 	case 6 :
-		EOT = val;
+		fdc.EOT = val;
 		break;
 
 	case 7 :
-		sect = SeekSector( R, &newPos );
-		if (sect != -1) {
-			TailleSect = 128 << CurrTrackDatasDSK.Sect[ sect ].N;
-			if ( ! newPos )
-			cntdata = ( sect * CurrTrackDatasDSK.SectSize ) << 8;
+		fdc.rd_sect = SeekSector( fdc.R, &fdc.rd_newPos );
+		if (fdc.rd_sect != -1) {
+			fdc.rd_SectorSize = 128 << fdc.CurrTrackDatasDSK.Sect[ fdc.rd_sect ].N;
+			if ( ! fdc.rd_newPos )
+			  fdc.rd_cntdata = ( fdc.rd_sect * fdc.CurrTrackDatasDSK.SectSize ) << 8;
 			else
-			cntdata = newPos;
+			  fdc.rd_cntdata = fdc.rd_newPos;
 		}
 		break;
 
 	case 8 :
-		Status |= STATUS_DIO | STATUS_NDM;
+		fdc.Status |= STATUS_DIO | STATUS_NDM;
 		break;
 
 	case 9 :
-		if ( ! ( ST0 & ST0_IC1 ) )
+		if ( ! ( fdc.ST0 & ST0_IC1 ) )
 		{
-			if ( --TailleSect )
-			state--;
+			if ( --fdc.rd_SectorSize )
+            {
+                fdc.state--;
+            }
 			else
 			{
-				if ( R++ < EOT )
-				state = 7;
+				if ( fdc.R++ < fdc.EOT )
+				  fdc.state = 7;
 				else
-				Status &= ~STATUS_NDM;
+				  fdc.Status &= ~STATUS_NDM;
 			}
-			return( ImgDsk[ PosData + cntdata++ ] );
+			return( fdc.ImgDsk[ fdc.PosData + fdc.rd_cntdata++ ] );
 		}
-		Status &= ~STATUS_NDM;
+		fdc.Status &= ~STATUS_NDM;
 		return( 0 );
 
 	case 10 :
-		return( ST0 );
+		return( fdc.ST0 );
 
 	case 11 :
-		return( ST1 | ST1_EN );
+		return( fdc.ST1 | ST1_EN );
 
 	case 12 :
-		return( ST2 );
+		return( fdc.ST2 );
 
 	case 13 :
-		return( C );
+		return( fdc.C );
 
 	case 14 :
-		return( H );
+		return( fdc.H );
 
 	case 15 :
-		return( R );
+		return( fdc.R );
 
 	case 16 :
-		state = 0;
-		Status &= ~STATUS_CB & ~STATUS_DIO;
-		return( N );
+		fdc.state = 0;
+		fdc.Status &= ~STATUS_CB & ~STATUS_DIO;
+		return( fdc.N );
 	}
 	return( 0 );
 }
 
 static int WriteData( int val )
 {
-	static int sect = 0, cntdata = 0, newPos;
-	static signed int TailleSect;
-
-	switch( state++ )
+	switch( fdc.state++ )
 	{
 	case 1 :
-		Drive = val;
+		fdc.Drive = val & 3;
 		SetST0();            
 		break;
 
 	case 2 :
-		C = val;
+		fdc.C = val;
 		break;
 
 	case 3 :
-		H = val;
+		fdc.H = val;
 		break;
 
 	case 4 :
-		R = val;
+		fdc.R = val;
 		break;
 
 	case 5 :
-		N = val;
+		fdc.N = val;
 		break;
 
 	case 6 :
-		EOT = val;
+		fdc.EOT = val;
 		break;
 
 	case 7 :
-		sect = SeekSector( R, &newPos );
-		if (sect != -1) {
-			TailleSect = 128 << CurrTrackDatasDSK.Sect[ sect ].N;
-			if ( ! newPos )
-			cntdata = ( sect * CurrTrackDatasDSK.SectSize ) << 8;
+		fdc.wr_sect = SeekSector( fdc.R, &fdc.wr_newPos );
+		if (fdc.wr_sect != -1) {
+			fdc.wr_SectorSize = 128 << fdc.CurrTrackDatasDSK.Sect[ fdc.wr_sect ].N;
+			if ( ! fdc.wr_newPos )
+			  fdc.wr_cntdata = ( fdc.wr_sect * fdc.CurrTrackDatasDSK.SectSize ) << 8;
 			else
-			cntdata = newPos;
+			  fdc.wr_cntdata = fdc.wr_newPos;
 		}
 		break;
 
 	case 8 :
-		Status |= STATUS_DIO | STATUS_NDM;
+		fdc.Status |= STATUS_DIO | STATUS_NDM;
 		break;
 
 	case 9 :
-		if ( ! ( ST0 & ST0_IC1 ) )
+		if ( ! ( fdc.ST0 & ST0_IC1 ) )
 		{
             floppy_sound = 2;
             floppy_action = 1;
-
-			ImgDsk[ PosData + cntdata++ ] = ( UBYTE )val;
-			if ( --TailleSect )
-			state--;
+            
+            fdc.dirty_counter = 3;
+            fdc.bDirtyFlags[(fdc.PosData + fdc.wr_cntdata) / 4096] = 1;
+            
+			fdc.ImgDsk[ fdc.PosData + fdc.wr_cntdata++ ] = ( UBYTE )val;
+			if ( --fdc.wr_SectorSize )
+            {
+                fdc.state--;
+            }
 			else
 			{
-				if ( R++ < EOT )
-				state = 7;
+				if ( fdc.R++ < fdc.EOT )
+				  fdc.state = 7;
 				else
-				Status &= ~STATUS_NDM;
+				  fdc.Status &= ~STATUS_NDM;
 			}
 			return( 0 );
 		}
-		Status &= ~STATUS_NDM;
+		fdc.Status &= ~STATUS_NDM;
 		return( 0 );
 
 	case 10 :
-		if ( ! ( ST0 & ST0_IC1 ) )
-		FlagWrite = 1;
-
-		return( ST0 );
+		if ( ! ( fdc.ST0 & ST0_IC1 ) )
+        {
+            fdc.FlagWrite = 1;
+        }
+		return( fdc.ST0 );
 
 	case 11 :
-		return( ST1 );
+		return( fdc.ST1 );
 
 	case 12 :
-		return( ST2 );
+		return( fdc.ST2 );
 
 	case 13 :
-		return( C );
+		return( fdc.C );
 
 	case 14 :
-		return( H );
+		return( fdc.H );
 
 	case 15 :
-		return( R );
+		return( fdc.R );
 
 	case 16 :
-		state = 0;
-		Status &= ~STATUS_CB & ~STATUS_DIO;
-		return( N );
+		fdc.state = 0;
+		fdc.Status &= ~STATUS_CB & ~STATUS_DIO;
+		return( fdc.N );
 	}
 	return( 0 );
 }
 
+pfctFDC fdc_func_lookup[] = 
+{
+    Nothing,    // 0x00
+    Nothing,    // 0x01
+    Nothing,    // 0x02
+    Specify,    // 0x03
+    ReadST3,    // 0x04
+    WriteData,  // 0x05
+    ReadData,   // 0x06
+    MoveTrack0, // 0x07
+    ReadST0,    // 0x08
+    WriteData,  // 0x09
+    ReadID,     // 0x0A
+    Nothing,    // 0x0B
+    ReadData,   // 0x0C
+    FormatTrack,// 0x0D
+    Nothing,    // 0x0E    
+    MoveTrack,  // 0x0F
+    Nothing,    // 0x10
+    Scan,       // 0x11
+    Nothing,    // 0x12
+    Nothing,    // 0x13
+    Nothing,    // 0x14
+    Nothing,    // 0x15
+    Nothing,    // 0x16
+    Nothing,    // 0x17
+    Nothing,    // 0x18
+    Nothing,    // 0x19
+    Nothing,    // 0x1A
+    Nothing,    // 0x1B
+    Nothing,    // 0x1C
+    Nothing,    // 0x1D
+    Nothing,    // 0x1E
+    Nothing,    // 0x1F
+};
+                
+                
 int ReadFDC( int port )
 {
-	if ( port & 1 )
-	return( fct( port ) );
+	if (port & 1)
+    {
+        return(  fdc_func_lookup[fdc.function](port) );
+    }
 
-	return( Status );
+	return( fdc.Status );
 }
 
 void WriteFDC( int port, int val )
 {
-	DriveBusy=1;
+	fdc.DriveBusy=1;
 	
-	if ( port == 0xFB7F ) {     
-		if (state) {    
-			fct(val);
-		} else {
-			Status |= STATUS_CB;
-			state = 1;
-			switch( val & 0x1F )
+	if (port == 0xFB7F) 
+    {
+		if (fdc.state) 
+        {
+			fdc_func_lookup[fdc.function](val);
+		}
+        else 
+        {
+			fdc.Status |= STATUS_CB;
+			fdc.state = 1;
+            fdc.function = (val & 0x1F);
+            
+			switch( fdc.function )
 			{
 			case 0x03 :
 				// Specify
-				fct = Specify;
 				break;
 
 			case 0x04 :
 				// Read ST3
-				fct = ReadST3;
 				break;
 
 			case 0x05 :
 				// Write data
-				fct = WriteData;
 				break;
 
 			case 0x06 :
 				// Reading data
-				fct = ReadData;
 				break;
 
 			case 0x07 :
 				// Track head movement 0
 				// Status |= STATUS_NDM;
-				fct = MoveTrack0;
 				break;
 
 			case 0x08 :
 				// Read ST0, track
-				Status |= STATUS_DIO;
-				fct = ReadST0;
+				fdc.Status |= STATUS_DIO;
 				break;
 
 			case 0x09 :
 				// Write data
-				fct = WriteData;
 				break;
 
 			case 0x0A :
 				// Read Field ID
-				fct = ReadID;
 				break;
 
 			case 0x0C :
 				// Read Data
-				fct = ReadData;
 				break;
 
 			case 0x0D :
 				// Track formatting
-				fct = FormatTrack;
 				break;
 
 			case 0x0F :
 				// Head movement
-				fct = MoveTrack;
 				break;
 
 			case 0x11 :
-				fct = Scan;
+				// Scan
 				break;
 
-				default :
-				Status |= STATUS_DIO;
-				fct = Nothing;
+            default :
+				fdc.Status |= STATUS_DIO;
 			}
 		}
-	} else {
-		if ( port == 0xFA7E ) {
-			Motor = val & 1;
+	}
+    else 
+    {
+		if (port == 0xFA7E) 
+        {
+			fdc.Motor = val & 1;
 		}
 	}
 }
 
 void ResetFDC( void )
 {
-	Status = STATUS_RQM;
-	ST0 = ST0_SE;
-	ST1 = 0;
-	ST2 = 0;
-	ST3 = ST3_RY | ST3_TS;
-	Busy = 0;
-	Inter = 0;
-	state = 0;
-    Motor = 0;
+    // Start with a blank slate...
+    memset(&fdc, 0x00, sizeof(fdc));
+    
+    fdc.sector_index = 0;
+	fdc.Status = STATUS_RQM;
+	fdc.ST0 = ST0_SE;
+	fdc.ST1 = 0;
+	fdc.ST2 = 0;
+	fdc.ST3 = ST3_RY | ST3_TS;
+	fdc.Busy = 0;
+	fdc.Inter = 0;
+	fdc.state = 0;
+    fdc.Motor = 0;
 }
 
 void EjectDiskFDC( void )
 {
-	if (Image!=0) Image = 0;
+	if (fdc.Image!=0) fdc.Image = 0;
 }
 
 int GetCurrTrack( void )
 {
-	return( C );
+	return( fdc.C );
 }
 
 void ReadDiskMem(u8 *rom, u32 romsize)
 {
 	EjectDiskFDC();
 
-	LongFic=romsize-sizeof(Infos);
+	fdc.disk_size=romsize-sizeof(fdc.Infos);
 
-	ImgDsk=(u8*)DISK_IMAGE_BUFFER;
+	fdc.ImgDsk=(u8*)DISK_IMAGE_BUFFER;
 	
-	memcpy(&Infos, rom, sizeof(Infos));
-	memcpy(ImgDsk, rom+sizeof(Infos), LongFic);
-	Image=1;
-	FlagWrite=0;
+	memcpy(&fdc.Infos, rom, sizeof(fdc.Infos));
+	memcpy(fdc.ImgDsk, rom+sizeof(fdc.Infos), fdc.disk_size);
+	fdc.Image=1;
+	fdc.FlagWrite=0;
+    if (fdc.Infos.NumHeads > 1)
+    {
+        fdc.ST3 &= ~ST3_TS;  // Yes, this is logically backwards.. TS of 0 means 'two heads'. Go figure.
+    }
 	
 	ChangeCurrTrack(0);
 }

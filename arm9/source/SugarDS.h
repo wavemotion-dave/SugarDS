@@ -191,6 +191,9 @@ extern u32 cpc_scanline_counter;
 extern u8 vSyncSeen;
 extern u8 display_disable_in;
 
+extern u8 floppy_sound;
+extern u8 floppy_action;
+
 extern u8 amstrad_mode;
 extern u8 kbd_keys_pressed;
 extern u8 kbd_keys[12];

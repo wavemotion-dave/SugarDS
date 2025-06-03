@@ -1551,6 +1551,91 @@ void ProcessBufferedKeys(void)
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = '2';
         }
+
+        // Check all of the characters that could be typed as shifted-values
+        if (buf_held == '+')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = ';';
+        }
+
+        if (buf_held == '!')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = '1';
+        }
+
+        if (buf_held == '"')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = '2';
+        }
+
+        if (buf_held == '#')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = '3';
+        }
+
+        if (buf_held == '$')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = '4';
+        }
+
+        if (buf_held == '%')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = '5';
+        }
+
+        if (buf_held == '&')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = '6';
+        }
+
+        if (buf_held == '(')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = '8';
+        }
+
+        if (buf_held == ')')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = '9';
+        }
+
+        if (buf_held == '_')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = '0';
+        }
+
+        if (buf_held == '*')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = ':';
+        }
+
+        if (buf_held == '=')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = '-';
+        }
     }
     else if (dampen >= (next_dampen_time/2))
     {

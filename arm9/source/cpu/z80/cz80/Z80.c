@@ -451,8 +451,6 @@ static void CodesCB(void)
   I=OpZ80(CPU.PC.W++);
   CPU.TStates += CyclesCB[I];
   
-  if (CyclesCB[I] == 0) debug[5]++;
-
   /* R register incremented on each M1 cycle */
   INCR(1);
 
@@ -474,7 +472,6 @@ ITCM_CODE static void CodesDDCB(void)
   J.W=CPU.XX.W+(offset)OpZ80(CPU.PC.W++);
   I=OpZ80(CPU.PC.W++);
   CPU.TStates += CyclesXXCB[I];
-  if (CyclesXXCB[I] == 0) debug[6]++;
 
   switch(I)
   {
@@ -495,7 +492,6 @@ ITCM_CODE static void CodesFDCB(void)
   J.W=CPU.XX.W+(offset)OpZ80(CPU.PC.W++);
   I=OpZ80(CPU.PC.W++);
   CPU.TStates += CyclesXXCB[I];
-  if (CyclesXXCB[I] == 0) debug[6]++;
 
   switch(I)
   {
