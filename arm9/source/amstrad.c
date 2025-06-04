@@ -48,6 +48,7 @@ u32  pre_inked_mode0[256] __attribute__((section(".dtcm"))) = {0};
 u32  pre_inked_mode1[256] __attribute__((section(".dtcm"))) = {0};
 u32  pre_inked_mode2a[256]  = {0};  // Not used often enough to soak up fast memory
 u32  pre_inked_mode2b[256]  = {0};  // Not used often enough to soak up fast memory
+u32  pre_inked_mode2c[256]  = {0};  // Not used often enough to soak up fast memory
 
 u8 CRTC_MASKS[0x20] = {0xFF, 0xFF, 0xFF, 0x0F, 
                        0x7F, 0x1F, 0x7F, 0x7F, 
@@ -88,9 +89,9 @@ ITCM_CODE void compute_pre_inked(u8 mode)
             u8 pixel6 = INK[((pixel & 0x02) >> 1)];
             u8 pixel7 = INK[((pixel & 0x01) >> 0)];
             
-            // We don't have enough DS LCD display resolution anyway... so render the best we can...
-            pre_inked_mode2a[pixel] = (pixel7 << 24) | (pixel5 << 16) | (pixel3 << 8) | (pixel1 << 0);
-            pre_inked_mode2b[pixel] = (pixel6 << 24) | (pixel4 << 16) | (pixel2 << 8) | (pixel0 << 0);
+            pre_inked_mode2b[pixel] = (pixel7 << 24) | (pixel6 << 16) | (pixel5 << 8) | (pixel4 << 0);
+            pre_inked_mode2a[pixel] = (pixel3 << 24) | (pixel2 << 16) | (pixel1 << 8) | (pixel0 << 0);
+            pre_inked_mode2c[pixel] = (pixel7 << 24) | (pixel5 << 16) | (pixel3 << 8) | (pixel1 << 0);
         }
     }
     else // Mode 0
@@ -341,21 +342,30 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                         switch (portC & 0xF)
                         {
                             case 0x00:
-                                if (kbd_key == KBD_KEY_CUP) keyBits |= 0x01;
-                                if (kbd_key == KBD_KEY_CRT) keyBits |= 0x02;
-                                if (kbd_key == KBD_KEY_CDN) keyBits |= 0x04;
-                                if (kbd_key == KBD_KEY_F3)  keyBits |= 0x20;
+                                if (kbd_key == KBD_KEY_CUP)  keyBits |= 0x01;
+                                if (kbd_key == KBD_KEY_CRT)  keyBits |= 0x02;
+                                if (kbd_key == KBD_KEY_CDN)  keyBits |= 0x04;
+                                if (kbd_key == KBD_KEY_F9)   keyBits |= 0x08;
+                                if (kbd_key == KBD_KEY_F6)   keyBits |= 0x10;
+                                if (kbd_key == KBD_KEY_F3)   keyBits |= 0x20;
+                                if (kbd_key == KBD_KEY_FENT) keyBits |= 0x40;
+                                if (kbd_key == KBD_KEY_FDOT) keyBits |= 0x80;
                                 break;
 
                             case 0x01:
                                 if (kbd_key == KBD_KEY_CLT) keyBits |= 0x01;
-                                if (kbd_key == KBD_KEY_CPY) keyBits |= 0x02;                                
+                                if (kbd_key == KBD_KEY_CPY) keyBits |= 0x02;
+                                if (kbd_key == KBD_KEY_F7)  keyBits |= 0x04;
+                                if (kbd_key == KBD_KEY_F8)  keyBits |= 0x08;
+                                if (kbd_key == KBD_KEY_F5)  keyBits |= 0x10;
                                 if (kbd_key == KBD_KEY_F1)  keyBits |= 0x20;
                                 if (kbd_key == KBD_KEY_F2)  keyBits |= 0x40;
+                                if (kbd_key == KBD_KEY_F0)  keyBits |= 0x80;
                                 break;
                                 
                             case 0x02:
                                 if (kbd_key == KBD_KEY_CTL) keyBits |= 0x80;
+                                if (kbd_key == KBD_KEY_BSL) keyBits |= 0x40;
                                 if (kbd_key == KBD_KEY_SFT) keyBits |= 0x20;
                                 if (kbd_key == KBD_KEY_F4)  keyBits |= 0x10;                                
                                 if (kbd_key == ']')         keyBits |= 0x08;

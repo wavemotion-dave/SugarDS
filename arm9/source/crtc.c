@@ -66,6 +66,7 @@ int R52_INT_ON_VSYNC[]   __attribute__((section(".dtcm"))) = {28, 16, 32};
 u8 vSyncSeen             __attribute__((section(".dtcm"))) = 0;
 u8 display_disable_in    __attribute__((section(".dtcm"))) = 0;
 u8 b32K_Mode             __attribute__((section(".dtcm"))) = 0;
+u8 pan_mode_offset       __attribute__((section(".dtcm"))) = 0;
 
 void crtc_reset(void)
 {
@@ -78,6 +79,7 @@ void crtc_reset(void)
     VTAC = 0;
     DISPEN = 0;
     b32K_Mode = 0;
+    pan_mode_offset = 0;
 
     current_ds_line = 0;
     vsync_plus_two = 0;
@@ -318,10 +320,9 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             u32 offset = (((cpc_scanline_counter)/(CRTC[9]+1)) * (CRTC[1]<<1));  // Base offset is based on current scanline
             offset += r12_screen_offset;                                         // As defined in R12/R13 - offset is in WORDs (2 bytes)
             
-            // -------------------------------------------------------------
-            // For the rare '32K video buffer' we handle this but only at
-            // the point of computing where in memory this scanline starts.
-            // -------------------------------------------------------------
+            // ------------------------------------------------------------------------------
+            // For the rare '32K video buffer' we handle a 'wrap' into the next memory block
+            // ------------------------------------------------------------------------------
             if (((offset&0xFFF) >= 0x800) && b32K_Mode)
             {
                 offset += 0x4000; // We address into the next bank of memory
@@ -334,11 +335,20 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             // -------------------------------------------------------------------------------------
             if ((RMR & 0x03) == 0x00) // Mode 0  (160x256)
             {
+                last_frame_crtc1 = CRTC[1];
                 for (int x=0; x<CRTC[1]; x++)
                 {
                     *vidBufDS++ = pre_inked_mode0[pixelPtr2K[offset++]];    // Fast draw pixel with pre-rendered lookup
                     *vidBufDS++ = pre_inked_mode0[pixelPtr2K[offset++]];    // Fast draw pixel with pre-rendered lookup
-                    offset &= 0x47FF;                                       // Wrap is always at the 2K boundary
+                    // -------------------------------------------------------------
+                    // For the rare '32K video buffer - used by a few amazing games
+                    // -------------------------------------------------------------
+                    if (b32K_Mode)
+                    {
+                        if ((offset&0xFFF) >= 0x800) offset += 0x4000; // We address into the next bank of memory
+                    }                    
+
+                    offset &= 0x47FF;                                  // Wrap is always at the 2K boundary
                 }
 
                 // Draw border out to at least 320 pixels
@@ -349,11 +359,19 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             }
             else if ((RMR & 0x03) == 0x01) // Mode 1 (320x256)
             {
+                last_frame_crtc1 = CRTC[1];
                 for (int x=0; x<(CRTC[1]); x++)
                 {
                     *vidBufDS++ = pre_inked_mode1[pixelPtr2K[offset++]];  // Fast draw pixel with pre-rendered lookup
                     *vidBufDS++ = pre_inked_mode1[pixelPtr2K[offset++]];  // Fast draw pixel with pre-rendered lookup
-                    offset &= 0x47FF;                                     // Wrap is always at the 2K boundary
+                    // -------------------------------------------------------------
+                    // For the rare '32K video buffer - used by a few amazing games
+                    // -------------------------------------------------------------
+                    if (b32K_Mode)
+                    {
+                        if ((offset&0xFFF) >= 0x800) offset += 0x4000; // We address into the next bank of memory
+                    }                    
+                    offset &= 0x47FF;                                  // Wrap is always at the 2K boundary
                 }
 
                 // Draw border out to at least 320 pixels
@@ -364,11 +382,62 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             }
             else if ((RMR & 0x03) == 0x02) // Mode 2 (640x256)
             {
-                for (int x=0; x<(CRTC[1]); x++)
+                last_frame_mode2++;
+                if (myConfig.mode2mode == 0)
                 {
-                    *vidBufDS++ = pre_inked_mode2a[pixelPtr2K[offset++]];  // Fast draw pixel with pre-rendered lookup
-                    *vidBufDS++ = pre_inked_mode2b[pixelPtr2K[offset++]];  // Fast draw pixel with pre-rendered lookup
-                    offset &= 0x47FF;                                      // Wrap is always at the 2K boundary
+                    u8 limit = (CRTC[1] <= 32) ? CRTC[1] : 32;
+                    for (int x=0; x<limit*2; x++)    // Best we can do is show 320 pixels
+                    {
+                        *vidBufDS++ = pre_inked_mode2a[pixelPtr2K[offset]];  // Fast draw pixel with pre-rendered lookup
+                        *vidBufDS++ = pre_inked_mode2b[pixelPtr2K[offset]];  // Fast draw pixel with pre-rendered lookup
+                        offset++;
+                        // -------------------------------------------------------------
+                        // For the rare '32K video buffer - used by a few amazing games
+                        // -------------------------------------------------------------
+                        if (b32K_Mode)
+                        {
+                            if ((offset&0xFFF) >= 0x800) offset += 0x4000; // We address into the next bank of memory
+                        }
+                        offset &= 0x47FF;                                  // Wrap is always at the 2K boundary                        
+                    }
+                }
+                else
+                {
+                    if (pan_mode_offset)
+                    {
+                        offset = (offset+pan_mode_offset) & 0x47FF;
+                        // -------------------------------------------------------------
+                        // For the rare '32K video buffer - used by a few amazing games
+                        // -------------------------------------------------------------
+                        if (b32K_Mode)
+                        {
+                            if ((offset&0xFFF) >= 0x800) offset += 0x4000; // We address into the next bank of memory
+                        }
+                        offset &= 0x47FF;                                  // Wrap is always at the 2K boundary                                          
+                    }
+
+                    for (int x=0; x<40; x++)    // Best we can do is show 320 pixels
+                    {
+                        if (x+pan_mode_offset < (CRTC[1]*2))
+                        {
+                            *vidBufDS++ = pre_inked_mode2a[pixelPtr2K[offset]];  // Fast draw pixel with pre-rendered lookup
+                            *vidBufDS++ = pre_inked_mode2b[pixelPtr2K[offset]];  // Fast draw pixel with pre-rendered lookup
+                            offset++;
+                            // -------------------------------------------------------------
+                            // For the rare '32K video buffer - used by a few amazing games
+                            // -------------------------------------------------------------
+                            if (b32K_Mode)
+                            {
+                                if ((offset&0xFFF) >= 0x800) offset += 0x4000; // We address into the next bank of memory
+                            }
+                            offset &= 0x47FF;                                  // Wrap is always at the 2K boundary                        
+                        }
+                        else
+                        {
+                            *vidBufDS++ = border_color;
+                            *vidBufDS++ = border_color;
+                        }
+                    }
                 }
             }
             else // Mode 3 never used... hopefully!

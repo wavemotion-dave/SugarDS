@@ -40,6 +40,7 @@ extern u32 pre_inked_mode0[256];
 extern u32 pre_inked_mode1[256];
 extern u32 pre_inked_mode2a[256];
 extern u32 pre_inked_mode2b[256];
+extern u32 pre_inked_mode2c[256];
 
 typedef struct
 {
@@ -70,7 +71,7 @@ struct __attribute__((__packed__)) GlobalConfig_t
     u8  showFPS;
     u8  lastDir;
     u8  diskROM;
-    u8  global_02;
+    u8  splashType;
     u8  global_03;
     u8  global_04;
     u8  global_05;
@@ -99,7 +100,7 @@ struct __attribute__((__packed__)) Config_t
     u8  cpuAdjust;
     u8  waveDirect;
     u8  screenTop;
-    u8  reserved4;
+    u8  mode2mode;
     u8  reserved5;
     u8  reserved6;
     u8  reserved7;

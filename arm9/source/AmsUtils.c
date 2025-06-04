@@ -787,7 +787,7 @@ void SetDefaultGameConfig(void)
     myConfig.cpuAdjust   = 0;                           // No CPU adjustment by default
     myConfig.waveDirect  = 0;                           // Normal sound driver
     myConfig.screenTop   = 0;                           // Normal screen top position
-    myConfig.reserved4   = 0;
+    myConfig.mode2mode   = 0;                           // Default to compressed 640
     myConfig.reserved5   = 0;
     myConfig.reserved6   = 0;
     myConfig.reserved7   = 0;
@@ -875,6 +875,7 @@ const struct options_t Option_Table[2][20] =
         {"SCREEN TOP",     {"+0","+1","+2","+3","+4","+5","+6","+7","+8","+9","+10"},           &myConfig.screenTop,         11},        
         {"NDS D-PAD",      {"NORMAL", "DIAGONALS", "SLIDE-N-GLIDE"},                            &myConfig.dpad,              3},
         {"GAME SPEED",     {"100%", "110%", "120%", "90%", "80%"},                              &myConfig.gameSpeed,         5},
+        {"MODE 2",         {"640 COMPRESS", "320 PAN"},                                         &myConfig.mode2mode,         2},
         {"R52  VSYNC",     {"NORMAL", "FORGIVING", "STRICT"},                                   &myConfig.r52IntVsync,       3},
         {"CPU ADJUST",     {"+0 (NONE)", "+2 CYCLES", "+4 CYCLES", "+8 CYCLES", 
                             "-8 CYCLES", "-4 CYCLES", "-2 CYCLES"},                             &myConfig.cpuAdjust,         7},
@@ -886,6 +887,8 @@ const struct options_t Option_Table[2][20] =
         {"FPS",            {"OFF", "ON", "ON FULLSPEED"},                                       &myGlobalConfig.showFPS,     3},
         {"DISK ROM",       {"AMSDOS", "PARADOS"},                                               &myGlobalConfig.diskROM,     2},
         {"START DIR",      {"/ROMS/CPC", "/ROMS/AMSTRAD", "LAST USED DIR"},                     &myGlobalConfig.lastDir,     3},
+        {"SPLASH SCR",     {"CPC KEYBOARD", "AMSTRAD CROC"},                                    &myGlobalConfig.splashType,  2},
+        
         {"DEBUGGER",       {"OFF", "BAD OPS", "DEBUG", "FULL DEBUG"},                           &myGlobalConfig.debugger,    4},
         {NULL,             {"",      ""},                                                       NULL,                        1},
     }
@@ -1414,6 +1417,7 @@ void sugarDSChangeOptions(void)
 
           case 15 :     // GLOBAL OPTIONS
             SugarDSGameOptions(true);
+            TopScreenOptions();
             BottomScreenOptions();
             dispInfoOptions(ucY);
             DisplayFileName();
@@ -1565,13 +1569,6 @@ void ProcessBufferedKeys(void)
             last_special_key = 1;
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = '1';
-        }
-
-        if (buf_held == '"')
-        {
-            last_special_key = 1;
-            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
-            buf_held = '2';
         }
 
         if (buf_held == '#')

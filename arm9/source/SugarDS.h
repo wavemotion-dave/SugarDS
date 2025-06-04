@@ -25,6 +25,9 @@ extern u8 CRTC[0x20];
 extern u8 CRT_Idx;
 extern u32 R52;
 extern u32 border_color;
+extern u32 last_frame_mode2;
+extern u32 last_frame_mode01;
+extern u8 last_frame_crtc1;
 
 // These are the various special icons/menu operations
 #define MENU_CHOICE_NONE        0x00
@@ -35,6 +38,7 @@ extern u32 border_color;
 #define MENU_CHOICE_DEFINE_KEYS 0x05
 #define MENU_CHOICE_CONFIG_GAME 0x06
 #define MENU_CHOICE_SWAP_DISK   0x07
+#define MENU_CHOICE_TOGGLE_KBD  0xFE        // Toggle Keyboard
 #define MENU_CHOICE_MENU        0xFF        // Special brings up a mini-menu of choices
 
 // ------------------------------------------------------------------------------
@@ -128,16 +132,27 @@ extern u32 border_color;
 #define KBD_KEY_CAPS        3
 #define KBD_KEY_CTL         4
 #define KBD_KEY_TAB         5
-#define KBD_KEY_F1          6
-#define KBD_KEY_F2          7
-#define KBD_KEY_F3          8
-#define KBD_KEY_F4          9
+#define KBD_KEY_CUP         6
+#define KBD_KEY_CRT         7
+#define KBD_KEY_CDN         8
+#define KBD_KEY_CLT         9
+#define KBD_KEY_CPY         10
+#define KBD_KEY_BSL         11
 #define KBD_KEY_RET         13
-#define KBD_KEY_CUP         14
-#define KBD_KEY_CRT         15
-#define KBD_KEY_CDN         16
-#define KBD_KEY_CLT         17
-#define KBD_KEY_CPY         18
+
+#define KBD_KEY_F0          14
+#define KBD_KEY_F1          15
+#define KBD_KEY_F2          16
+#define KBD_KEY_F3          17
+#define KBD_KEY_F4          18
+#define KBD_KEY_F5          19
+#define KBD_KEY_F6          20
+#define KBD_KEY_F7          21
+#define KBD_KEY_F8          22
+#define KBD_KEY_F9          23
+#define KBD_KEY_FDOT        24
+#define KBD_KEY_FENT        25
+
 #define KBD_KEY_ESC         27
 
 // What format is the input file?
@@ -224,6 +239,7 @@ extern u8 crtc_render_screen_line(void);
 extern void crtc_reset(void);
 extern void crtc_r52_int(void);
 extern void BottomScreenOptions(void);
+extern void TopScreenOptions(void);
 extern void TopScreenImage(void);
 extern void BottomScreenCassette(void);
 extern void BottomScreenKeyboard(void);

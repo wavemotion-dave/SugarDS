@@ -70,7 +70,7 @@ SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
 PNGFILES	:=	$(foreach dir,$(GRAPHICS),$(notdir $(wildcard $(dir)/*.png)))
 
-OSPECIALS :=  debug_ovl.o cpc_kbd.o mainmenu.o topscreen.o splash.o splash_top.o  
+OSPECIALS :=  debug_ovl.o cpc_kbd.o mainmenu.o topscreen.o splash.o splash_top.o topscreen_alt.o cpc_numpad.o
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -144,10 +144,16 @@ mainmenu.s mainmenu.h : mainmenu.png
 cpc_kbd.s cpc_kbd.h : cpc_kbd.png
 	grit $^ -o $@  -gt -mrt -mR8 -mLs -gzl -mzl
 
+cpc_numpad.s cpc_numpad.h : cpc_numpad.png
+	grit $^ -o $@  -gt -mrt -mR8 -mLs -gzl -mzl
+
 debug_ovl.s debug_ovl.h : debug_ovl.png
 	grit $^ -o $@  -gt -mrt -mR8 -mLs -gzl -mzl
 
 topscreen.s topscreen.h : topscreen.png
+	grit $^ -o $@  -gt -mrt -mR8 -mLs -gzl -mzl
+
+topscreen_alt.s topscreen_alt.h : topscreen_alt.png
 	grit $^ -o $@  -gt -mrt -mR8 -mLs -gzl -mzl
 
 splash.s splash.h : splash.png

@@ -117,6 +117,18 @@ Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay
 Version History :
 -----------------------
 
+Version 0.7 - 04-Jun-2025 by wavemotion-dave
+* Double sided disks now supported. Orion Prime in 3.5" floppy works!
+* Disks now auto-persist back to the SD card when written.
+* CPU Z80 timing improved - more games run more correctly.
+* Better auto-filename support for launching disk games.
+* Number pad added - press the number pad icon on the main keyboard.
+* Mode 2 support improved - use PAN or COMPRESSED mode and upper screen region (the Amstrad Logo area) to pan.
+* New Amstrad Croc top screen available - use Global Settings.
+* Improved auto-scale in the X (horizontal) direction.
+* Minor tweaks and bug fixes as time allowed.
+
+
 Version 0.6 - 02-Jun-2025 by wavemotion-dave
 * Cartridge .CPR support up to 512K
 * Disk support is now up to 3.5" 80-track maximums (720K)

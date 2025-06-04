@@ -23,8 +23,10 @@
 #include "SugarDS.h"
 #include "AmsUtils.h"
 #include "cpc_kbd.h"
+#include "cpc_numpad.h"
 #include "debug_ovl.h"
 #include "topscreen.h"
+#include "topscreen_alt.h"
 #include "mainmenu.h"
 #include "soundbank.h"
 #include "soundbank_bin.h"
@@ -54,7 +56,6 @@ s16 temp_offset   __attribute__((section(".dtcm"))) = 0;
 u16 slide_dampen  __attribute__((section(".dtcm"))) = 0;
 u8 JITTER[]       __attribute__((section(".dtcm"))) = {0, 64, 128};
 u8 debugger_pause __attribute__((section(".dtcm"))) = 0;
-
 // ----------------------------------------------------------------------------
 // We track the most recent directory and file loaded... both the initial one
 // (for the CRC32) and subsequent additional tape loads (Side 2, Side B, etc)
@@ -71,6 +72,7 @@ char last_file[MAX_FILENAME_LEN]    = "";
 u8 bFirstTime        = 1;
 u8 bottom_screen     = 0;
 u8 bStartIn          = 0;
+u8 keyboard_shown    = 0;
 
 // ---------------------------------------------------------------------------
 // Some timing and frame rate comutations to keep the emulation on pace...
@@ -91,6 +93,10 @@ u16 nds_key          __attribute__((section(".dtcm"))) = 0;       // 0 if no key
 u8 last_mapped_key   __attribute__((section(".dtcm"))) = 0;       // The last mapped key which has been pressed - used for key click feedback
 u8 kbd_keys_pressed  __attribute__((section(".dtcm"))) = 0;       // Each frame we check for keys pressed - since we can map keyboard keys to the NDS, there may be several pressed at once
 u8 kbd_keys[12]      __attribute__((section(".dtcm")));           // Up to 12 possible keys pressed at the same time (we have 12 NDS physical buttons though it's unlikely that more than 2 or maybe 3 would be pressed)
+u8 last_frame_crtc1  __attribute__((section(".dtcm"))) = 0;       // Tracking the number of characters written in the last non-mode2 draw
+
+u32 last_frame_mode2  __attribute__((section(".dtcm"))) = 0;      // To track number of mode2 draws - for auto-scaling use...
+u32 last_frame_mode01 __attribute__((section(".dtcm"))) = 0;      // To track number of mode0 and mode1 draws - for auto-scaling use...
 
 u8 bStartSoundEngine = 0;      // Set to true to unmute sound after 1 frame of rendering...
 int bg0, bg1, bg0b, bg1b;      // Some vars for NDS background screen handling
@@ -779,9 +785,17 @@ u8 MiniMenu(void)
 u8 last_special_key = 0;
 u8 last_special_key_dampen = 0;
 u8 last_kbd_key = 0;
+extern u8 pan_mode_offset;
 
 u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 {
+    if (iTy < 37)
+    {
+        if (iTx < 75)  if (pan_mode_offset > 0)  pan_mode_offset--;
+        if (iTx > 185) if (pan_mode_offset < 48) pan_mode_offset++; // A little wiggle room
+        swiWaitForVBlank();
+    }
+    else
     if ((iTy >= 40) && (iTy < 72))   // Row 1 (number row)
     {
         if      ((iTx >= 0)   && (iTx < 23))   kbd_key = KBD_KEY_ESC;
@@ -849,7 +863,78 @@ u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
     else if ((iTy >= 162) && (iTy < 192)) // Row 5 (SPACE BAR and icons row)
     {
         if      ((iTx >= 1)   && (iTx < 43))   {kbd_key = KBD_KEY_CTL; last_special_key = KBD_KEY_CTL;}
-        else if ((iTx >= 43)  && (iTx < 194))  kbd_key = ' ';
+        else if ((iTx >= 43)  && (iTx < 70))   return MENU_CHOICE_TOGGLE_KBD;
+        else if ((iTx >= 70)  && (iTx < 194))  kbd_key = ' ';
+        else if ((iTx >= 194) && (iTx < 255))  return MENU_CHOICE_MENU;
+    }
+
+    DisplayStatusLine(false);
+
+    return MENU_CHOICE_NONE;
+}
+
+// ----------------------------------------------------
+// Special version for the Number Pad on the CPC range
+// ----------------------------------------------------
+u8 handle_cpc_numpad_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
+{
+    if (iTy < 37)
+    {
+        if (iTx < 75)  if (pan_mode_offset > 0)  pan_mode_offset--;
+        if (iTx > 185) if (pan_mode_offset < ((CRTC[1] < 40) ? CRTC[1]:40)) pan_mode_offset++;
+        swiWaitForVBlank();
+    }
+    else
+    if ((iTx >= 162) && (iTy > 40) && (iTy < 162))   // Function Key Block
+    {
+        if (iTy < 72) // Top Row of Function Key Block
+        {
+            if      (iTx < 194)   kbd_key = KBD_KEY_F7;
+            else if (iTx < 224)   kbd_key = KBD_KEY_F8;
+            else if (iTx < 255)   kbd_key = KBD_KEY_F9;
+        }
+        else if (iTy < 101) // Second Row of Function Key Block
+        {
+            if      (iTx < 194)   kbd_key = KBD_KEY_F4;
+            else if (iTx < 224)   kbd_key = KBD_KEY_F5;
+            else if (iTx < 255)   kbd_key = KBD_KEY_F6;
+        }
+        else if (iTy < 131) // Third Row of Function Key Block
+        {
+            if      (iTx < 194)   kbd_key = KBD_KEY_F1;
+            else if (iTx < 224)   kbd_key = KBD_KEY_F2;
+            else if (iTx < 255)   kbd_key = KBD_KEY_F3;
+        }
+        else if (iTy < 161) // Bottom Row of Function Key Block
+        {
+            if      (iTx < 194)   kbd_key = KBD_KEY_F0;
+            else if (iTx < 224)   kbd_key = KBD_KEY_FDOT;
+            else if (iTx < 255)   kbd_key = KBD_KEY_FENT;
+        }
+    }
+    else if ((iTx >= 33) && (iTx < 140) && (iTy > 45) && (iTy < 160)) // Cursor Keys
+    {
+        if      ((iTx >= 33)  && (iTx < 68))
+        {
+            if      ((iTy >=  83) && (iTy < 121))  kbd_key = KBD_KEY_CLT;
+        }
+        else if ((iTx >= 68)  && (iTx < 93))
+        {
+            if      ((iTy >=  45) && (iTy < 83))  kbd_key = KBD_KEY_CUP;
+            else if ((iTy >=  83) && (iTy < 121)) kbd_key = KBD_KEY_CPY;
+            else if ((iTy >= 121) && (iTy < 160)) kbd_key = KBD_KEY_CDN;
+        }
+        else if ((iTx >= 93)  && (iTx < 139))
+        {
+            if      ((iTy >=  83) && (iTy < 121))  kbd_key = KBD_KEY_CRT;
+        }
+    }
+    else if ((iTy >= 162) && (iTy < 192)) // Row 5 (SPACE BAR and icons row)
+    {
+        if      ((iTx >= 1)   && (iTx < 22))   kbd_key = '^';
+        else if ((iTx >= 22)  && (iTx < 43))   kbd_key = KBD_KEY_BSL;
+        else if ((iTx >= 43)  && (iTx < 70))   return MENU_CHOICE_TOGGLE_KBD;
+        else if ((iTx >= 70)  && (iTx < 194))  kbd_key = ' ';
         else if ((iTx >= 194) && (iTx < 255))  return MENU_CHOICE_MENU;
     }
 
@@ -883,6 +968,7 @@ u8 handle_debugger_overlay(u16 iTx, u16 iTy)
 
     return MENU_CHOICE_NONE;
 }
+
 
 u8 __attribute__((noinline)) handle_meta_key(u8 meta_key)
 {
@@ -1049,11 +1135,34 @@ void SugarDS_main(void)
         // -----------------------------------------------------
         if (myConfig.autoSize)
         {
-                 if (CRTC[1] <= 34)  myConfig.scaleX = 320;
-            else if (CRTC[1] <= 37)  myConfig.scaleX = 288;
-            else if (CRTC[1] <= 41)  myConfig.scaleX = 256;
-            else if (CRTC[1] <= 43)  myConfig.scaleX = 224;
-            else  myConfig.scaleX = 200;
+            static u8 mode2_frames = 0;
+            if (last_frame_mode2 > 128) // Did we draw than half the frames in mode2?
+            {
+                if (mode2_frames < 128) mode2_frames++;
+            }
+            else
+            {
+                mode2_frames = 0;
+            }
+            
+            if (mode2_frames > 50) // A full second of mode2 frames in a row is enough to switch...
+            {
+                 if (myConfig.mode2mode == 0)
+                     myConfig.scaleX = 120; // Compress screen as much as we dare...
+                 else
+                     myConfig.scaleX = 320; // Fixed at 34 displayed chars max
+            }
+            else
+            {
+                     if (last_frame_crtc1 <= 34)  myConfig.scaleX = 320;
+                else if (last_frame_crtc1 <= 37)  myConfig.scaleX = 288;
+                else if (last_frame_crtc1 <= 41)  myConfig.scaleX = 256;
+                else if (last_frame_crtc1 <= 43)  myConfig.scaleX = 224;
+                else  myConfig.scaleX = 200;
+            }
+            
+            // Reset counters...
+            last_frame_mode2 = last_frame_mode01 = 0;
         }
         
         // -------------------------------------------------------------
@@ -1111,7 +1220,7 @@ void SugarDS_main(void)
             }
         }
         emuActFrames++;
-
+        
         // --------------------------------------------------------------------
         // We only support PAL 50 frames as this is an Amstrad CPC from the UK
         // --------------------------------------------------------------------
@@ -1178,7 +1287,10 @@ void SugarDS_main(void)
                 // ------------------------------------------------------------
                 else
                 {
-                    meta_key = handle_cpc_keyboard_press(iTx, iTy);
+                    if (keyboard_shown == 1)
+                        meta_key = handle_cpc_numpad_press(iTx, iTy);
+                    else
+                        meta_key = handle_cpc_keyboard_press(iTx, iTy);
                 }
 
                 // If the special menu key indicates we should show the choice menu, do so here...
@@ -1186,7 +1298,14 @@ void SugarDS_main(void)
                 {
                     meta_key = MiniMenu();
                 }
-
+                // If the special menu key indicates we should show the choice menu, do so here...
+                else if (meta_key == MENU_CHOICE_TOGGLE_KBD)
+                {
+                    keyboard_shown ^= 1;
+                    BottomScreenKeyboard();
+                    WAITVBL;WAITVBL;
+                }
+                
                 // -------------------------------------------------------------------
                 // If one of the special meta keys was picked, we handle that here...
                 // -------------------------------------------------------------------
@@ -1282,7 +1401,7 @@ void SugarDS_main(void)
             if (nds_key & KEY_LEFT)
             {
                 dampen = 2;
-                if (myConfig.scaleX > 200) myConfig.scaleX--;
+                if (myConfig.scaleX > 180) myConfig.scaleX--;
             }
             if (nds_key & KEY_RIGHT)
             {
@@ -1444,6 +1563,29 @@ void useVRAM(void)
   vramSetBankI(VRAM_I_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x068A0000 -   Unused - reserved for future use
 }
 
+void TopScreenOptions(void)
+{
+  bg0 = bgInit(0, BgType_Text8bpp,  BgSize_T_256x512, 31,0);
+  bg1 = bgInit(1, BgType_Text8bpp,  BgSize_T_256x512, 29,0);
+  bgSetPriority(bg0,1);bgSetPriority(bg1,0);
+  if (myGlobalConfig.splashType)
+  {
+      decompress(topscreen_altTiles,  bgGetGfxPtr(bg0), LZ77Vram);
+      decompress(topscreen_altMap,  (void*) bgGetMapPtr(bg0), LZ77Vram);
+      dmaCopy((void*) topscreen_altPal,(void*)  BG_PALETTE,256*2);
+      unsigned  short dmaVal =*(bgGetMapPtr(bg0)+51*32);
+      dmaFillWords(dmaVal | (dmaVal<<16),(void*)  bgGetMapPtr(bg1),32*24*2);
+  }
+  else
+  {
+      decompress(topscreenTiles,  bgGetGfxPtr(bg0), LZ77Vram);
+      decompress(topscreenMap,  (void*) bgGetMapPtr(bg0), LZ77Vram);
+      dmaCopy((void*) topscreenPal,(void*)  BG_PALETTE,256*2);
+      unsigned  short dmaVal =*(bgGetMapPtr(bg0)+51*32);
+      dmaFillWords(dmaVal | (dmaVal<<16),(void*)  bgGetMapPtr(bg1),32*24*2);
+  }
+}
+
 /*********************************************************************************
  * Init DS Emulator - setup VRAM banks and background screen rendering banks
  ********************************************************************************/
@@ -1459,14 +1601,7 @@ void SugarDSInit(void)
   REG_BLDCNT=0; REG_BLDCNT_SUB=0; REG_BLDY=0; REG_BLDY_SUB=0;
 
   //  Render the top screen
-  bg0 = bgInit(0, BgType_Text8bpp,  BgSize_T_256x512, 31,0);
-  bg1 = bgInit(1, BgType_Text8bpp,  BgSize_T_256x512, 29,0);
-  bgSetPriority(bg0,1);bgSetPriority(bg1,0);
-  decompress(topscreenTiles,  bgGetGfxPtr(bg0), LZ77Vram);
-  decompress(topscreenMap,  (void*) bgGetMapPtr(bg0), LZ77Vram);
-  dmaCopy((void*) topscreenPal,(void*)  BG_PALETTE,256*2);
-  unsigned  short dmaVal =*(bgGetMapPtr(bg0)+51*32);
-  dmaFillWords(dmaVal | (dmaVal<<16),(void*)  bgGetMapPtr(bg1),32*24*2);
+  TopScreenOptions();
 
   // Put up the options screen
   BottomScreenOptions();
@@ -1518,13 +1653,21 @@ void BottomScreenKeyboard(void)
       dmaCopy((void*) bgGetMapPtr(bg0b)+32*30*2,(void*) bgGetMapPtr(bg1b),32*24*2);
       dmaCopy((void*) debug_ovlPal,(void*) BG_PALETTE_SUB,256*2);
     }
-    else
+    else if (keyboard_shown == 0)
     {
       //  Init bottom screen for CPC Keyboard
       decompress(cpc_kbdTiles, bgGetGfxPtr(bg0b),  LZ77Vram);
       decompress(cpc_kbdMap, (void*) bgGetMapPtr(bg0b),  LZ77Vram);
       dmaCopy((void*) bgGetMapPtr(bg0b)+32*30*2,(void*) bgGetMapPtr(bg1b),32*24*2);
       dmaCopy((void*) cpc_kbdPal,(void*) BG_PALETTE_SUB,256*2);
+    }
+    else // Numpad
+    {
+      //  Init bottom screen for CPC Keyboard
+      decompress(cpc_numpadTiles, bgGetGfxPtr(bg0b),  LZ77Vram);
+      decompress(cpc_numpadMap, (void*) bgGetMapPtr(bg0b),  LZ77Vram);
+      dmaCopy((void*) bgGetMapPtr(bg0b)+32*30*2,(void*) bgGetMapPtr(bg1b),32*24*2);
+      dmaCopy((void*) cpc_numpadPal,(void*) BG_PALETTE_SUB,256*2);
     }
 
     unsigned  short dmaVal = *(bgGetMapPtr(bg1b)+24*32);
