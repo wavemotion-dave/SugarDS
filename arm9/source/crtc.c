@@ -400,6 +400,12 @@ ITCM_CODE u8 crtc_render_screen_line(void)
                         }
                         offset &= 0x47FF;                                  // Wrap is always at the 2K boundary                        
                     }
+                    
+                    for (int x=0; x<8; x++)
+                    {
+                        *vidBufDS++ = border_color;
+                        *vidBufDS++ = border_color;
+                    }
                 }
                 else
                 {
