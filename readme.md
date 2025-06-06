@@ -7,8 +7,9 @@ SugarDS is an Amstrad CPC 646 and 6128 Emulator for the DS/DSi
 Features :
 -----------------------
 * Emulates CPC 464 (64K) and CPC 6128 (128K)
-* Loads .SNA and .DSK files up to 1024K total length
+* Loads .SNA and .DSK files up to 1024K total length (single and double sided)
 * Plus2CPC Cartridge Support to load .CPR files up to 512K
+* Dandanator Cartridge Support - banking only (no EEPROM writes)
 * Emulates CRTC Type 3 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll
 * Save / Load state so you can pick up where you left off
 
@@ -96,6 +97,13 @@ Key Mapping :
 Shoulder button L + D-Pad for offset
 Shoulder button R + D-Pad for scale (turn off auto-scale)
 
+It's critical that you use the L/R buttons to shift/scale the screen as the Amstrad
+CPC will often utilize more pixels than the DS has resolution so you will be forced
+to either compress (squash) the screen or else position the screen carefully and map
+one of the buttons to PAN UP or PAN DOWN the screen briefly - this works really well
+for games that show status or score at the top or bottom of the screen but otherwise
+doesn't really affect the main gameplay area. 
+
 DISK Support :
 -----------------------
 .DSK files up to the maximum allowed by 3.5" drives using PARADOS is roughly 720K.
@@ -103,19 +111,30 @@ DISK Support :
 Cartridge Support :
 -----------------------
 Although .CPR cartridges up to 512K are supported, this is not a CPC+ (plus) emulator.
+Dandanator support is for cartridge banking only - but you will be able to play Sword
+of Ianna and Los Amores de Brunilda.
 
 SNA Support :
 -----------------------
-TBD
+Memory snapshots are supported for both 64K and 128K machines.
 
 Known Issues :
 -----------------------
 Prehistorik II has major graphical glitches.
-Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay is fine.
+Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay is better.
 
 
 Version History :
 -----------------------
+
+Version 0.8 - 06-Jun-2025 by wavemotion-dave
+* Tweaks to the Z80 core timing to get it closer to real Amstrad performance. Fewer graphical glitches in games.
+* Improved two-sided disk support.
+* Memory expansion up to 512K is now supported - Mighty Steel Fighters now runs.
+* Dandanator support for cart-banking (only - no EEPROM writes).
+* Screen dimming of bottom screen added.
+* Other minor cleanups and fixes as time allowed.
+
 
 Version 0.7 - 04-Jun-2025 by wavemotion-dave
 * Double sided disks now supported. Orion Prime in 3.5" floppy works!

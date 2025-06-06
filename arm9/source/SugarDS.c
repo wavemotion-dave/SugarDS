@@ -74,6 +74,11 @@ u8 bottom_screen     = 0;
 u8 bStartIn          = 0;
 u8 keyboard_shown    = 0;
 
+int8 currentBrightness = 0;
+const int8 brightness[] = {0, -6, -12, -15};
+static uint16 dimDampen = 0;
+
+
 // ---------------------------------------------------------------------------
 // Some timing and frame rate comutations to keep the emulation on pace...
 // ---------------------------------------------------------------------------
@@ -726,6 +731,7 @@ u8 MiniMenu(void)
 
   while (true)
   {
+    MaxBrightness();
     nds_key = keysCurrent();
     if (nds_key)
     {
@@ -789,6 +795,8 @@ extern u8 pan_mode_offset;
 
 u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 {
+    MaxBrightness();
+    
     if (iTy < 37)
     {
         if (iTx < 75)  if (pan_mode_offset > 0)  pan_mode_offset--;
@@ -810,7 +818,7 @@ u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
         else if ((iTx >= 176) && (iTx < 195))  kbd_key = '9';
         else if ((iTx >= 195) && (iTx < 214))  kbd_key = '0';
         else if ((iTx >= 214) && (iTx < 233))  kbd_key = '-';
-        else if ((iTx >= 233) && (iTx < 255))  kbd_key = KBD_KEY_CLR;
+        else if ((iTx >= 233) && (iTx < 255))  kbd_key = KBD_KEY_DEL;
     }
     else if ((iTy >= 72) && (iTy < 102))  // Row 2 (QWERTY row)
     {
@@ -878,6 +886,8 @@ u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 // ----------------------------------------------------
 u8 handle_cpc_numpad_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 {
+    MaxBrightness();
+    
     if (iTy < 37)
     {
         if (iTx < 75)  if (pan_mode_offset > 0)  pan_mode_offset--;
@@ -912,22 +922,26 @@ u8 handle_cpc_numpad_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
             else if (iTx < 255)   kbd_key = KBD_KEY_FENT;
         }
     }
-    else if ((iTx >= 33) && (iTx < 140) && (iTy > 45) && (iTy < 160)) // Cursor Keys
+    else if ((iTx >= 41) && (iTx < 150) && (iTy > 44) && (iTy < 160)) // Cursor Keys
     {
-        if      ((iTx >= 33)  && (iTx < 68))
+        if      ((iTx >= 41)  && (iTx < 78))
         {
-            if      ((iTy >=  83) && (iTy < 121))  kbd_key = KBD_KEY_CLT;
+            if      ((iTy >=  83) && (iTy < 123))  kbd_key = KBD_KEY_CLT;
         }
-        else if ((iTx >= 68)  && (iTx < 93))
+        else if ((iTx >= 78)  && (iTx < 113))
         {
             if      ((iTy >=  45) && (iTy < 83))  kbd_key = KBD_KEY_CUP;
             else if ((iTy >=  83) && (iTy < 121)) kbd_key = KBD_KEY_CPY;
             else if ((iTy >= 121) && (iTy < 160)) kbd_key = KBD_KEY_CDN;
         }
-        else if ((iTx >= 93)  && (iTx < 139))
+        else if ((iTx >= 113)  && (iTx < 150))
         {
             if      ((iTy >=  83) && (iTy < 121))  kbd_key = KBD_KEY_CRT;
         }
+    }
+    else if ((iTy >= 132) && (iTy < 162) && iTx < 41) // Clear key
+    {
+        kbd_key = KBD_KEY_CLR;
     }
     else if ((iTy >= 162) && (iTy < 192)) // Row 5 (SPACE BAR and icons row)
     {
@@ -948,6 +962,8 @@ u8 handle_cpc_numpad_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 // -----------------------------------------------------------------------------------
 u8 handle_debugger_overlay(u16 iTx, u16 iTy)
 {
+    MaxBrightness();
+    
     if ((iTy >= 165) && (iTy < 192)) // Bottom row is where the debugger keys are...
     {
         if      ((iTx >= 0)   && (iTx <  22))  kbd_key = 'Z';
@@ -1696,6 +1712,24 @@ void SugarDSInitCPU(void)
     BottomScreenKeyboard();
 }
 
+void MaxBrightness(void)
+{
+    currentBrightness = 0;
+    dimDampen = 0;
+}
+
+void HandleBrightness(void)
+{
+    if (currentBrightness == 0) {setBrightness(2, currentBrightness);}
+    if (++dimDampen > ((currentBrightness == 0) ? 200 : 15))
+    {
+        if (currentBrightness < brightness[myGlobalConfig.keyboardDim]) currentBrightness++; else currentBrightness--;
+        setBrightness(2, currentBrightness);      // Subscreen Brightness
+        dimDampen = 0;
+    }
+}
+
+
 ITCM_CODE void irqVBlank(void)
 {
     // Manage time
@@ -1728,6 +1762,11 @@ ITCM_CODE void irqVBlank(void)
             slide_dampen--;
         }
     }
+    
+    if (currentBrightness != brightness[myGlobalConfig.keyboardDim])
+    {
+        HandleBrightness();
+    }    
 }
 
 // ----------------------------------------------------------------------

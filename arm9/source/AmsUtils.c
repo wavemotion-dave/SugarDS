@@ -364,6 +364,13 @@ void sugarDSFindFiles(void)
           countFiles++;
         }
 
+        if ( (strcasecmp(strrchr(szFile, '.'), ".dan") == 0) )  {
+          strcpy(gpFic[uNbFile].szName,szFile);
+          gpFic[uNbFile].uType = AMSTRAD_FILE;
+          uNbFile++;
+          countFiles++;
+        }
+
         if ( (strcasecmp(strrchr(szFile, '.'), ".dsk") == 0) )  {
           strcpy(gpFic[uNbFile].szName,szFile);
           gpFic[uNbFile].uType = AMSTRAD_FILE;
@@ -425,6 +432,7 @@ u8 SugarDSChooseGame(u8 bDiskOnly)
   // -----------------------------------------------------
   while (!bDone)
   {
+    MaxBrightness();
     if (keysCurrent() & KEY_UP)
     {
       if (!ucHaut)
@@ -877,8 +885,8 @@ const struct options_t Option_Table[2][20] =
         {"GAME SPEED",     {"100%", "110%", "120%", "90%", "80%"},                              &myConfig.gameSpeed,         5},
         {"MODE 2",         {"640 COMPRESS", "320 PAN"},                                         &myConfig.mode2mode,         2},
         {"R52  VSYNC",     {"NORMAL", "FORGIVING", "STRICT"},                                   &myConfig.r52IntVsync,       3},
-        {"CPU ADJUST",     {"+0 (NONE)", "+2 CYCLES", "+4 CYCLES", "+8 CYCLES", 
-                            "-8 CYCLES", "-4 CYCLES", "-2 CYCLES"},                             &myConfig.cpuAdjust,         7},
+        {"CPU ADJUST",     {"+0 (NONE)", "+1 CYCLES", "+2 CYCLES", "-4 CYCLES", 
+                            "-3 CYCLES", "-2 CYCLES", "-1 CYCLES"},                             &myConfig.cpuAdjust,         7},
         {"SOUND DRV",      {"NORMAL", "WAVE DIRECT"},                                           &myConfig.waveDirect,        2},        
         {NULL,             {"",      ""},                                                       NULL,                        1},
     },
@@ -888,6 +896,7 @@ const struct options_t Option_Table[2][20] =
         {"DISK ROM",       {"AMSDOS", "PARADOS"},                                               &myGlobalConfig.diskROM,     2},
         {"START DIR",      {"/ROMS/CPC", "/ROMS/AMSTRAD", "LAST USED DIR"},                     &myGlobalConfig.lastDir,     3},
         {"SPLASH SCR",     {"CPC KEYBOARD", "AMSTRAD CROC"},                                    &myGlobalConfig.splashType,  2},
+        {"KEYBD BRIGHT",   {"MAX BRIGHT", "DIM", "DIMMER", "DIMMEST"},                          &myGlobalConfig.keyboardDim, 4},
         
         {"DEBUGGER",       {"OFF", "BAD OPS", "DEBUG", "FULL DEBUG"},                           &myGlobalConfig.debugger,    4},
         {NULL,             {"",      ""},                                                       NULL,                        1},
@@ -946,6 +955,7 @@ void SugarDSGameOptions(bool bIsGlobal)
     }
     while (!bDone)
     {
+        MaxBrightness();
         keys_pressed = keysCurrent();
         if (keys_pressed != last_keys_pressed)
         {
@@ -1092,7 +1102,9 @@ void SugarDSChangeKeymap(void)
       ;
   WAITVBL;
 
-  while (!bOK) {
+  while (!bOK) 
+  {
+    MaxBrightness();
     if (keysCurrent() & KEY_UP) {
       if (!ucHaut) {
         DisplayKeymapName(32);
@@ -1109,7 +1121,8 @@ void SugarDSChangeKeymap(void)
     else {
       ucHaut = 0;
     }
-    if (keysCurrent() & KEY_DOWN) {
+    if (keysCurrent() & KEY_DOWN) 
+    {
       if (!ucBas) {
         DisplayKeymapName(32);
         ucY = (ucY == 16 ? 7 : ucY +1);
@@ -1265,6 +1278,8 @@ void ReadFileCRCAndConfig(void)
     if (strstr(gpFic[ucGameChoice].szName, ".CPR") != 0) amstrad_mode = MODE_CPR;
     if (strstr(gpFic[ucGameChoice].szName, ".sna") != 0) amstrad_mode = MODE_SNA;
     if (strstr(gpFic[ucGameChoice].szName, ".SNA") != 0) amstrad_mode = MODE_SNA;
+    if (strstr(gpFic[ucGameChoice].szName, ".dan") != 0) amstrad_mode = MODE_DAN;
+    if (strstr(gpFic[ucGameChoice].szName, ".DAN") != 0) amstrad_mode = MODE_DAN;
 
     // Grab the all-important file CRC - this also loads the file into ROM_Memory[]
     getfile_crc(gpFic[ucGameChoice].szName);
@@ -1332,7 +1347,9 @@ void sugarDSChangeOptions(void)
       DisplayFileName();
   }
 
-  while (!bOK) {
+  while (!bOK) 
+  {
+    MaxBrightness();
     if (keysCurrent()  & KEY_UP) {
       if (!ucHaut) {
         dispInfoOptions(32);
@@ -1519,7 +1536,13 @@ void BufferKey(u8 key)
 // Buffer a whole string worth of characters...
 void BufferKeys(char *str)
 {
-    for (int i=0; i<strlen(str); i++)  BufferKey((u8)str[i]);
+    for (int i=0; i<strlen(str); i++)
+    {
+        if (str[i] >= 32)
+        {
+            BufferKey((u8)str[i]);
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------------------
@@ -1555,79 +1578,68 @@ void ProcessBufferedKeys(void)
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = '2';
         }
-
         // Check all of the characters that could be typed as shifted-values
-        if (buf_held == '+')
+        else if (buf_held == '+')
         {
             last_special_key = 1;
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = ';';
         }
-
-        if (buf_held == '!')
+        else if (buf_held == '!')
         {
             last_special_key = 1;
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = '1';
         }
-
-        if (buf_held == '#')
+        else if (buf_held == '#')
         {
             last_special_key = 1;
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = '3';
         }
-
-        if (buf_held == '$')
+        else if (buf_held == '$')
         {
             last_special_key = 1;
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = '4';
         }
-
-        if (buf_held == '%')
+        else if (buf_held == '%')
         {
             last_special_key = 1;
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = '5';
         }
-
-        if (buf_held == '&')
+        else if (buf_held == '&')
         {
             last_special_key = 1;
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = '6';
         }
-
-        if (buf_held == '(')
+        else if (buf_held == '(')
         {
             last_special_key = 1;
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = '8';
         }
-
-        if (buf_held == ')')
+        else if (buf_held == ')')
         {
             last_special_key = 1;
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = '9';
         }
-
-        if (buf_held == '_')
+        else if (buf_held == '_')
         {
             last_special_key = 1;
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = '0';
         }
-
-        if (buf_held == '*')
+        else if (buf_held == '*')
         {
             last_special_key = 1;
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = ':';
         }
-
-        if (buf_held == '=')
+        else if (buf_held == '=')
         {
             last_special_key = 1;
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;

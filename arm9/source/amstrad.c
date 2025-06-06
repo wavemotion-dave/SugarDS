@@ -59,9 +59,17 @@ u8 CRTC_MASKS[0x20] = {0xFF, 0xFF, 0xFF, 0x0F,
                        0x00, 0x00, 0x00, 0x00,
                        0x00, 0x00, 0x00, 0x00};
 
-s16 CPU_ADJUST[] __attribute__((section(".dtcm"))) = {0, 2, 4, 8, -8, -4, -2};
+s16 CPU_ADJUST[] __attribute__((section(".dtcm"))) = {0, 1, 2, -4, -3, -2, -1};
 
 extern u8 last_special_key;
+
+// ----------------------------------------------------
+// Dandanator Mini support - mostly for Sword of IANNA
+// and Los Amores de Brunilda.
+// ----------------------------------------------------
+u8  DAN_Zone0     = 0x00;   // Zone 0 enabled on slot0
+u8  DAN_Zone1     = 0x20;   // Zone 1 disabled on slot0
+u16 DAN_ZonesA15  = 0x00;   // Zones 0 and 1 high address bit
 
 ITCM_CODE void compute_pre_inked(u8 mode)
 {
@@ -152,6 +160,26 @@ void CartLoad(void)
     }
 }
 
+
+// -------------------------------------------------------------------
+// Dandanator support is limited to cart banking into zones only.
+// There is no writing back of the EEPROM for games that might
+// make use of save states. For that, we can just use our Save/Load
+// state handling for the emulator.
+// -------------------------------------------------------------------
+void DandanatorLoad(void)
+{
+    // -------------------------------------------------------------------
+    // Not much to do really. The Dandanator file is laid out in sequential
+    // blocks of 16K from 0..31 for a total of 512K of flay file memory.
+    // This is now contained in our ROM_Memory[] buffer ready to use...
+    // -------------------------------------------------------------------
+    DAN_Zone0     = 0x00;   // Zone 0 enabled on slot0
+    DAN_Zone1     = 0x20;   // Zone 1 disabled on slot0
+    DAN_ZonesA15  = 0x00;   // Zones 0 and 1 high address bit    
+}
+
+
 // -Address-     0      1      2      3      4      5      6      7
 // 0000-3FFF   RAM_0  RAM_0  RAM_4  RAM_0  RAM_0  RAM_0  RAM_0  RAM_0
 // 4000-7FFF   RAM_1  RAM_1  RAM_5  RAM_3  RAM_4  RAM_5  RAM_6  RAM_7
@@ -192,6 +220,20 @@ ITCM_CODE void ConfigureMemory(void)
         LROM_Ptr = CartBankPtr[0];
     }
     
+    u8 *upper_ram_block = RAM_Memory+0x10000;
+
+    switch ((MMR >> 3) & 7)
+    {
+        case 0: upper_ram_block = RAM_Memory+0x10000; break;
+        case 1: upper_ram_block = ROM_Memory+0x90000; break;
+        case 2: upper_ram_block = ROM_Memory+0xA0000; break;
+        case 3: upper_ram_block = ROM_Memory+0xB0000; break;
+        case 4: upper_ram_block = ROM_Memory+0xC0000; break;
+        case 5: upper_ram_block = ROM_Memory+0xD0000; break;
+        case 6: upper_ram_block = ROM_Memory+0xE0000; break;            
+        case 7: upper_ram_block = ROM_Memory+0xF0000; break;            
+    }
+    
     switch (MMR & 0x7)
     {
       case 0x00: // 0-1-2-3
@@ -210,86 +252,120 @@ ITCM_CODE void ConfigureMemory(void)
         MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
         MemoryMapR[1] = RAM_Memory + 0x4000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
-        MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0x1C000) : UROM_Ptr;  // Upper ROM
+        MemoryMapR[3] = (RMR & 0x08) ? (upper_ram_block + 0xC000) : UROM_Ptr;  // Upper ROM
 
         MemoryMapW[0] = RAM_Memory + 0x0000;
         MemoryMapW[1] = RAM_Memory + 0x4000;
         MemoryMapW[2] = RAM_Memory + 0x8000;
-        MemoryMapW[3] = RAM_Memory + 0x1C000;
+        MemoryMapW[3] = upper_ram_block + 0xC000;
         break;
 
       case 0x02: // 4-5-6-7
-        MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x10000) : LROM_Ptr;   // Lower ROM
-        MemoryMapR[1] = RAM_Memory + 0x14000;
-        MemoryMapR[2] = RAM_Memory + 0x18000;
-        MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0x1C000) : UROM_Ptr;   // Upper ROM
+        MemoryMapR[0] = (RMR & 0x04) ? (upper_ram_block + 0x0000) : LROM_Ptr;   // Lower ROM
+        MemoryMapR[1] = upper_ram_block + 0x4000 ;
+        MemoryMapR[2] = upper_ram_block + 0x8000;
+        MemoryMapR[3] = (RMR & 0x08) ? (upper_ram_block + 0xC000) : UROM_Ptr;   // Upper ROM
 
-        MemoryMapW[0] = RAM_Memory + 0x10000;
-        MemoryMapW[1] = RAM_Memory + 0x14000;
-        MemoryMapW[2] = RAM_Memory + 0x18000;
-        MemoryMapW[3] = RAM_Memory + 0x1C000;
+        MemoryMapW[0] = upper_ram_block + 0x0000;
+        MemoryMapW[1] = upper_ram_block + 0x4000;
+        MemoryMapW[2] = upper_ram_block + 0x8000;
+        MemoryMapW[3] = upper_ram_block + 0xC000;
         break;
 
       case 0x03: // 0-3-2-7
         MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
         MemoryMapR[1] = RAM_Memory + 0xC000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
-        MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0x1C000) : UROM_Ptr;  // Upper ROM
+        MemoryMapR[3] = (RMR & 0x08) ? (upper_ram_block + 0xC000) : UROM_Ptr;  // Upper ROM
 
         MemoryMapW[0] = RAM_Memory + 0x0000;
         MemoryMapW[1] = RAM_Memory + 0xC000;
         MemoryMapW[2] = RAM_Memory + 0x8000;
-        MemoryMapW[3] = RAM_Memory + 0x1C000;
+        MemoryMapW[3] = upper_ram_block + 0xC000;
         break;
 
       case 0x04: // 0-4-2-3
         MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
-        MemoryMapR[1] = RAM_Memory + 0x10000;
+        MemoryMapR[1] = upper_ram_block + 0x0000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
         MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0xC000) : UROM_Ptr;   // Upper ROM
 
         MemoryMapW[0] = RAM_Memory + 0x0000;
-        MemoryMapW[1] = RAM_Memory + 0x10000;
+        MemoryMapW[1] = upper_ram_block + 0x0000;
         MemoryMapW[2] = RAM_Memory + 0x8000;
         MemoryMapW[3] = RAM_Memory + 0xC000;
         break;
 
       case 0x05: // 0-5-2-3
         MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
-        MemoryMapR[1] = RAM_Memory + 0x14000;
+        MemoryMapR[1] = upper_ram_block + 0x4000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
         MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0xC000) : UROM_Ptr;   // Upper ROM
 
         MemoryMapW[0] = RAM_Memory + 0x0000;
-        MemoryMapW[1] = RAM_Memory + 0x14000;
+        MemoryMapW[1] = upper_ram_block + 0x4000;
         MemoryMapW[2] = RAM_Memory + 0x8000;
         MemoryMapW[3] = RAM_Memory + 0xC000;
         break;
         
       case 0x06: // 0-6-2-3
         MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
-        MemoryMapR[1] = RAM_Memory + 0x18000;
+        MemoryMapR[1] = upper_ram_block + 0x8000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
         MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0xC000) : UROM_Ptr;   // Upper ROM
 
         MemoryMapW[0] = RAM_Memory + 0x0000;
-        MemoryMapW[1] = RAM_Memory + 0x18000;
+        MemoryMapW[1] = upper_ram_block + 0x8000;
         MemoryMapW[2] = RAM_Memory + 0x8000;
         MemoryMapW[3] = RAM_Memory + 0xC000;
         break;
 
       case 0x07: // 0-7-2-3
         MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
-        MemoryMapR[1] = RAM_Memory + 0x1C000;
+        MemoryMapR[1] = upper_ram_block + 0xC000;
         MemoryMapR[2] = RAM_Memory + 0x8000;
         MemoryMapR[3] = (RMR & 0x08) ? (RAM_Memory + 0xC000) : UROM_Ptr;   // Upper ROM
 
         MemoryMapW[0] = RAM_Memory + 0x0000;
-        MemoryMapW[1] = RAM_Memory + 0x1C000;
+        MemoryMapW[1] = upper_ram_block + 0xC000;
         MemoryMapW[2] = RAM_Memory + 0x8000;
         MemoryMapW[3] = RAM_Memory + 0xC000;
         break;
     }
+    
+    
+    // ------------------------------------------------------
+    // And after all is said and done above, the last thing
+    // we do is check if any Dandanator Mini cart memory
+    // is mapped in which overrides everything else... but
+    // only for memory reads (writes always go to RAM).
+    // ------------------------------------------------------
+    if (amstrad_mode == MODE_DAN)
+    {
+        if ((DAN_Zone0 & 0x20) == 0) // Is Zone 0 Enabled?
+        {
+            if (DAN_ZonesA15 & 0x01) // High bit A15 enabled?
+            {
+                MemoryMapR[2] = &ROM_Memory[(DAN_Zone0 & 0x1F) * 0x4000];
+            }
+            else
+            {
+                MemoryMapR[0] = &ROM_Memory[(DAN_Zone0 & 0x1F) * 0x4000];
+            }
+        }
+        
+        if ((DAN_Zone1 & 0x20) == 0) // Is Zone 1 Enabled?
+        {
+            if (DAN_ZonesA15 & 0x02) // High bit A15 enabled?
+            {
+                MemoryMapR[3] = &ROM_Memory[(DAN_Zone1 & 0x1F) * 0x4000];
+            }
+            else
+            {
+                MemoryMapR[1] = &ROM_Memory[(DAN_Zone1 & 0x1F) * 0x4000];
+            }
+        }
+    }    
     
     // Offset so lookup is faster in Z80 core
     MemoryMapR[1] -= 0x4000;
@@ -371,6 +447,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                                 if (kbd_key == ']')         keyBits |= 0x08;
                                 if (kbd_key == KBD_KEY_RET) keyBits |= 0x04;
                                 if (kbd_key == '[')         keyBits |= 0x02;
+                                if (kbd_key == KBD_KEY_CLR) keyBits |= 0x01;                                
                                 
                                 // And handle the special modifier keys
                                 if (last_special_key == KBD_KEY_SFT) keyBits |= 0x20;
@@ -444,7 +521,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                                 break;
                             
                             case 0x09:
-                                if (kbd_key == KBD_KEY_CLR) keyBits |= 0x80;
+                                if (kbd_key == KBD_KEY_DEL) keyBits |= 0x80;
                                 if (JoyState & JST_FIRE3)   keyBits |= 0x40;
                                 if (JoyState & JST_FIRE2)   keyBits |= 0x20;
                                 if (JoyState & JST_FIRE)    keyBits |= 0x10;
@@ -710,12 +787,18 @@ void amstrad_reset(void)
     else if (amstrad_mode == MODE_CPR)
     {
         CartLoad();
+        ConfigureMemory();
+    }
+    else if (amstrad_mode == MODE_DAN)
+    {
+        DandanatorLoad();
+        ConfigureMemory();
     }
     else // Must be SNA snapshot 
     {   
-        // ------------------------------------------
-        // For now, just assume .SNA snapshot format.
-        // ------------------------------------------
+        // ----------------------------------
+        // The memory .SNA snapshot format.
+        // ----------------------------------
         u8 snap_ver = ROM_Memory[0x10];
         (void)snap_ver;
         

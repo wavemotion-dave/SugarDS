@@ -28,6 +28,7 @@ extern u32 border_color;
 extern u32 last_frame_mode2;
 extern u32 last_frame_mode01;
 extern u8 last_frame_crtc1;
+extern int8 currentBrightness;
 
 // These are the various special icons/menu operations
 #define MENU_CHOICE_NONE        0x00
@@ -128,7 +129,7 @@ extern u8 last_frame_crtc1;
 // For the Full Keyboard...
 // -----------------------------
 #define KBD_KEY_SFT         1
-#define KBD_KEY_CLR         2
+#define KBD_KEY_DEL         2
 #define KBD_KEY_CAPS        3
 #define KBD_KEY_CTL         4
 #define KBD_KEY_TAB         5
@@ -152,13 +153,16 @@ extern u8 last_frame_crtc1;
 #define KBD_KEY_F9          23
 #define KBD_KEY_FDOT        24
 #define KBD_KEY_FENT        25
+#define KBD_KEY_CLR         26
 
 #define KBD_KEY_ESC         27
 
 // What format is the input file?
 #define MODE_DSK            1
 #define MODE_CPR            2
-#define MODE_SNA            3
+#define MODE_DAN            3
+#define MODE_SNA            4
+
 
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
@@ -250,6 +254,7 @@ extern void ReadFileCRCAndConfig(void);
 extern void DisplayStatusLine(bool bForce);
 extern void DiskInsert(char *filename, u8 bForceRead);
 extern void ResetAmstrad(void);
+extern void MaxBrightness(void);
 extern void debug_init();
 extern void debug_save();
 extern void debug_printf(const char * str, ...);
