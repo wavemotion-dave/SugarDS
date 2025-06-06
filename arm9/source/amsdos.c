@@ -1,9 +1,9 @@
 // SugarDS is Copyright (c) 2025 Dave Bernazzani (wavemotion-dave)
-// 
-// Bits of pieces of this emulator have been glued and attached from a large number of sources - along with a healthy amount of 
-// code by this author to pull it all together. Although it was hard to trace everythign to the original sources, I believe all 
+//
+// Bits of pieces of this emulator have been glued and attached from a large number of sources - along with a healthy amount of
+// code by this author to pull it all together. Although it was hard to trace everythign to the original sources, I believe all
 // sources have released their material under the GNU General Public License and, as such, the SugarDS emulator follows suit.
-// 
+//
 // Previous contributions to this codebase:
 //
 // CrocoDS: CPC Emulator for the DS - Copyright (c) 2013 Miguel Vanhove (Kyuran)
@@ -11,20 +11,20 @@
 // Caprice32: Amstrad CPC Emulator - Copyright (c) 1997-2004 Ulrich Doewich.
 // Arnold: Amstrad CPC Emulator - Copyright (c) 1995-2002, 2007 Andreas Micklei and Kevin Thacker
 //
-// As far as I'm concerned, you can use this code in whatever way suits you provided you continue to release the sources under 
+// As far as I'm concerned, you can use this code in whatever way suits you provided you continue to release the sources under
 // the original copyright notice (see below) which appeared to be the intention of all the pioneers who came before me.
-// 
+//
 // Original Copyright Notice
 // This program is free software; you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation; either version 2 of the License, or
 // (at your option) any later version.
-// 
+//
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -393,7 +393,7 @@ BOOL    AMSDOS_DoesDirectoryEntryQualifyForAutorun(const amsdos_directory_entry 
     {
         return FALSE;
     }
-    
+
     /* check the filename can actually be typed */
     if (!AMSDOS_CheckValidFilename(entry))
         return FALSE;
@@ -741,7 +741,7 @@ int AMSDOS_ProcessFiles(const AMSDOS_FORMAT *pFormat,unsigned char *pBuffer, cha
             char tmp[33];
             sprintf(tmp, "%3d %s", nPriority, Filename);
             DSPrint(0, zzz++, 6, tmp);
-#endif            
+#endif
             ValidEntries[i].nPriority = nPriority;
         }
 
@@ -884,7 +884,7 @@ int AMSDOS_GenerateAutorunCommand(char *AutorunCommand)
         /* Sector C1 does exist */
         /* Sector 01 doesn't exist */
 
-        if (!HasDirectoryC1) 
+        if (!HasDirectoryC1)
         {
             return AUTORUN_NOT_POSSIBLE;
         }

@@ -72,7 +72,7 @@ struct __attribute__((__packed__)) GlobalConfig_t
     u8  lastDir;
     u8  diskROM;
     u8  splashType;
-    u8  global_03;
+    u8  keyboardDim;
     u8  global_04;
     u8  global_05;
     u8  global_06;
@@ -130,7 +130,7 @@ extern u8 BufferedKeysReadIdx;
 extern u8 portA, portB, portC;
 
 extern u8 ROM_Memory[MAX_ROM_SIZE];
-extern u8 RAM_Memory[0x20000];
+extern u8 RAM_Memory[0x20000]; // 64K plus an expanded 512K
 
 extern u8 *MemoryMapR[4];
 extern u8 *MemoryMapW[4];

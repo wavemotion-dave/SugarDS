@@ -116,14 +116,14 @@ typedef struct
     int Motor;
     int sector_index;
     int function;
-	int rd_sect;
+    int rd_sect;
     int rd_cntdata;
     int rd_newPos;
-	int rd_SectorSize;
+    int rd_SectorSize;
     int wr_sect;
     int wr_cntdata;
     int wr_newPos;
-	int wr_SectorSize;
+    int wr_SectorSize;
     int dirty_counter;
     u8  bDirtyFlags[256]; // one flag for each of 256 possible 4K SD flash blocks (1024K max)
     u8 *ImgDsk;

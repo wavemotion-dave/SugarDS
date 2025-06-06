@@ -34,6 +34,11 @@ extern u32 debug[];
 extern u32 DX,DY;
 extern void EI_Enable(void);
 
+extern u8  DAN_Zone0;
+extern u8  DAN_Zone1;
+extern u16 DAN_ZonesA15;
+extern void ConfigureMemory(void);
+
 #define INLINE static inline
 
 /** System-Dependent Stuff ***********************************/
@@ -563,11 +568,30 @@ static void CodesFD(void)
 
   /* R register incremented on each M1 cycle */
   INCR(1);
-
+  
   switch(I)
   {
 #include "CodesXX.h"
     case PFX_FD:
+        if (RdZ80(CPU.PC.W) == 0x70) // LD (IY+nn),B - Zone 0 command
+        {
+            DAN_Zone0 = CPU.BC.B.h;
+            ConfigureMemory();
+        }        
+        if (RdZ80(CPU.PC.W) == 0x71) // LD (IY+nn),C - Zone 1 command
+        {
+            DAN_Zone1 = CPU.BC.B.l;
+            ConfigureMemory();
+        }        
+        if (RdZ80(CPU.PC.W) == 0x77) // LD (IY+nn),A - Config command
+        {
+            if (CPU.AF.B.h & 0x80)
+            {
+                DAN_ZonesA15 = (CPU.AF.B.h & 0x0C) >> 2;
+                ConfigureMemory();
+            }
+        }        
+        CPU.PC.W--;break;
     case PFX_DD:
       CPU.PC.W--;break;
     case PFX_CB:
