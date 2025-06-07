@@ -277,10 +277,8 @@ ITCM_CODE mm_word OurSoundMixer(mm_word len, mm_addr dest, mm_stream_formats for
 }
 
 // --------------------------------------------------------------------------------------------
-// This is called when we want to sample the audio directly - we grab 2x AY samples and mix
-// them with the beeper tones. We do a little bit of edge smoothing on the audio  tones here
-// to make the direct beeper sound a bit less harsh - but this really needs to be properly
-// over-sampled and smoothed someday to make it really shine... good enough for now.
+// This is called when we want to sample the audio directly - we grab 4x AY samples that  
+// will be played back by the mixer routine directly above...
 // --------------------------------------------------------------------------------------------
 s16 mixbufAY[4]  __attribute__((section(".dtcm")));
 s16 beeper_vol[4] __attribute__((section(".dtcm"))) = { 0x000, 0x200, 0x600, 0xA00 };
@@ -397,7 +395,7 @@ void dsInstallSoundEmuFIFO(void)
 //*****************************************************************************
 
 // --------------------------------------------------------------
-// When we first load a ROM/CASSETTE or when the user presses
+// When we first load a ROM/DISK or when the user presses
 // the RESET button on the touch-screen...
 // --------------------------------------------------------------
 void ResetAmstrad(void)
@@ -639,69 +637,11 @@ void DiskInsert(char *filename, u8 bForceRead)
 }
 
 
-// ----------------------------------------------------------------------
-// The Cassette Menu can be called up directly from the keyboard graphic
-// and allows the user to rewind the tape, swap in a new tape, etc.
-// ----------------------------------------------------------------------
-#define MENU_ACTION_END             255 // Always the last sentinal value
-#define MENU_ACTION_EXIT            0   // Exit the menu
-#define MENU_ACTION_PLAY            1   // Play Cassette
-#define MENU_ACTION_STOP            2   // Stop Cassette
-#define MENU_ACTION_SWAP            3   // Swap Cassette
-#define MENU_ACTION_REWIND          4   // Rewind Cassette
-#define MENU_ACTION_POSITION        5   // Position Cassette
-
-#define MENU_ACTION_RESET           98  // Reset the machine
-#define MENU_ACTION_SKIP            99  // Skip this MENU choice
-
 typedef struct
 {
     char *menu_string;
     u8    menu_action;
 } MenuItem_t;
-
-typedef struct
-{
-    char *title;
-    u8   start_row;
-    MenuItem_t menulist[15];
-} CassetteDiskMenu_t;
-
-CassetteDiskMenu_t generic_cassette_menu =
-{
-    "CASSETTE MENU", 3,
-    {
-        {" PLAY     CASSETTE  ",      MENU_ACTION_PLAY},
-        {" STOP     CASSETTE  ",      MENU_ACTION_STOP},
-        {" SWAP     CASSETTE  ",      MENU_ACTION_SWAP},
-        {" REWIND   CASSETTE  ",      MENU_ACTION_REWIND},
-        {" POSITION CASSETTE  ",      MENU_ACTION_POSITION},
-        {" EXIT     MENU      ",      MENU_ACTION_EXIT},
-        {" NULL               ",      MENU_ACTION_END},
-    },
-};
-
-
-CassetteDiskMenu_t *menu = &generic_cassette_menu;
-
-// ------------------------------------------------------------------------
-// Show the Cassette/Disk Menu text - highlight the selected row.
-// ------------------------------------------------------------------------
-u8 cassette_menu_items = 0;
-void CassetteMenuShow(bool bClearScreen, u8 sel)
-{
-}
-
-// ------------------------------------------------------------------------
-// Handle Cassette mini-menu interface... Allows rewind, swap tape, etc.
-// ------------------------------------------------------------------------
-void CassetteMenu(void)
-{
-  WAITVBL;WAITVBL;
-  BottomScreenKeyboard();  // Could be generic or overlay...
-  SoundUnPause();
-}
-
 
 // ------------------------------------------------------------------------
 // Show the Mini Menu - highlight the selected row. This can be called

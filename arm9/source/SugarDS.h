@@ -245,7 +245,6 @@ extern void crtc_r52_int(void);
 extern void BottomScreenOptions(void);
 extern void TopScreenOptions(void);
 extern void TopScreenImage(void);
-extern void BottomScreenCassette(void);
 extern void BottomScreenKeyboard(void);
 extern void PauseSound(void);
 extern void UnPauseSound(void);

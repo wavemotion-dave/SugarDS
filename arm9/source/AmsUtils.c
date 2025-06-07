@@ -1897,10 +1897,9 @@ void intro_logo(void)
   FadeToColor(1,BLEND_FADE_WHITE | BLEND_SRC_BG0 | BLEND_DST_BG0,3,16,3);
 }
 
-// -------------------------------------------------------------------------
-// For arious machines, we have patched the BIOS so that we trap calls
-// to various I/O routines: namely cassette access. We handle that here.
-// -------------------------------------------------------------------------
+// -------------------------------------------
+// Not needed presently for the Amstrad CPC 
+// -------------------------------------------
 void PatchZ80(register Z80 *r)
 {
 }
@@ -1918,6 +1917,7 @@ void Trap_Bad_Ops(char *prefix, byte I, word W)
     }
 }
 
+// Needed for the printf.h replacement library
 void _putchar(char character) {}
 
 // End of file
