@@ -752,5 +752,6 @@ void ReadDiskMem(u8 *rom, u32 romsize)
         fdc.ST3 &= ~ST3_TS; // Clear Two Sides signal
     }
 
-    ChangeCurrTrack(0);
+    SetST0();
+    MoveTrack0(0);
 }

@@ -580,7 +580,7 @@ void DisplayStatusLine(bool bForce)
                 {
                     if (fdc.bDirtyFlags[i])
                     {
-                        fwrite(DISK_IMAGE_BUFFER + (4096 * i), 1024, 1, outfile);
+                        fwrite(DISK_IMAGE_BUFFER + (4096 * i), 4096, 1, outfile);
                         fdc.bDirtyFlags[i] = 0;
                     }
                     else
