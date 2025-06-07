@@ -171,7 +171,7 @@ void DandanatorLoad(void)
 {
     // -------------------------------------------------------------------
     // Not much to do really. The Dandanator file is laid out in sequential
-    // blocks of 16K from 0..31 for a total of 512K of flay file memory.
+    // blocks of 16K from 0..31 for a total of 512K of cart file memory.
     // This is now contained in our ROM_Memory[] buffer ready to use...
     // -------------------------------------------------------------------
     DAN_Zone0     = 0x00;   // Zone 0 enabled on slot0
@@ -222,18 +222,35 @@ ITCM_CODE void ConfigureMemory(void)
     
     u8 *upper_ram_block = RAM_Memory+0x10000;
 
+    // ------------------------------------------------------------------
+    // If a game calls for more than the standard 128K of RAM found
+    // in a CPC 6128, we start to steal blocks of 64K from the back-end
+    // of the ROM_Memory[] buffer. The hope is that we would not need 
+    // to use both that much ROM_Memory[] and extended RAM_Memory[] at
+    // the same time... but this is a compromise as we have limited RAM.
+    // Steal the 64K blocks starting at the far (back) end of the buffer
+    // so there is less chance of the two memory ends meeting and causing
+    // a catastrophe of biblical proportions.
+    // ------------------------------------------------------------------
     switch ((MMR >> 3) & 7)
     {
         case 0: upper_ram_block = RAM_Memory+0x10000; break;
-        case 1: upper_ram_block = ROM_Memory+0x90000; break;
-        case 2: upper_ram_block = ROM_Memory+0xA0000; break;
-        case 3: upper_ram_block = ROM_Memory+0xB0000; break;
+        case 1: upper_ram_block = ROM_Memory+0xF0000; break;
+        case 2: upper_ram_block = ROM_Memory+0xE0000; break;
+        case 3: upper_ram_block = ROM_Memory+0xD0000; break;
         case 4: upper_ram_block = ROM_Memory+0xC0000; break;
-        case 5: upper_ram_block = ROM_Memory+0xD0000; break;
-        case 6: upper_ram_block = ROM_Memory+0xE0000; break;            
-        case 7: upper_ram_block = ROM_Memory+0xF0000; break;            
+        case 5: upper_ram_block = ROM_Memory+0xB0000; break;
+        case 6: upper_ram_block = ROM_Memory+0xA0000; break;            
+        case 7: upper_ram_block = ROM_Memory+0x90000; break;            
     }
     
+    // ----------------------------------------------------------------------
+    // The heart of the memory management system utilizes MMR to tell us
+    // what blocks get mapped where in the 64K Z80 memory space.  One
+    // neat thing about the Amstrad is that the RAM is always write-thru
+    // so even if ROM is mapped into a 16K block, the RAM under it can 
+    // always be written (which is convenient since ROM can't be written to)
+    // ----------------------------------------------------------------------
     switch (MMR & 0x7)
     {
       case 0x00: // 0-1-2-3
@@ -367,11 +384,15 @@ ITCM_CODE void ConfigureMemory(void)
         }
     }    
     
-    // Offset so lookup is faster in Z80 core
+    // -------------------------------------------------------------------------------
+    // Offset so lookup is faster in Z80 core - this way we don't have to use a mask.
+    // -------------------------------------------------------------------------------
+    MemoryMapR[0] -= 0x0000;
     MemoryMapR[1] -= 0x4000;
     MemoryMapR[2] -= 0x8000;
     MemoryMapR[3] -= 0xC000;
 
+    MemoryMapW[0] -= 0x0000;
     MemoryMapW[1] -= 0x4000;
     MemoryMapW[2] -= 0x8000;
     MemoryMapW[3] -= 0xC000;    

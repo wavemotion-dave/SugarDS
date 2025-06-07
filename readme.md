@@ -106,22 +106,37 @@ doesn't really affect the main gameplay area.
 
 DISK Support :
 -----------------------
-.DSK files up to the maximum allowed by 3.5" drives using PARADOS is roughly 720K.
+.DSK files up to the maximum allowed by 3.5" drives using PARADOS is roughly 720K. Most
+disks should auto-load but if your disk does not, it should provide a catalog of the
+possible filenames that could be used to run the program. One trick is to include
+the command you want to run in the filename of the .DSK file itself. That helps the
+auto-type detection algorithm.
 
 Cartridge Support :
 -----------------------
 Although .CPR cartridges up to 512K are supported, this is not a CPC+ (plus) emulator.
-Dandanator support is for cartridge banking only - but you will be able to play Sword
-of Ianna and Los Amores de Brunilda.
+So games like ALCON 2020 work fine... as do any other .CPR games that do not specifically
+utilize the GX4000 or Amstrad CPC+ (plus) graphics capabilities. 
+
+Dandanator Support :
+-----------------------
+Mainly to run two games - Sword of Ianna and Los Amores de Brunilda. Rename those .rom
+files as .dan files so that they will be loaded as Dandanator files within the SugarDS
+emulator. Note that we do not support Flash writes on these carts - but the games
+themselves should be playable and you can use the normal emulator save/load states
+to save your progress.
 
 SNA Support :
 -----------------------
-Memory snapshots are supported for both 64K and 128K machines.
+Memory snapshots are supported for both 64K and 128K machines. You should strongly prefer
+to use .DSK or .CPR (or .DAN) files as snapshots cannot save data nor can they multi-load.
 
 Known Issues :
 -----------------------
-Prehistorik II has major graphical glitches.
-Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay is better.
+* Prehistorik II has major graphical glitches.
+* Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay is better.
+* Dizzy III requires that you set the 'V52 Sync' option to 'Forgiving' so it plays at the right speed.
+* Galactic Tomb 128K has graphical glitches. The only way to get it to run is to change the CPU Cycles from +0 to -2 back and forth while playing until the game 'locks in' and starts to look/play correctly. 
 
 
 Version History :
@@ -135,7 +150,6 @@ Version 0.8 - 06-Jun-2025 by wavemotion-dave
 * Screen dimming of bottom screen added.
 * Other minor cleanups and fixes as time allowed.
 
-
 Version 0.7 - 04-Jun-2025 by wavemotion-dave
 * Double sided disks now supported. Orion Prime in 3.5" floppy works!
 * Disks now auto-persist back to the SD card when written.
@@ -146,7 +160,6 @@ Version 0.7 - 04-Jun-2025 by wavemotion-dave
 * New Amstrad Croc top screen available - use Global Settings.
 * Improved auto-scale in the X (horizontal) direction.
 * Minor tweaks and bug fixes as time allowed.
-
 
 Version 0.6 - 02-Jun-2025 by wavemotion-dave
 * Cartridge .CPR support up to 512K

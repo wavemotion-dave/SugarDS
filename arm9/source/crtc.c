@@ -193,7 +193,6 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             R52 = 0;                // Always reset the R52 counter on VSync+2
             vSyncDS = 1;            // Inform caller of frame end - our DS 'vSync' if you will...
             escapeClause = 320;     // Reset watchdog
-            vSyncSeen = 1;          // We've seen a vertical sync this frame
         }
     }
 
@@ -208,12 +207,15 @@ ITCM_CODE u8 crtc_render_screen_line(void)
         }
     }
     
+    // We are currently not using this force vsync mechanism...
+    // Unsure if it's possible to force a VSYNC with most CRTC versions.
     if (crtc_force_vsync)
     {
         crtc_force_vsync = 0; // Only one force per frame
         portB |= 0x01;        // Set VSYNC
         vsync_plus_two = 2;   // Interrupt in 2 raster lines
         vsync_off_count = 16; // And turn off in 16 scanlines
+        vSyncSeen = 1;        // We've seen a vSync
     }
 
     // -------------------------------------------------------------------------
@@ -226,13 +228,13 @@ ITCM_CODE u8 crtc_render_screen_line(void)
         VLC = 0;    // Reset counter - build up the next character line
         VCC++;      // We have finished one vertical character
 
-        if (VCC == CRTC[7]) // Vertical Sync reached?
-        {
-            portB |= 0x01;        // Set VSYNC
-            vsync_plus_two = 2;   // Interrupt in 2 raster lines
-            vsync_off_count = 16; // And turn off in 16 scanlines
-        }
-
+        // This isn't right - it should be equals-equals (==) but the
+        // timing on Amstrad CPC games is tight and the line-based
+        // emulation is not perfect so we have to cheat a bit. This
+        // works well enough and tends to not cause any NEW problems
+        // (that is - games that already have issues are not helped 
+        // by making this more 'correct' and we lose some functionality
+        // if we tighten the screws on this one).
         if (VCC >= (CRTC[4]+1)) // Full "Screen" rendered?
         {
             VTAC = 1;   // Assume no extra lines... may adjust below
@@ -265,6 +267,14 @@ ITCM_CODE u8 crtc_render_screen_line(void)
                 DISPEN = 0; // Turn off display (render border)
             }
         }
+        
+        if (VCC == CRTC[7]) // Vertical Sync reached?
+        {
+            portB |= 0x01;        // Set VSYNC
+            vsync_plus_two = 2;   // Interrupt in 2 raster lines
+            vsync_off_count = 16; // And turn off in 16 scanlines
+            vSyncSeen = 1;        // We've seen a vSync
+        }    
     }
 
     // -------------------------------------------------------
