@@ -1239,7 +1239,25 @@ void SugarDS_main(void)
                         if (myConfig.autoLoad)
                         {
                             char cmd[32];
-                            if (AMSDOS_GenerateAutorunCommand(cmd) == AUTORUN_OK)
+                            char *specified_cmd = strstr(last_file, "[[");
+                            
+                            // If the .dsk filename on the SD card has a [[cmd]] we simply use that blindly
+                            if (specified_cmd)
+                            {
+                                BufferKey('R');
+                                BufferKey('U');
+                                BufferKey('N');
+                                BufferKey('"');
+                                specified_cmd += 2; // Get past the '[['
+                                for (u8 i=0; i<12; i++)
+                                {
+                                    if (specified_cmd[i] == ']') break;
+                                    if (specified_cmd[i] == 0)   break;
+                                    BufferKey(specified_cmd[i]);
+                                }
+                                BufferKey(KBD_KEY_RET);
+                            }
+                            else if (AMSDOS_GenerateAutorunCommand(cmd) == AUTORUN_OK)
                             {
                                 BufferKeys(cmd);
                                 BufferKey(KBD_KEY_RET);

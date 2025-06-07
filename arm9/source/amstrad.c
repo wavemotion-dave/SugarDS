@@ -50,10 +50,10 @@ u32  pre_inked_mode2a[256]  = {0};  // Not used often enough to soak up fast mem
 u32  pre_inked_mode2b[256]  = {0};  // Not used often enough to soak up fast memory
 u32  pre_inked_mode2c[256]  = {0};  // Not used often enough to soak up fast memory
 
-u8 CRTC_MASKS[0x20] = {0xFF, 0xFF, 0xFF, 0x0F, 
-                       0x7F, 0x1F, 0x7F, 0x7F, 
-                       0x03, 0x1F, 0x7F, 0x1F, 
-                       0x3F, 0xFF, 0x3F, 0xFF, 
+u8 CRTC_MASKS[0x20] = {0xFF, 0xFF, 0xFF, 0x0F,
+                       0x7F, 0x1F, 0x7F, 0x7F,
+                       0x03, 0x1F, 0x7F, 0x1F,
+                       0x3F, 0xFF, 0x3F, 0xFF,
                        0x00, 0x00, 0x00, 0x00,
                        0x00, 0x00, 0x00, 0x00,
                        0x00, 0x00, 0x00, 0x00,
@@ -96,7 +96,7 @@ ITCM_CODE void compute_pre_inked(u8 mode)
             u8 pixel5 = INK[((pixel & 0x04) >> 2)];
             u8 pixel6 = INK[((pixel & 0x02) >> 1)];
             u8 pixel7 = INK[((pixel & 0x01) >> 0)];
-            
+
             pre_inked_mode2b[pixel] = (pixel7 << 24) | (pixel6 << 16) | (pixel5 << 8) | (pixel4 << 0);
             pre_inked_mode2a[pixel] = (pixel3 << 24) | (pixel2 << 16) | (pixel1 << 8) | (pixel0 << 0);
             pre_inked_mode2c[pixel] = (pixel7 << 24) | (pixel5 << 16) | (pixel3 << 8) | (pixel1 << 0);
@@ -117,21 +117,21 @@ ITCM_CODE void compute_pre_inked(u8 mode)
 // We use the back-end 512K of the DISK IMAGE BUFFER as the place
 // to store our 32 banks (0..31) of 16K each. This buffer is otherwise
 // unused when we have a cartridge inserted. In theory, we could still
-// keep the disk active for loading and limit ourselves to 512K worth 
+// keep the disk active for loading and limit ourselves to 512K worth
 // of .dsk which is plenty for this emulation.
 // --------------------------------------------------------------------
 u8 *CartBankPtr[32] = {0}; // The 32 banks of 16K ROM cart chunks
 void CartLoad(void)
 {
     u8 *cart_buffer = (u8 *) (DISK_IMAGE_BUFFER + (512 * 1024));
-    
+
     memset(cart_buffer, 0x00, (512 * 1024)); // Nothing out there to start...
 
     if ((ROM_Memory[0] == 'R') && (ROM_Memory[1] == 'I') && (ROM_Memory[2] == 'F') && (ROM_Memory[3] == 'F') &&
         (ROM_Memory[8] == 'A') && (ROM_Memory[9] == 'M') && (ROM_Memory[10] == 'S') && (ROM_Memory[11] == '!'))
     {
         u32 total_len = (ROM_Memory[7] << 24) | (ROM_Memory[6] << 16) | (ROM_Memory[5] << 8) | (ROM_Memory[4] << 0);
-        
+
         // ---------------------------------------------------------------------------
         // Set the 32 banks of CART memory. Not all banks need to be present and will
         // contain 0x00 values for any part of the cart not present in the .CPR file
@@ -140,9 +140,9 @@ void CartLoad(void)
         {
             CartBankPtr[bank] = (u8 *) (cart_buffer + (0x4000 * bank));
         }
-        
+
         u32 idx = 0x0C; // The first chunk is here...
-        
+
         while (idx < (total_len-4))
         {
             if ((ROM_Memory[idx] == 'c') && (ROM_Memory[idx+1] == 'b'))
@@ -151,7 +151,7 @@ void CartLoad(void)
                 u16 chunk_size  = (ROM_Memory[idx+5] << 8) | (ROM_Memory[idx+4] << 0);
                 for (int i=0; i<chunk_size; i++)
                 {
-                    CartBankPtr[bank][i] = ROM_Memory[idx+8+i];            
+                    CartBankPtr[bank][i] = ROM_Memory[idx+8+i];
                 }
                 idx += 8 + chunk_size;
             }
@@ -176,7 +176,7 @@ void DandanatorLoad(void)
     // -------------------------------------------------------------------
     DAN_Zone0     = 0x00;   // Zone 0 enabled on slot0
     DAN_Zone1     = 0x20;   // Zone 1 disabled on slot0
-    DAN_ZonesA15  = 0x00;   // Zones 0 and 1 high address bit    
+    DAN_ZonesA15  = 0x00;   // Zones 0 and 1 high address bit
 }
 
 
@@ -193,10 +193,10 @@ ITCM_CODE void ConfigureMemory(void)
     {
         if (myGlobalConfig.diskROM)
             UROM_Ptr = (u8 *)PARADOS;
-        else 
+        else
             UROM_Ptr = (u8 *)AMSDOS;
     }
-    
+
     // ------------------------------------------------------------
     // Cartridge Support... This is not a full CPC+ implementation
     // but is good enough for using CPR as a storage medium.
@@ -204,7 +204,7 @@ ITCM_CODE void ConfigureMemory(void)
     if (amstrad_mode == MODE_CPR)
     {
         // ------------------------------------------------------
-        // CPC+ map their logical cart banks starting at 128... 
+        // CPC+ map their logical cart banks starting at 128...
         // There are, at most 32 banks supported for 512K total.
         // ------------------------------------------------------
         if (UROM & 0x80)
@@ -216,16 +216,16 @@ ITCM_CODE void ConfigureMemory(void)
             if (UROM == 3) UROM_Ptr = (u8 *)AMSDOS;
             else UROM_Ptr = (u8 *) BASIC_6128;
         }
-        
+
         LROM_Ptr = CartBankPtr[0];
     }
-    
+
     u8 *upper_ram_block = RAM_Memory+0x10000;
 
     // ------------------------------------------------------------------
     // If a game calls for more than the standard 128K of RAM found
     // in a CPC 6128, we start to steal blocks of 64K from the back-end
-    // of the ROM_Memory[] buffer. The hope is that we would not need 
+    // of the ROM_Memory[] buffer. The hope is that we would not need
     // to use both that much ROM_Memory[] and extended RAM_Memory[] at
     // the same time... but this is a compromise as we have limited RAM.
     // Steal the 64K blocks starting at the far (back) end of the buffer
@@ -240,15 +240,15 @@ ITCM_CODE void ConfigureMemory(void)
         case 3: upper_ram_block = ROM_Memory+0xD0000; break;
         case 4: upper_ram_block = ROM_Memory+0xC0000; break;
         case 5: upper_ram_block = ROM_Memory+0xB0000; break;
-        case 6: upper_ram_block = ROM_Memory+0xA0000; break;            
-        case 7: upper_ram_block = ROM_Memory+0x90000; break;            
+        case 6: upper_ram_block = ROM_Memory+0xA0000; break;
+        case 7: upper_ram_block = ROM_Memory+0x90000; break;
     }
-    
+
     // ----------------------------------------------------------------------
     // The heart of the memory management system utilizes MMR to tell us
     // what blocks get mapped where in the 64K Z80 memory space.  One
     // neat thing about the Amstrad is that the RAM is always write-thru
-    // so even if ROM is mapped into a 16K block, the RAM under it can 
+    // so even if ROM is mapped into a 16K block, the RAM under it can
     // always be written (which is convenient since ROM can't be written to)
     // ----------------------------------------------------------------------
     switch (MMR & 0x7)
@@ -324,7 +324,7 @@ ITCM_CODE void ConfigureMemory(void)
         MemoryMapW[2] = RAM_Memory + 0x8000;
         MemoryMapW[3] = RAM_Memory + 0xC000;
         break;
-        
+
       case 0x06: // 0-6-2-3
         MemoryMapR[0] = (RMR & 0x04) ? (RAM_Memory + 0x0000) : LROM_Ptr;   // Lower ROM
         MemoryMapR[1] = upper_ram_block + 0x8000;
@@ -349,8 +349,8 @@ ITCM_CODE void ConfigureMemory(void)
         MemoryMapW[3] = RAM_Memory + 0xC000;
         break;
     }
-    
-    
+
+
     // ------------------------------------------------------
     // And after all is said and done above, the last thing
     // we do is check if any Dandanator Mini cart memory
@@ -370,7 +370,7 @@ ITCM_CODE void ConfigureMemory(void)
                 MemoryMapR[0] = &ROM_Memory[(DAN_Zone0 & 0x1F) * 0x4000];
             }
         }
-        
+
         if ((DAN_Zone1 & 0x20) == 0) // Is Zone 1 Enabled?
         {
             if (DAN_ZonesA15 & 0x02) // High bit A15 enabled?
@@ -382,8 +382,8 @@ ITCM_CODE void ConfigureMemory(void)
                 MemoryMapR[1] = &ROM_Memory[(DAN_Zone1 & 0x1F) * 0x4000];
             }
         }
-    }    
-    
+    }
+
     // -------------------------------------------------------------------------------
     // Offset so lookup is faster in Z80 core - this way we don't have to use a mask.
     // -------------------------------------------------------------------------------
@@ -395,7 +395,7 @@ ITCM_CODE void ConfigureMemory(void)
     MemoryMapW[0] -= 0x0000;
     MemoryMapW[1] -= 0x4000;
     MemoryMapW[2] -= 0x8000;
-    MemoryMapW[3] -= 0xC000;    
+    MemoryMapW[3] -= 0xC000;
 }
 
 // Keyboard Matrix... Scan row is PortC and read returned on PortA (low bits active)
@@ -422,7 +422,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
     {
         return CRTC[CRT_Idx];
     }
-    
+
     if (!(Port & 0x0800)) // PPI - PSG
     {
         switch ((Port >> 8) & 0x03)
@@ -435,7 +435,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                     for (u8 i=0; i< (kbd_keys_pressed ? kbd_keys_pressed:1); i++) // We may have more than one key pressed...
                     {
                         if (kbd_keys_pressed) kbd_key = kbd_keys[i]; else kbd_key = 0;
-                    
+
                         switch (portC & 0xF)
                         {
                             case 0x00:
@@ -459,22 +459,22 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                                 if (kbd_key == KBD_KEY_F2)  keyBits |= 0x40;
                                 if (kbd_key == KBD_KEY_F0)  keyBits |= 0x80;
                                 break;
-                                
+
                             case 0x02:
                                 if (kbd_key == KBD_KEY_CTL) keyBits |= 0x80;
                                 if (kbd_key == KBD_KEY_BSL) keyBits |= 0x40;
                                 if (kbd_key == KBD_KEY_SFT) keyBits |= 0x20;
-                                if (kbd_key == KBD_KEY_F4)  keyBits |= 0x10;                                
+                                if (kbd_key == KBD_KEY_F4)  keyBits |= 0x10;
                                 if (kbd_key == ']')         keyBits |= 0x08;
                                 if (kbd_key == KBD_KEY_RET) keyBits |= 0x04;
                                 if (kbd_key == '[')         keyBits |= 0x02;
-                                if (kbd_key == KBD_KEY_CLR) keyBits |= 0x01;                                
-                                
+                                if (kbd_key == KBD_KEY_CLR) keyBits |= 0x01;
+
                                 // And handle the special modifier keys
                                 if (last_special_key == KBD_KEY_SFT) keyBits |= 0x20;
                                 if (last_special_key == KBD_KEY_CTL) keyBits |= 0x80;
                                 break;
-                                
+
                             case 0x03:
                                 if (kbd_key == '.')         keyBits |= 0x80;
                                 if (kbd_key == '/')         keyBits |= 0x40;
@@ -540,7 +540,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                                 if (kbd_key == '2')         keyBits |= 0x02;
                                 if (kbd_key == '1')         keyBits |= 0x01;
                                 break;
-                            
+
                             case 0x09:
                                 if (kbd_key == KBD_KEY_DEL) keyBits |= 0x80;
                                 if (JoyState & JST_FIRE3)   keyBits |= 0x40;
@@ -553,7 +553,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                                 break;
                         }
                     }
-                    
+
                     return ~keyBits;
                 }
                 else // Normal register
@@ -572,16 +572,16 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                 break;
         }
     }
-   
 
     return 0xFF;  // Unused port returns 0xFF
 }
 
-
-//#BCXX	%x0xxxx00 xxxxxxxx	6845 CRTC Index - Write
-//#BDXX	%x0xxxx01 xxxxxxxx	6845 CRTC Data Out - Write
-//#BEXX	%x0xxxx10 xxxxxxxx	6845 CRTC Status (as far as supported) - Read
-//#BFXX	%x0xxxx11 xxxxxxxx	6845 CRTC Data In (as far as supported) - Read
+// -----------------------------------------------------------------------------
+// #BCXX    %x0xxxx00 xxxxxxxx  6845 CRTC Index - Write
+// #BDXX    %x0xxxx01 xxxxxxxx  6845 CRTC Data Out - Write
+// #BEXX    %x0xxxx10 xxxxxxxx  6845 CRTC Status (as far as supported) - Read
+// #BFXX    %x0xxxx11 xxxxxxxx  6845 CRTC Data In (as far as supported) - Read
+// -----------------------------------------------------------------------------
 
 ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned char Value)
 {
@@ -593,17 +593,17 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                 portA = Value;
                 if ((portC & 0xC0) == 0x80) // AY Data Write into Register
                 {
-                    ay38910DataW(portA, &myAY);                
+                    ay38910DataW(portA, &myAY);
                 }
 
                 if ((portC & 0xC0) == 0xC0) // AY Register Select
                 {
                     if (portA < 16) ay38910IndexW(portA & 0xF, &myAY);
                 }                break;
-                
+
             case 0x02:
-                portC = Value;        
-                
+                portC = Value;
+
                 // PortC high bits:
                 // 0 0   Inactive
                 // 0 1   Read from selected PSG register.When function is set, the PSG will make the register data available to PPI Port A
@@ -613,7 +613,7 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                 {
                     if ((portC & 0xC0) == 0x80) // AY Data Write into Register
                     {
-                        ay38910DataW(portA, &myAY);                
+                        ay38910DataW(portA, &myAY);
                     }
 
                     if ((portC & 0xC0) == 0xC0) // AY Register Select
@@ -622,7 +622,7 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                     }
                 }
                 break;
-                
+
             case 0x03:  // PPI Control
                 if ((Value & 0x80) == 0) // Bit Control
                 {
@@ -639,7 +639,7 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                 break;
             }
     }
-    
+
     if (!(Port & 0x4000)) // CRTC
     {
         switch ((Port >> 8) & 0x03)
@@ -647,7 +647,7 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
             case 0x00:
                 CRT_Idx = Value & 0x1F;
                 break;
-                
+
             case 0x01:
                 CRTC[CRT_Idx] = Value & CRTC_MASKS[CRT_Idx];
                 break;
@@ -661,7 +661,7 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
             case 0x00:  // PENR - Pen Register
                 PENR = Value;
                 break;
-            
+
             case 0x01:  // INKR - Ink Register
                 if (PENR & 0x10)
                 {
@@ -677,14 +677,14 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                     }
                 }
                 break;
-                
+
             case 0x02:  // RMR - ROM Map and Graphics Mode
                 // Are we changing graphic modes?
                 if ((RMR & 0x03) != (Value & 0x03))
                 {
                     inks_changed = 1; // Force ink change
                 }
-                
+
                 RMR = Value;
                 if (RMR & 0x10)
                 {
@@ -692,7 +692,7 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                 }
                 ConfigureMemory();
                 break;
-                
+
             case 0x03:  // MMR - RAM Memory Mapping
                 MMR = Value;
                 ConfigureMemory();
@@ -704,7 +704,7 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
     {
         WriteFDC(Port, Value);
     }
-    
+
     if (!(Port & 0x2000))   //Upper ROM Number
     {
         UROM = Value;
@@ -730,11 +730,11 @@ void amstrad_reset(void)
     RMR = 0x00;
     UROM = 0x00;
     ConfigureMemory();
-    
+
     memset(INK, 0x00, sizeof(INK));
-    
+
     border_color = 0;
-    
+
     memset(pre_inked_mode0, 0x00, sizeof(pre_inked_mode0));
     memset(pre_inked_mode1, 0x00, sizeof(pre_inked_mode1));
 
@@ -747,7 +747,7 @@ void amstrad_reset(void)
     ink_map[0x1D] = 5;
     ink_map[0x0C] = 6;
     ink_map[0x05] = 7;
-    
+
     ink_map[0x0D] = 8;
     ink_map[0x16] = 9;
     ink_map[0x06] = 10;
@@ -765,7 +765,7 @@ void amstrad_reset(void)
     ink_map[0x1A] = 21;
     ink_map[0x19] = 22;
     ink_map[0x1B] = 23;
-  
+
     ink_map[0x0A] = 24;
     ink_map[0x03] = 25;
     ink_map[0x0B] = 26;
@@ -774,21 +774,21 @@ void amstrad_reset(void)
     ink_map[0x01] = 29;
     ink_map[0x11] = 30;
     ink_map[0x09] = 31;
-    
+
     for (int i=0; i<32; i++) CartBankPtr[i] = (u8*)0;
-    
+
     crtc_reset();
-    
+
     memset(RAM_Memory, 0x00, sizeof(RAM_Memory));
-    
+
     CPU.PC.W            = 0x0000;   // Z80 entry point
     CPU.SP.W            = 0x0000;   // Z80 entry point
     portA               = 0x00;
     portB               = 0xFF;     // 50Hz, Amstrad, VSync set
     portC               = 0x00;
-    
+
     scanline_count = 1;
-    
+
     if (amstrad_mode == MODE_DSK)
     {
         // The current Color Palette
@@ -796,13 +796,13 @@ void amstrad_reset(void)
         {
            INK[ink] = ink_map[0];
         }
-        
+
         border_color = (INK[16] << 24) | (INK[16] << 16) | (INK[16] << 8) | (INK[16] << 0);
-        
+
         compute_pre_inked(0);
         compute_pre_inked(1);
         compute_pre_inked(2);
-        
+
         DiskInsert(initial_file, false);
     }
     else if (amstrad_mode == MODE_CPR)
@@ -815,14 +815,14 @@ void amstrad_reset(void)
         DandanatorLoad();
         ConfigureMemory();
     }
-    else // Must be SNA snapshot 
-    {   
+    else // Must be SNA snapshot
+    {
         // ----------------------------------
         // The memory .SNA snapshot format.
         // ----------------------------------
         u8 snap_ver = ROM_Memory[0x10];
         (void)snap_ver;
-        
+
         CPU.AF.B.l = ROM_Memory[0x11]; //F
         CPU.AF.B.h = ROM_Memory[0x12]; //A
 
@@ -834,17 +834,17 @@ void amstrad_reset(void)
 
         CPU.HL.B.l = ROM_Memory[0x17]; //L
         CPU.HL.B.h = ROM_Memory[0x18]; //H
-        
+
         CPU.R      = ROM_Memory[0x19]; // Low 7-bits of Refresh
         CPU.I      = ROM_Memory[0x1A]; // Interrupt register
         CPU.R_HighBit = (CPU.R & 0x80);// High bit of refresh
-        
+
         CPU.IFF     = ((ROM_Memory[0x1B] & 1) ? IFF_1 : 0x00);
         CPU.IFF    |= ((ROM_Memory[0x1C] & 1) ? IFF_2 : 0x00);
 
         CPU.IX.B.l  = ROM_Memory[0x1D]; // IX low
         CPU.IX.B.h  = ROM_Memory[0x1E]; // IX high
-        
+
         CPU.IY.B.l  = ROM_Memory[0x1F]; // IY low
         CPU.IY.B.h  = ROM_Memory[0x20]; // IY high
 
@@ -867,49 +867,49 @@ void amstrad_reset(void)
 
         CPU.HL1.B.l = ROM_Memory[0x2C]; // HL'
         CPU.HL1.B.h = ROM_Memory[0x2D];
-        
+
         PENR = ROM_Memory[0x2E]; // Selected Pen
-        
+
         // The current Color Palette
         for (int ink=0; ink<17; ink++)
         {
            INK[ink] = ink_map[ROM_Memory[0x2F+ink]];
         }
-        
+
         border_color = (INK[16] << 24) | (INK[16] << 16) | (INK[16] << 8) | (INK[16] << 0);
-        
+
         compute_pre_inked(0);
         compute_pre_inked(1);
         compute_pre_inked(2);
 
         RMR = ROM_Memory[0x40]; // ROM configuration
-        MMR = ROM_Memory[0x41]; // RAM configuration 
+        MMR = ROM_Memory[0x41]; // RAM configuration
         ConfigureMemory();
-        
+
         extern u32 VCC, VLC;
-        VCC = ROM_Memory[0xAB]; 
+        VCC = ROM_Memory[0xAB];
         VCC = (VCC/8)*8;
         VLC = ROM_Memory[0xAC];
-        
+
         CRT_Idx = ROM_Memory[0x42];
         for (int i=0; i<18; i++)
         {
             CRTC[i] = ROM_Memory[0x43 + i];
         }
-        
+
         //portA = ROM_Memory[0x56];
         //portB = ROM_Memory[0x57];
         portC = ROM_Memory[0x58];
-        
+
         for (u8 i=0; i<16; i++)
         {
             ay38910IndexW(i, &myAY);
             ay38910DataW(ROM_Memory[0x5B], &myAY);
         }
         ay38910IndexW(ROM_Memory[0x5A], &myAY);
-        
+
         u32 dump_size = ROM_Memory[0x6B] * 1024;
-        
+
         if (dump_size > 0)
         {
             memcpy(RAM_Memory, ROM_Memory+0x100, dump_size);
@@ -941,7 +941,7 @@ void amstrad_reset(void)
                     RAM_Memory[ram_idx++] = romPtr[i];
                 }
             }
-            
+
             // And now look for MEM1 in case it's present...
             romPtr += comp_size;
             if ((romPtr[0] == 'M') && (romPtr[1] == 'E') && (romPtr[2] == 'M') && (romPtr[3] == '1'))
@@ -971,10 +971,10 @@ void amstrad_reset(void)
                         RAM_Memory[ram_idx++] = romPtr[i];
                     }
                 }
-            }        
+            }
         }
     }
-    
+
     return;
 }
 
@@ -990,7 +990,7 @@ ITCM_CODE u32 amstrad_run(void)
 {
     // Process 1 scanline worth of AY audio
     if (myConfig.waveDirect) processDirectAudio();
-    
+
     // Process 1 scanline for the mighty CRTC controller chip
     u8 vsync = crtc_render_screen_line();
 

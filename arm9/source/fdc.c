@@ -608,7 +608,6 @@ int ReadFDC( int port )
 {
     if (port & 1)
     {
-        if (fdc.function < 17) debug[fdc.function-1]++;
         return(  fdc_func_lookup[fdc.function](port) );
     }
 
@@ -624,7 +623,6 @@ void WriteFDC( int port, int val )
     {
         if (fdc.state)
         {
-            if (fdc.function < 17) debug[fdc.function-1]++;
             fdc_func_lookup[fdc.function](val);
         }
         else

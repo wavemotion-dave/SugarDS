@@ -228,6 +228,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
         VLC = 0;    // Reset counter - build up the next character line
         VCC++;      // We have finished one vertical character
 
+        // --------------------------------------------------------------
         // This isn't right - it should be equals-equals (==) but the
         // timing on Amstrad CPC games is tight and the line-based
         // emulation is not perfect so we have to cheat a bit. This
@@ -235,6 +236,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
         // (that is - games that already have issues are not helped 
         // by making this more 'correct' and we lose some functionality
         // if we tighten the screws on this one).
+        // --------------------------------------------------------------
         if (VCC >= (CRTC[4]+1)) // Full "Screen" rendered?
         {
             VTAC = 1;   // Assume no extra lines... may adjust below
@@ -393,7 +395,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             else if ((RMR & 0x03) == 0x02) // Mode 2 (640x256)
             {
                 last_frame_mode2++;
-                if (myConfig.mode2mode == 0)
+                if (myConfig.mode2mode == 0) // Show compressed?
                 {
                     u8 limit = (CRTC[1] <= 32) ? CRTC[1] : 32;
                     for (int x=0; x<limit*2; x++)    // Best we can do is show 320 pixels

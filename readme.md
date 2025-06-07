@@ -111,7 +111,13 @@ DISK Support :
 disks should auto-load but if your disk does not, it should provide a catalog of the
 possible filenames that could be used to run the program. One trick is to include
 the command you want to run in the filename of the .DSK file itself. That helps the
-auto-type detection algorithm.
+auto-type detection algorithm. To force a very specific run command, place the name
+of the Amstrad CPC file you wish to run in double brackets like this:
+
+"Orion Prime 3_5 Inch Disk [[ORION]].dsk"
+
+This when that .dsk file is loaded, the emulator will sense what's between the double
+brackets and issue the proper RUN "ORION" command
 
 Cartridge Support :
 -----------------------
