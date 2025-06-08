@@ -91,7 +91,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Configuration :
 -----------------------
-Coming soon - and there's LOTs to talk about!
+There is quite a few configuration options that you can explore. However, of primary 
+importance are these two:
+
+* V52 Sync
+* CPU Adjust
+
+Normally you should touch neither adjustment... unless the game is not running correct. In that case, try the following:
+
+If the game is running slower than on normal hardware (e.g. Dizzy III which slows down when you move) - adjust the V52 Sync to 'Forgiving'.
+
+If the game has minor graphical glitches - say a stray line (e.g. Sword of Ianna on screen transitions) - try a CPU Adjust of -1 or -2.
 
 Key Mapping :
 -----------------------
