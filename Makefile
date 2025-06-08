@@ -15,7 +15,7 @@ include $(DEVKITARM)/ds_rules
 
 export TARGET		:=	SugarDS
 export TOPDIR		:=	$(CURDIR)
-export VERSION		:=  0.8b
+export VERSION		:=  0.9
 
 ICON 		:= -b $(CURDIR)/logo.bmp "SugarDS $(VERSION);wavemotion-dave;https://github.com/wavemotion-dave/SugarDS" 
 

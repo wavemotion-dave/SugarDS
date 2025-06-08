@@ -772,6 +772,7 @@ void SetDefaultGlobalConfig(void)
     myGlobalConfig.showFPS        = 0;    // Don't show FPS counter by default
     myGlobalConfig.lastDir        = 0;    // Default is to start in /roms/cpc
     myGlobalConfig.debugger       = 0;    // Debugger is not shown by default
+    myGlobalConfig.splashType     = 0;    // Show the Amstrad Croc by default
 }
 
 void SetDefaultGameConfig(void)
@@ -796,7 +797,7 @@ void SetDefaultGameConfig(void)
     myConfig.waveDirect  = 0;                           // Normal sound driver
     myConfig.screenTop   = 0;                           // Normal screen top position
     myConfig.mode2mode   = 0;                           // Default to compressed 640
-    myConfig.reserved5   = 0;
+    myConfig.diskWrite   = 1;                           // Default is to allow write back to SD
     myConfig.reserved6   = 0;
     myConfig.reserved7   = 0;
     myConfig.reserved8   = 0;
@@ -888,6 +889,8 @@ const struct options_t Option_Table[2][20] =
         {"CPU ADJUST",     {"+0 (NONE)", "+1 CYCLES", "+2 CYCLES", "-4 CYCLES", 
                             "-3 CYCLES", "-2 CYCLES", "-1 CYCLES"},                             &myConfig.cpuAdjust,         7},
         {"SOUND DRV",      {"NORMAL", "WAVE DIRECT"},                                           &myConfig.waveDirect,        2},        
+        {"DISK WRITE",     {"OFF", "ALLOWED"},                                                  &myConfig.diskWrite,         2},        
+
         {NULL,             {"",      ""},                                                       NULL,                        1},
     },
     // Global Options
@@ -895,7 +898,7 @@ const struct options_t Option_Table[2][20] =
         {"FPS",            {"OFF", "ON", "ON FULLSPEED"},                                       &myGlobalConfig.showFPS,     3},
         {"DISK ROM",       {"AMSDOS", "PARADOS"},                                               &myGlobalConfig.diskROM,     2},
         {"START DIR",      {"/ROMS/CPC", "/ROMS/AMSTRAD", "LAST USED DIR"},                     &myGlobalConfig.lastDir,     3},
-        {"SPLASH SCR",     {"CPC KEYBOARD", "AMSTRAD CROC"},                                    &myGlobalConfig.splashType,  2},
+        {"SPLASH SCR",     {"AMSTRAD CROC", "CPC KEYBOARD"},                                    &myGlobalConfig.splashType,  2},
         {"KEYBD BRIGHT",   {"MAX BRIGHT", "DIM", "DIMMER", "DIMMEST"},                          &myGlobalConfig.keyboardDim, 4},
         
         {"DEBUGGER",       {"OFF", "BAD OPS", "DEBUG", "FULL DEBUG"},                           &myGlobalConfig.debugger,    4},

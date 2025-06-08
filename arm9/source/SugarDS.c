@@ -567,32 +567,42 @@ void DisplayStatusLine(bool bForce)
         // Persist the the disk image to the SD card
         if (--fdc.dirty_counter == 0)
         {
-            DSPrint(19, 0, 6, "DISK WRITE");
-            chdir(last_path);
-            FILE *outfile = fopen(last_file, "rb+");
-            if (outfile)
+            // See if this game allows write-back to disk
+            if (myConfig.diskWrite)
             {
-                // Always skip over the 256 byte .dsk header... that never changes
-                fseek(outfile, sizeof(fdc.Infos), SEEK_SET);
-                
-                // And write out all changed 4K blocks
-                for (u8 i=0; i < ((fdc.disk_size / 4096)+1); i++)
+                DSPrint(19, 0, 6, "DISK WRITE");
+                chdir(last_path);
+                FILE *outfile = fopen(last_file, "rb+");
+                if (outfile)
                 {
-                    if (fdc.bDirtyFlags[i])
+                    // Always skip over the 256 byte .dsk header... that never changes
+                    fseek(outfile, sizeof(fdc.Infos), SEEK_SET);
+                    
+                    // And write out all changed 4K blocks
+                    for (u8 i=0; i < ((fdc.disk_size / 4096)+1); i++)
                     {
-                        fwrite(DISK_IMAGE_BUFFER + (4096 * i), 4096, 1, outfile);
-                        fdc.bDirtyFlags[i] = 0;
+                        if (fdc.bDirtyFlags[i])
+                        {
+                            int write_num = 4096;   // Normally we write 4K
+                            if (((4096 * i) + 4096) > fdc.disk_size) // But could be less if on last part of disk
+                            {
+                                write_num = fdc.disk_size - (4096 * i);
+                            }
+                            fwrite(DISK_IMAGE_BUFFER + (4096 * i), write_num, 1, outfile);
+                            fdc.bDirtyFlags[i] = 0;
+                        }
+                        else
+                        {
+                            fseek(outfile, 4096, SEEK_CUR);  // Skip to the next 4K block
+                        }
                     }
-                    else
-                    {
-                        fseek(outfile, 4096, SEEK_CUR);  // Skip to the next 4K block
-                    }
+                    
+                    fflush(outfile);
+                    fclose(outfile);
+                    WAITVBL;WAITVBL;
                 }
-                
-                fflush(outfile);
-                fclose(outfile);
+                DSPrint(19, 0, 6, "          ");
             }
-            DSPrint(19, 0, 6, "          ");
         }
     }
     
@@ -1087,7 +1097,7 @@ void SugarDS_main(void)
     }
     else
     {
-        frame_complete = !amstrad_run();
+        frame_complete = amstrad_run();
     }
     
     // -----------------------------------------------------
@@ -1565,17 +1575,19 @@ void TopScreenOptions(void)
   bgSetPriority(bg0,1);bgSetPriority(bg1,0);
   if (myGlobalConfig.splashType)
   {
-      decompress(topscreen_altTiles,  bgGetGfxPtr(bg0), LZ77Vram);
-      decompress(topscreen_altMap,  (void*) bgGetMapPtr(bg0), LZ77Vram);
-      dmaCopy((void*) topscreen_altPal,(void*)  BG_PALETTE,256*2);
+      // Closeup of Amstrad Keyboard
+      decompress(topscreenTiles,  bgGetGfxPtr(bg0), LZ77Vram);
+      decompress(topscreenMap,  (void*) bgGetMapPtr(bg0), LZ77Vram);
+      dmaCopy((void*) topscreenPal,(void*)  BG_PALETTE,256*2);
       unsigned  short dmaVal =*(bgGetMapPtr(bg0)+51*32);
       dmaFillWords(dmaVal | (dmaVal<<16),(void*)  bgGetMapPtr(bg1),32*24*2);
   }
   else
   {
-      decompress(topscreenTiles,  bgGetGfxPtr(bg0), LZ77Vram);
-      decompress(topscreenMap,  (void*) bgGetMapPtr(bg0), LZ77Vram);
-      dmaCopy((void*) topscreenPal,(void*)  BG_PALETTE,256*2);
+      // Amstrad Croc
+      decompress(topscreen_altTiles,  bgGetGfxPtr(bg0), LZ77Vram);
+      decompress(topscreen_altMap,  (void*) bgGetMapPtr(bg0), LZ77Vram);
+      dmaCopy((void*) topscreen_altPal,(void*)  BG_PALETTE,256*2);
       unsigned  short dmaVal =*(bgGetMapPtr(bg0)+51*32);
       dmaFillWords(dmaVal | (dmaVal<<16),(void*)  bgGetMapPtr(bg1),32*24*2);
   }

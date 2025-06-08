@@ -611,7 +611,6 @@ int ReadFDC( int port )
         return(  fdc_func_lookup[fdc.function](port) );
     }
 
-    DY++;
     return( fdc.Status );
 }
 
@@ -752,6 +751,5 @@ void ReadDiskMem(u8 *rom, u32 romsize)
         fdc.ST3 &= ~ST3_TS; // Clear Two Sides signal
     }
 
-    SetST0();
-    MoveTrack0(0);
+    ChangeCurrTrack(0);
 }

@@ -25,15 +25,15 @@
 #include "fdc.h"
 #include "lzav.h"
 
-#define SUGAR_SAVE_VER   0x0002       // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
+#define SUGAR_SAVE_VER   0x0003     // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
 
 /*********************************************************************************
  * Save the current state - save everything we need to a single .sav file.
  ********************************************************************************/
-u8  spare[512] = {0x00};            // We keep some spare bytes so we can use them in the future without changing the structure
+u8  spare[256] = {0x00};            // We keep some spare bytes so we can use them in the future without changing the structure
 
 static char szLoadFile[256];        // We build the filename out of the base filename and tack on .sav, .ee, etc.
-static char tmpStr[32];
+static char tmpStr[32];             // For various screen status strings
 
 u8 CompressBuffer[150*1024];        // Big enough to handle compression of even full 128K games
 
@@ -118,6 +118,15 @@ void amstradSaveState()
     if (retVal) retVal = fwrite(&portA,             sizeof(portA),              1, handle);
     if (retVal) retVal = fwrite(&portB,             sizeof(portB),              1, handle);
     if (retVal) retVal = fwrite(&portC,             sizeof(portC),              1, handle);
+    
+    if (retVal) retVal = fwrite(&DAN_Zone0,         sizeof(DAN_Zone0),          1, handle);
+    if (retVal) retVal = fwrite(&DAN_Zone1,         sizeof(DAN_Zone1),          1, handle);
+    if (retVal) retVal = fwrite(&DAN_ZonesA15,      sizeof(DAN_ZonesA15),       1, handle);
+
+    if (retVal) retVal = fwrite(spare,              256,                        1, handle);
+
+    // The RAM highwater tells us how many extra RAM banks were utilized
+    if (retVal) retVal = fwrite(&ram_highwater,     sizeof(ram_highwater),      1, handle);
 
     // -------------------------------------------------------------------
     // Save Z80 Memory Map... All 128K of it!
@@ -131,6 +140,30 @@ void amstradSaveState()
 
     if (retVal) retVal = fwrite(&comp_len,          sizeof(comp_len), 1, handle);
     if (retVal) retVal = fwrite(&CompressBuffer,    comp_len,         1, handle);
+    
+    if (ram_highwater) // If we used more than one extra 64K bank... we need to save those
+    {
+        u8 *upper_ram_block = 0;
+        for (u8 block=1; block<=ram_highwater; block++)
+        {
+            switch (block)
+            {
+                case 1: upper_ram_block = ROM_Memory+0xF0000; break;
+                case 2: upper_ram_block = ROM_Memory+0xE0000; break;
+                case 3: upper_ram_block = ROM_Memory+0xD0000; break;
+                case 4: upper_ram_block = ROM_Memory+0xC0000; break;
+                case 5: upper_ram_block = ROM_Memory+0xB0000; break;
+                case 6: upper_ram_block = ROM_Memory+0xA0000; break;
+                case 7: upper_ram_block = ROM_Memory+0x90000; break;
+            }
+    
+            int max_len = lzav_compress_bound_hi( 0x10000 );        
+            int comp_len = lzav_compress_hi( upper_ram_block, CompressBuffer, 0x10000, max_len );
+
+            if (retVal) retVal = fwrite(&comp_len,          sizeof(comp_len), 1, handle);
+            if (retVal) retVal = fwrite(&CompressBuffer,    comp_len,         1, handle);
+        }
+    }
 
     strcpy(tmpStr, (retVal ? "OK ":"ERR"));
     DSPrint(27,0,0,tmpStr);
@@ -238,6 +271,15 @@ void amstradLoadState()
             if (retVal) retVal = fread(&portA,             sizeof(portA),              1, handle);
             if (retVal) retVal = fread(&portB,             sizeof(portB),              1, handle);
             if (retVal) retVal = fread(&portC,             sizeof(portC),              1, handle);
+            
+            if (retVal) retVal = fread(&DAN_Zone0,         sizeof(DAN_Zone0),          1, handle);
+            if (retVal) retVal = fread(&DAN_Zone1,         sizeof(DAN_Zone1),          1, handle);
+            if (retVal) retVal = fread(&DAN_ZonesA15,      sizeof(DAN_ZonesA15),       1, handle);            
+            
+            if (retVal) retVal = fread(spare,              256,                        1, handle);
+            
+            // The RAM highwater tells us how many extra RAM banks were utilized
+            if (retVal) retVal = fread(&ram_highwater,     sizeof(ram_highwater),      1, handle);            
     
             // Load Z80 Memory Map... all 128K of it!
             int comp_len = 0;
@@ -249,6 +291,31 @@ void amstradLoadState()
             // right memory location... this is quite fast all things considered.
             // ------------------------------------------------------------------
             (void)lzav_decompress( CompressBuffer, RAM_Memory, comp_len, 0x20000 );
+            
+            if (ram_highwater) // If we used more than one extra 64K bank... we need to save those
+            {
+                u8 *upper_ram_block = 0;
+                for (u8 block=1; block<=ram_highwater; block++)
+                {
+                    int comp_len = 0;
+                    if (retVal) retVal = fread(&comp_len,          sizeof(comp_len), 1, handle);
+                    if (retVal) retVal = fread(&CompressBuffer,    comp_len,         1, handle);
+                    
+                    switch (block)
+                    {
+                        case 1: upper_ram_block = ROM_Memory+0xF0000; break;
+                        case 2: upper_ram_block = ROM_Memory+0xE0000; break;
+                        case 3: upper_ram_block = ROM_Memory+0xD0000; break;
+                        case 4: upper_ram_block = ROM_Memory+0xC0000; break;
+                        case 5: upper_ram_block = ROM_Memory+0xB0000; break;
+                        case 6: upper_ram_block = ROM_Memory+0xA0000; break;
+                        case 7: upper_ram_block = ROM_Memory+0x90000; break;
+                    }
+                    
+                    (void)lzav_decompress( CompressBuffer, upper_ram_block, comp_len, 0x10000 );
+                }
+            }
+            
 
             // And put the memory pointers back in place...
             ConfigureMemory();

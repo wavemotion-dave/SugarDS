@@ -143,11 +143,17 @@ Known Issues :
 * Prehistorik II has major graphical glitches.
 * Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay is better.
 * Dizzy III requires that you set the 'V52 Sync' option to 'Forgiving' so it plays at the right speed.
-* Galactic Tomb 128K has graphical glitches. The only way to get it to run is to change the CPU Cycles from +0 to -2 back and forth while playing until the game 'locks in' and starts to look/play correctly. 
 
 
 Version History :
 -----------------------
+
+Version 0.9 - 08-Jun-2025 by wavemotion-dave
+* Fix disk write-back so it doesn't potentially corrupt a .dsk file! Sorry about that.
+* Improved save/load state so it preserves Dandanator carts and Extended Memory > 128K.
+* More robust CRTC handling to fix games like Hypernoid Zero, Galactic Tomb 128K and Bomb Jack Extra Sugar.
+* You can now put [[cmd]] in the title of the .dsk file to force a RUN command.
+* Other cleanups, minor timing improvements and fixes as time allowed.
 
 Version 0.8 - 06-Jun-2025 by wavemotion-dave
 * Tweaks to the Z80 core timing to get it closer to real Amstrad performance. Fewer graphical glitches in games.

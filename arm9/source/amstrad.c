@@ -30,6 +30,7 @@ u8  portC               __attribute__((section(".dtcm"))) = 0x00;
 
 u32 last_file_size      __attribute__((section(".dtcm"))) = 0;
 u32 scanline_count      __attribute__((section(".dtcm"))) = 1;
+u8 ram_highwater        __attribute__((section(".dtcm"))) = 0;
 
 u8 MMR                  __attribute__((section(".dtcm"))) = 0x00;
 u8 RMR                  __attribute__((section(".dtcm"))) = 0x00;
@@ -41,8 +42,9 @@ u32 border_color        __attribute__((section(".dtcm"))) = 0;
 u8 CRTC[0x20]           __attribute__((section(".dtcm"))) = {0};
 u8 CRT_Idx              __attribute__((section(".dtcm"))) = 0;
 u8 inks_changed         __attribute__((section(".dtcm"))) = 0;
-u32 refresh_tstates     __attribute__((section(".dtcm"))) = 0;
+u16 refresh_tstates     __attribute__((section(".dtcm"))) = 0;
 u8 ink_map[256]         __attribute__((section(".dtcm"))) = {0};
+
 
 u32  pre_inked_mode0[256] __attribute__((section(".dtcm"))) = {0};
 u32  pre_inked_mode1[256] __attribute__((section(".dtcm"))) = {0};
@@ -60,6 +62,8 @@ u8 CRTC_MASKS[0x20] = {0xFF, 0xFF, 0xFF, 0x0F,
                        0x00, 0x00, 0x00, 0x00};
 
 s16 CPU_ADJUST[] __attribute__((section(".dtcm"))) = {0, 1, 2, -4, -3, -2, -1};
+
+int cpu_targ __attribute__((section(".dtcm"))) = 0;
 
 extern u8 last_special_key;
 
@@ -232,6 +236,7 @@ ITCM_CODE void ConfigureMemory(void)
     // so there is less chance of the two memory ends meeting and causing
     // a catastrophe of biblical proportions.
     // ------------------------------------------------------------------
+    ram_highwater = ((MMR >> 3) & 7);
     switch ((MMR >> 3) & 7)
     {
         case 0: upper_ram_block = RAM_Memory+0x10000; break;
@@ -780,6 +785,8 @@ void amstrad_reset(void)
     crtc_reset();
 
     memset(RAM_Memory, 0x00, sizeof(RAM_Memory));
+    
+    ram_highwater = 0;
 
     CPU.PC.W            = 0x0000;   // Z80 entry point
     CPU.SP.W            = 0x0000;   // Z80 entry point
@@ -788,6 +795,7 @@ void amstrad_reset(void)
     portC               = 0x00;
 
     scanline_count = 1;
+    cpu_targ = 0;
 
     if (amstrad_mode == MODE_DSK)
     {
@@ -984,7 +992,10 @@ void amstrad_reset(void)
 // the emulation has executed the last line of the frame.
 //
 // We also process 1 line worth of Audio and render one screen line for
-// the CRTC display controller.
+// the CRTC display controller. This is a carefully choreographed dance 
+// between the CRTC controller, audio processor and CPU - and as with most
+// emulation - it's not perfect. We have a few tweaks/tricks that can be
+// configured to help keep things in alignment and keep the game running.
 // -----------------------------------------------------------------------------
 ITCM_CODE u32 amstrad_run(void)
 {
@@ -995,24 +1006,35 @@ ITCM_CODE u32 amstrad_run(void)
     u8 vsync = crtc_render_screen_line();
 
     // Execute 1 scanline worth of CPU instructions ... Z80 at 4MHz
-    ExecZ80((256+CPU_ADJUST[myConfig.cpuAdjust]) * scanline_count);
-
+    cpu_targ += (256+CPU_ADJUST[myConfig.cpuAdjust]);
+    ExecZ80(cpu_targ);
+    
     if (vsync) // Will return non-zero if VSYNC started
     {
-        if (++refresh_tstates & 0x100) // Every 256 Frames, reset counters
+        if (++refresh_tstates & 0x10) // Every 16 Frames, reset counters to prevent overflow
         {
-            CPU.TStates = CPU.TStates - ((256+CPU_ADJUST[myConfig.cpuAdjust]) * scanline_count);
+            refresh_tstates = 0;
+            CPU.TStates = CPU.TStates - cpu_targ;
+            cpu_targ = 0;
+            
+            // ---------------------------------------------------------------------------
+            // If we came up significantly short we make an attempt to adjust the VCC to
+            // put the CPU and CRTC back into alignment. Due to the line-based emulation, 
+            // if things are not firing perfectly on games that have very tight timings,
+            // we can end up with a mess. This is a last ditch effort to get the system 
+            // running by skewing the CRTC VCC counter and the CPU line-based emulation. 
+            // The one game that definitely is improved by this is Galactic Tomb 128K.
+            // ---------------------------------------------------------------------------
+            if (scanline_count < (250 * 16))
+            {
+                VCC = 0; // Shock the monkey!
+            }
             scanline_count = 0; // Will be incremented to 1 directly below
         }
-        scanline_count++;
-        return 0; // End of frame (start of VSYNC)
     }
-    else
-    {
-        scanline_count++;
-    }
+    scanline_count++;
 
-    return 1; // Not end of frame
+    return vsync; // Return '1' if end of frame.. '0' if not end of frame
 }
 
 // End of file

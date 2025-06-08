@@ -20,7 +20,7 @@
 #define MAX_ROM_SIZE               (1024*1024) // 1024K is big enough for any disk / cart / snapshot
 
 #define MAX_CONFIGS                 890
-#define CONFIG_VERSION              0x0004
+#define CONFIG_VERSION              0x0005
 
 #define AMSTRAD_FILE                0x01
 #define DIRECTORY                   0x02
@@ -101,7 +101,7 @@ struct __attribute__((__packed__)) Config_t
     u8  waveDirect;
     u8  screenTop;
     u8  mode2mode;
-    u8  reserved5;
+    u8  diskWrite;
     u8  reserved6;
     u8  reserved7;
     u8  reserved8;

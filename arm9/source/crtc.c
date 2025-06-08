@@ -63,10 +63,10 @@ u16 escapeClause         __attribute__((section(".dtcm"))) = 0;    // To ensure 
 u32 cpc_scanline_counter __attribute__((section(".dtcm"))) = 0;    // This is where we are in the CPC graphics memory 
 
 int R52_INT_ON_VSYNC[]   __attribute__((section(".dtcm"))) = {28, 16, 32};
-u8 vSyncSeen             __attribute__((section(".dtcm"))) = 0;
-u8 display_disable_in    __attribute__((section(".dtcm"))) = 0;
-u8 b32K_Mode             __attribute__((section(".dtcm"))) = 0;
-u8 pan_mode_offset       __attribute__((section(".dtcm"))) = 0;
+u8 vSyncSeen             __attribute__((section(".dtcm"))) = 0;    // Set to '1' when we've seen a CRTC VSYNC
+u8 display_disable_in    __attribute__((section(".dtcm"))) = 0;    // Number of scanlines before we disable the output
+u8 b32K_Mode             __attribute__((section(".dtcm"))) = 0;    // Set to '1' if we are in 32K CRTC mode (wrap into next block of RAM)
+u8 pan_mode_offset       __attribute__((section(".dtcm"))) = 0;    // For the Mode 2 PAN/SCAN handling - best we can do...
 
 void crtc_reset(void)
 {
@@ -460,6 +460,12 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             }
             else // Mode 3 never used... hopefully!
             {
+                // -------------------------------------------------------------------
+                // Mode 3 is an 'unofficial' mode that is a consequence / side-effect
+                // of how the hardware works. It's basically Mode 0 with a limit of 
+                // 4 colors and  so has no practical uses. We could support it. For
+                // now we increment a debug counter registers so we can detect it.
+                // -------------------------------------------------------------------
                 DY++;
             }
         }

@@ -8,8 +8,8 @@
 //
 // The SugarDS emulator is offered as-is, without any warranty. Please see readme.md
 // =====================================================================================
-#ifndef _SUGARSE_H_
-#define _SUGARSE_H_
+#ifndef _SUGARDS_H_
+#define _SUGARDS_H_
 
 #include <nds.h>
 #include <string.h>
@@ -29,6 +29,7 @@ extern u32 last_frame_mode2;
 extern u32 last_frame_mode01;
 extern u8 last_frame_crtc1;
 extern int8 currentBrightness;
+extern u8 ram_highwater;
 
 // These are the various special icons/menu operations
 #define MENU_CHOICE_NONE        0x00
@@ -182,12 +183,16 @@ extern u8 RMR;
 extern u8 PENR;
 extern u8 UROM;
 
+extern u8  DAN_Zone0;
+extern u8  DAN_Zone1;
+extern u16 DAN_ZonesA15;
+
 extern u8 INK[17];
 extern u32 border_color;
 extern u8 CRTC[0x20];
 extern u8 CRT_Idx;
 extern u8 inks_changed;
-extern u32 refresh_tstates;
+extern u16 refresh_tstates;
 extern u8 ink_map[256];
 
 extern u32 HCC;
@@ -258,4 +263,4 @@ extern void debug_init();
 extern void debug_save();
 extern void debug_printf(const char * str, ...);
 
-#endif // _SUGARSE_H_
+#endif // _SUGARDS_H_
