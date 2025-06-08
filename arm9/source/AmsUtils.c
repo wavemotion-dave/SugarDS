@@ -702,8 +702,8 @@ void MapPlayer1(void)
 
     myConfig.keymap[5]   = 0;    // NDS B Button mapped to Joystick UP (jump)
     myConfig.keymap[6]   = 50;   // NDS X Button mapped to SPACE
-    myConfig.keymap[7]   = 51;   // NDS Y Button mapped to RETURN
-    myConfig.keymap[8]   = 42;   // NDS START mapped to '0'
+    myConfig.keymap[7]   = 5;    // NDS Y Button mapped to Joystick Fire 2
+    myConfig.keymap[8]   = 51;   // NDS START mapped to RETURN
     myConfig.keymap[9]   = 33;   // NDS SELECT mapped to '1'
 }
 

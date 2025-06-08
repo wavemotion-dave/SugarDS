@@ -391,7 +391,7 @@ ITCM_CODE void IntZ80(Z80 *R,word Vector)
 
     if((CPU.IFF&IFF_1)||(Vector==INT_NMI))
     {
-      CPU.TStates += ((CPU.IFF&IFF_IM1) ? 5:19); // Z80 takes 5 cycles in IM1 mode and 19 cycles to acknowledge in IM2 mode
+      CPU.TStates += 20; // Time to acknowledge interrupt. 
 
       /* Save PC on stack */
       M_PUSH(PC);
@@ -525,6 +525,7 @@ ITCM_CODE static void CodesED(void)
   {
 #include "CodesED.h"
     case PFX_ED:
+      CPU.TStates += 4;
       CPU.PC.W--;break;
     default:
       if(CPU.TrapBadOps) Trap_Bad_Ops(" ED ", I, CPU.PC.W-4);
@@ -549,6 +550,7 @@ static void CodesDD(void)
 #include "CodesXX.h"
     case PFX_FD:
     case PFX_DD:
+      CPU.TStates += 4;
       CPU.PC.W--;break;
     case PFX_CB:
       CodesDDCB();break;
@@ -575,6 +577,7 @@ static void CodesFD(void)
   {
 #include "CodesXX.h"
     case PFX_FD:
+        CPU.TStates += 4;
         if (RdZ80(CPU.PC.W) == 0x70) // LD (IY+nn),B - Zone 0 command
         {
             DAN_Zone0 = CPU.BC.B.h;
@@ -595,6 +598,7 @@ static void CodesFD(void)
         }        
         CPU.PC.W--;break;
     case PFX_DD:
+      CPU.TStates += 4;
       CPU.PC.W--;break;
     case PFX_CB:
       CodesFDCB();break;

@@ -222,8 +222,8 @@ ITCM_CODE u8 crtc_render_screen_line(void)
     // The heart of the CRTC system we use the internal counters to 'time' the
     // vertical character generation, increment line counters and handle VSYNC.
     // -------------------------------------------------------------------------
-    VLC &= 0x1F;
-    if (++VLC >= (CRTC[9]+1))
+    VLC = (VLC + 1) & 0x1F;
+    if (VLC >= (CRTC[9]+1))
     {
         VLC = 0;    // Reset counter - build up the next character line
         VCC++;      // We have finished one vertical character
@@ -330,9 +330,9 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             // The pixel data is stored in 2K chunks of memory within a 16K block of memory. This is a bit
             // unusual, but we follow the addressing formula completely including wrapping at 2K blocks.
             // ------------------------------------------------------------------------------------------------
-            u8 *pixelPtr2K = (cpc_ScreenPage + (((cpc_scanline_counter) % (CRTC[9]+1)) * 2048));
+            u8 *pixelPtr2K = (cpc_ScreenPage + (((cpc_scanline_counter) % ((CRTC[9]&7)+1)) * 2048));
 
-            u32 offset = (((cpc_scanline_counter)/(CRTC[9]+1)) * (CRTC[1]<<1));  // Base offset is based on current scanline
+            u32 offset = (((cpc_scanline_counter)/((CRTC[9]&7)+1)) * (CRTC[1]<<1));  // Base offset is based on current scanline
             offset += r12_screen_offset;                                         // As defined in R12/R13 - offset is in WORDs (2 bytes)
             
             // ------------------------------------------------------------------------------
@@ -416,7 +416,8 @@ ITCM_CODE u8 crtc_render_screen_line(void)
                         offset &= 0x47FF;                                  // Wrap is always at the 2K boundary                        
                     }
                     
-                    for (int x=0; x<8; x++)
+                    // Render the border out to the full 512 pixels for the DS (that's all we have)
+                    for (int x=limit; x<32; x++)
                     {
                         *vidBufDS++ = border_color;
                         *vidBufDS++ = border_color;

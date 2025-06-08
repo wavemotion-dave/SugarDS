@@ -102,7 +102,7 @@ Normally you should touch neither adjustment... unless the game is not running c
 
 If the game is running slower than on real hardware (e.g. Dizzy III which slows down when you move) then adjust the V52 Sync to 'Forgiving'.
 
-If the game has minor graphical glitches - say a stray line (e.g. Sword of Ianna on screen transitions) then try a CPU Adjust of -1 or -2.
+If the game has minor graphical glitches - say a stray line (e.g. Sword of Ianna on screen transitions) then try a CPU Adjust of -1 (or -2 at most).
 
 Key Mapping :
 -----------------------
@@ -158,6 +158,11 @@ Known Issues :
 
 Version History :
 -----------------------
+Version 1.0 - 08-Jun-2025 by wavemotion-dave
+* Improved Z80 / CRTC timing so more games run more correctly.
+* Improved Mode 2 rendering so it's a little better positioned 'compressed' on the DS screen.
+* Improved default key mapping that maps Y button to Joystick Fire 2 (used by many homebrews).
+* Lots of small cleanups and commenting of the code.
 
 Version 0.9 - 08-Jun-2025 by wavemotion-dave
 * Fix disk write-back so it doesn't potentially corrupt a .dsk file! Sorry about that.
