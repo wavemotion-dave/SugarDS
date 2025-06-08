@@ -6,10 +6,10 @@ SugarDS is an Amstrad CPC 646 and 6128 Emulator for the DS/DSi
 
 Features :
 -----------------------
-* Emulates CPC 464 (64K) and CPC 6128 (128K)
+* Emulates CPC 464 (64K) and CPC 6128 (128K) with an expanded 512K of RAM available.
 * Loads .SNA and .DSK files up to 1024K total length (single and double sided)
 * Plus2CPC Cartridge Support to load .CPR files up to 512K
-* Dandanator Cartridge Support - banking only (no EEPROM writes)
+* Dandanator Cartridge Support - banking only (no EEPROM writes) - rename files to .dan to load.
 * Emulates CRTC Type 3 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll
 * Full button mapping - supporting all 3 possible joystick buttons of the Amstrad as well as mapping buttons to keyboard keys
 * Save / Load state so you can pick up where you left off
