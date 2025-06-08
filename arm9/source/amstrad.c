@@ -73,7 +73,7 @@ extern u8 last_special_key;
 // ----------------------------------------------------
 u8  DAN_Zone0     = 0x00;   // Zone 0 enabled on slot0
 u8  DAN_Zone1     = 0x20;   // Zone 1 disabled on slot0
-u16 DAN_ZonesA15  = 0x00;   // Zones 0 and 1 high address bit
+u16 DAN_Config    = 0x00;   // Zones 0 and 1 high address bit
 
 ITCM_CODE void compute_pre_inked(u8 mode)
 {
@@ -180,7 +180,7 @@ void DandanatorLoad(void)
     // -------------------------------------------------------------------
     DAN_Zone0     = 0x00;   // Zone 0 enabled on slot0
     DAN_Zone1     = 0x20;   // Zone 1 disabled on slot0
-    DAN_ZonesA15  = 0x00;   // Zones 0 and 1 high address bit
+    DAN_Config    = 0x00;   // Zones 0 and 1 high address bit
 }
 
 
@@ -356,17 +356,27 @@ ITCM_CODE void ConfigureMemory(void)
     }
 
 
-    // ------------------------------------------------------
-    // And after all is said and done above, the last thing
-    // we do is check if any Dandanator Mini cart memory
-    // is mapped in which overrides everything else... but
-    // only for memory reads (writes always go to RAM).
-    // ------------------------------------------------------
+    // ------------------------------------------------------------------------
+    // And after all is said and done above, the last thing we do is check if
+    // any Dandanator Mini cart memory is mapped in which overrides everything 
+    // else... but only for memory reads (writes always go to RAM).
+    //
+    // Registers B and C are read by the CPLD as follows:
+    // Bits 4-0:  Slot to assign to zone 0-31
+    // Bit  5:    ‘0’ zone enabled, ‘1’ zone disabled
+    //
+    // Dandanator Configuration Register:
+    //   bit 5: Disable Further Dandanator commands until reset
+    //   bit 4: Enable FollowRomEn on RET (only read if bit 6 = 1)
+    //   b3-b2: A15 values for zone 1 and zone 0.
+    //   Zone 0 Can be at 0x0000 or 0x8000, zone 1 can be at 0x4000 or 0xC000
+    //   b1-b0: EEPROM_CE for zone 1 and zone 0. “0”: Enabled, “1” Disabled.
+    // ------------------------------------------------------------------------
     if (amstrad_mode == MODE_DAN)
     {
         if ((DAN_Zone0 & 0x20) == 0) // Is Zone 0 Enabled?
         {
-            if (DAN_ZonesA15 & 0x01) // High bit A15 enabled?
+            if (DAN_Config & 0x04) // High bit A15 enabled for Zone 0?
             {
                 MemoryMapR[2] = &ROM_Memory[(DAN_Zone0 & 0x1F) * 0x4000];
             }
@@ -378,7 +388,7 @@ ITCM_CODE void ConfigureMemory(void)
 
         if ((DAN_Zone1 & 0x20) == 0) // Is Zone 1 Enabled?
         {
-            if (DAN_ZonesA15 & 0x02) // High bit A15 enabled?
+            if (DAN_Config & 0x08) // High bit A15 enabled for Zone 1?
             {
                 MemoryMapR[3] = &ROM_Memory[(DAN_Zone1 & 0x1F) * 0x4000];
             }
@@ -604,7 +614,8 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                 if ((portC & 0xC0) == 0xC0) // AY Register Select
                 {
                     if (portA < 16) ay38910IndexW(portA & 0xF, &myAY);
-                }                break;
+                }                
+                break;
 
             case 0x02:
                 portC = Value;

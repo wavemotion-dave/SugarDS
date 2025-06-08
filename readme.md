@@ -6,13 +6,14 @@ SugarDS is an Amstrad CPC 646 and 6128 Emulator for the DS/DSi
 
 Features :
 -----------------------
-* Emulates CPC 464 (64K) and CPC 6128 (128K) with an expanded 512K of RAM available.
-* Loads .SNA and .DSK files up to 1024K total length (single and double sided)
-* Plus2CPC Cartridge Support to load .CPR files up to 512K
-* Dandanator Cartridge Support - banking only (no EEPROM writes) - rename files to .dan to load.
-* Emulates CRTC Type 3 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll
-* Full button mapping - supporting all 3 possible joystick buttons of the Amstrad as well as mapping buttons to keyboard keys
-* Save / Load state so you can pick up where you left off
+* Emulates CPC 464 (64K) and CPC 6128 (128K) with 512K of extended RAM available.
+* Loads .SNA and .DSK files up to 1024K total length (single and double sided).
+* Plus2CPC Cartridge Support to load .CPR files up to 512K.
+* Partial Dandanator Cartridge Support - Enough for Sword of Ianna and Los Amores de Brunilda. Rename files to .dan to load.
+* Emulates CRTC Type 3 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll.
+* Full button mapping - supporting all 3 possible joystick buttons of the Amstrad as well as mapping buttons to keyboard keys.
+* Full touch-screen Amstrad keyboard styled after the colorful CPC 464.
+* Save / Load state so you can pick up where you left off.
 
 Copyright :
 -----------------------
@@ -91,17 +92,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 Configuration :
 -----------------------
-There is quite a few configuration options that you can explore. However, of primary 
-importance are these two:
+There is quite a few configuration options that you can explore. Some options are global for the emulator
+and some are specific to one game. However, of primary importance are these two which you must understand:
 
 * V52 Sync
 * CPU Adjust
 
 Normally you should touch neither adjustment... unless the game is not running correct. In that case, try the following:
 
-If the game is running slower than on normal hardware (e.g. Dizzy III which slows down when you move) - adjust the V52 Sync to 'Forgiving'.
+If the game is running slower than on real hardware (e.g. Dizzy III which slows down when you move) then adjust the V52 Sync to 'Forgiving'.
 
-If the game has minor graphical glitches - say a stray line (e.g. Sword of Ianna on screen transitions) - try a CPU Adjust of -1 or -2.
+If the game has minor graphical glitches - say a stray line (e.g. Sword of Ianna on screen transitions) then try a CPU Adjust of -1 or -2.
 
 Key Mapping :
 -----------------------

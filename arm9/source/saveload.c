@@ -121,7 +121,7 @@ void amstradSaveState()
     
     if (retVal) retVal = fwrite(&DAN_Zone0,         sizeof(DAN_Zone0),          1, handle);
     if (retVal) retVal = fwrite(&DAN_Zone1,         sizeof(DAN_Zone1),          1, handle);
-    if (retVal) retVal = fwrite(&DAN_ZonesA15,      sizeof(DAN_ZonesA15),       1, handle);
+    if (retVal) retVal = fwrite(&DAN_Config,        sizeof(DAN_Config),         1, handle);
 
     if (retVal) retVal = fwrite(spare,              256,                        1, handle);
 
@@ -274,7 +274,7 @@ void amstradLoadState()
             
             if (retVal) retVal = fread(&DAN_Zone0,         sizeof(DAN_Zone0),          1, handle);
             if (retVal) retVal = fread(&DAN_Zone1,         sizeof(DAN_Zone1),          1, handle);
-            if (retVal) retVal = fread(&DAN_ZonesA15,      sizeof(DAN_ZonesA15),       1, handle);            
+            if (retVal) retVal = fread(&DAN_Config,        sizeof(DAN_Config),         1, handle);            
             
             if (retVal) retVal = fread(spare,              256,                        1, handle);
             

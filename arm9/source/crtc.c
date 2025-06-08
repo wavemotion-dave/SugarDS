@@ -317,8 +317,11 @@ ITCM_CODE u8 crtc_render_screen_line(void)
     // ------------------------------------------------------------------------
     if (CRTC[3] & 1) vidBufDS++;
 
-    // If the display is enabled... render screen.
-    if ((current_ds_line & 0xFFFFFF00) == 0) // If we are in the 256 visible lines...
+    // ------------------------------------------------------------------------
+    // If the display is enabled... render screen. This handles translating the
+    // video memory in main RAM_Memory[] to the DS/DSi LCD video buffer...
+    // ------------------------------------------------------------------------
+    if ((current_ds_line & 0xFFFFFF00) == 0) // If we are in the 256 visible lines... that's all we have!
     {
         if (DISPEN)
         {
@@ -471,7 +474,9 @@ ITCM_CODE u8 crtc_render_screen_line(void)
         }
         else // Display not enabled - render border
         {
-            for (int x=0; x<(CRTC[1]<<1)+16; x++)
+            int limit = (CRTC[1]<<1)+16;   // Draw the full border line plus a little 'extra'
+            if (limit > 128) limit = 128;  // This is the extent of our video buffer (512 horizontal pixels)
+            for (int x=0; x<limit; x++)
             {
                 *vidBufDS++ = border_color;
             }
