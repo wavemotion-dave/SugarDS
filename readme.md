@@ -22,7 +22,7 @@ SugarDS is Copyright (c) 2025 Dave Bernazzani (wavemotion-dave)
 Bits of pieces of this emulator have been glued and attached from 
 a large number of sources - along with a healthy amount of code by 
 this author to pull it all together. Although it was hard to trace 
-everythign to the original sources, I believe all sources have 
+everything to the original sources, I believe all sources have 
 released their material under the GNU General Public License and, 
 as such, the SugarDS emulator follows suit.
 
