@@ -101,11 +101,14 @@ but it will render speech and other digitized effects quite well.
 
 Of primary importance to gameplay are these two: **V52 Sync** and **CPU Adjust**.
 
-Normally you should touch neither adjustment... unless the game is not running correct. In that case, try the following:
+Normally you shouldn't touch either adjustment... unless the game is not running correctly. In that case, try the following:
 
 If the game is running slower than on real hardware (e.g. Dizzy III which slows down when you move) then adjust the V52 Sync to 'Forgiving'.
 
 If the game has minor graphical glitches - say a stray line (e.g. Sword of Ianna on screen transitions) then try a CPU Adjust of -1 (or -2 at most).
+
+Because the emulator is doing line-based (vs cycle-based) emulation, the accuracy is only to that of a scanline and sometimes these small tweaks are 
+necessary to get games running as close as possible to real hardware.
 
 Key Mapping :
 -----------------------
