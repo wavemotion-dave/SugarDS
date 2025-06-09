@@ -112,15 +112,19 @@ necessary to get games running as close as possible to real hardware.
 
 Key Mapping :
 -----------------------
+Any of the non shoulder buttons can be mapped to any joystick button and/or keyboard key. 
+
+The shoulder buttons are special:
+
 Shoulder button L + D-Pad for offset
 Shoulder button R + D-Pad for scale (turn off auto-scale)
 
 It's critical that you use the L/R buttons to shift/scale the screen as the Amstrad
-CPC will often utilize more pixels than the DS has resolution so you will be forced
-to either compress (squash) the screen or else position the screen carefully and map
-one of the buttons to PAN UP or PAN DOWN the screen briefly - this works really well
-for games that show status or score at the top or bottom of the screen but otherwise
-doesn't really affect the main gameplay area. 
+CPC will often utilize more pixels than the DS has resolution (192 vertical pixels)
+so you will be forced to either compress (squash) the screen or else position the 
+screen carefully and map one of the buttons to PAN UP or PAN DOWN the screen briefly.
+This works really well for games that show status or score at the top or bottom of 
+the screen but otherwise doesn't really affect the main gameplay area. 
 
 DISK Support :
 -----------------------
