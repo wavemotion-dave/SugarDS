@@ -164,7 +164,7 @@ Known Issues :
 * Prehistorik II has major graphical glitches.
 * Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay is better.
 * Dizzy III requires that you set the 'V52 Sync' option to 'Forgiving' so it plays at the right speed.
-
+* Sword of Ianna dandinator cart requires a CPU Adjustment of -2 to avoid the stay blue line mid-screen on cut-scene transitions.
 
 Version History :
 -----------------------
