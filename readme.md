@@ -93,10 +93,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 Configuration :
 -----------------------
 There is quite a few configuration options that you can explore. Some options are global for the emulator
-and some are specific to one game. However, of primary importance are these two which you must understand:
+and some are specific to one game. 
 
-* V52 Sync
-* CPU Adjust
+If you are playing a game like Robocop, Chase HQ or Manic Miner which hits the AY sound chip hard to produce "speech" or 
+similar digitizied effects, you should set the **Sound Driver** to 'WAVE DIRECT'. This is a bit more taxing on the emulator
+but it will render speech and other digitized effects quite well.
+
+Of primary importance to gameplay are these two: **V52 Sync** and **CPU Adjust**.
 
 Normally you should touch neither adjustment... unless the game is not running correct. In that case, try the following:
 
