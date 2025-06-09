@@ -330,9 +330,9 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             // The pixel data is stored in 2K chunks of memory within a 16K block of memory. This is a bit
             // unusual, but we follow the addressing formula completely including wrapping at 2K blocks.
             // ------------------------------------------------------------------------------------------------
-            u8 *pixelPtr2K = (cpc_ScreenPage + (((cpc_scanline_counter) % ((CRTC[9]&7)+1)) * 2048));
+            u8 *pixelPtr2K = (cpc_ScreenPage + (((cpc_scanline_counter) % (CRTC[9]+1)) * 2048));
 
-            u32 offset = (((cpc_scanline_counter)/((CRTC[9]&7)+1)) * (CRTC[1]<<1));  // Base offset is based on current scanline
+            u32 offset = (((cpc_scanline_counter)/(CRTC[9]+1)) * (CRTC[1]<<1));  // Base offset is based on current scanline
             offset += r12_screen_offset;                                         // As defined in R12/R13 - offset is in WORDs (2 bytes)
             
             // ------------------------------------------------------------------------------

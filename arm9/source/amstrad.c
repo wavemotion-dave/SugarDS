@@ -1013,12 +1013,21 @@ ITCM_CODE u32 amstrad_run(void)
     // Process 1 scanline worth of AY audio
     if (myConfig.waveDirect) processDirectAudio();
 
-    // Execute 1 scanline worth of CPU instructions ... Z80 at 4MHz
-    cpu_targ += (256+CPU_ADJUST[myConfig.cpuAdjust]);
+    // -----------------------------------------------------------------------
+    // Execute half of the current scanline - we do this to get as close
+    // to accurate as possible - half the CPU line, then the CRTC line
+    // then the back-half of the CPU line. This way we're no more than half
+    // a line "wrong" at any time which is good enough for 98% of CPC games.
+    // -----------------------------------------------------------------------
+    cpu_targ += 128;
     ExecZ80(cpu_targ);
 
     // Process 1 scanline for the mighty CRTC controller chip
     u8 vsync = crtc_render_screen_line();
+
+    // Finish the scanline plus any user-called for adjustment...
+    cpu_targ += (128+CPU_ADJUST[myConfig.cpuAdjust]);
+    ExecZ80(cpu_targ);
     
     if (vsync) // Will return non-zero if VSYNC started
     {

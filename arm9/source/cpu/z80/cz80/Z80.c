@@ -391,7 +391,7 @@ ITCM_CODE void IntZ80(Z80 *R,word Vector)
 
     if((CPU.IFF&IFF_1)||(Vector==INT_NMI))
     {
-      CPU.TStates += 20; // Time to acknowledge interrupt. 
+      CPU.TStates += (CPU.IFF&IFF_IM2 ? 19:5); // Time to acknowledge interrupt. 
 
       /* Save PC on stack */
       M_PUSH(PC);
@@ -590,7 +590,7 @@ static void CodesFD(void)
         }        
         if (RdZ80(CPU.PC.W) == 0x77) // LD (IY+nn),A - Config command
         {
-            if (CPU.AF.B.h & 0x80) // High bit is a Dandanator Configuration
+            if (CPU.AF.B.h & 0x80) // High bit is the Dandanator Configuration
             {
                 DAN_Config = CPU.AF.B.h;
                 ConfigureMemory();
