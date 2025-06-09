@@ -168,7 +168,7 @@ Known Issues :
 
 Version History :
 -----------------------
-Version 1.0 - 08-Jun-2025 by wavemotion-dave
+Version 1.0 - ??-Jun-2025 by wavemotion-dave
 * Improved Z80 / CRTC timing so more games run more correctly.
 * Improved Mode 2 rendering so it's a little better positioned 'compressed' on the DS screen.
 * Improved default key mapping that maps Y button to Joystick Fire 2 (used by many homebrews).
