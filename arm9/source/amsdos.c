@@ -435,14 +435,14 @@ BOOL AMSDOS_GetSector(int nDrive, int nTrack, int nSector, unsigned char *pBuffe
 
     if (nSectorIndex==-1) return FALSE;
 
-    TailleSect = 128 << fdc.CurrTrackDatasDSK.Sect[ nSectorIndex ].N;
+    TailleSect = 128 << fdc.CurrTrackDatasDSK[fdc.H].Sect[ nSectorIndex ].N;
     if ( ! newPos )
-        cntdata = ( nSectorIndex * fdc.CurrTrackDatasDSK.SectSize ) << 8;
+        cntdata = ( nSectorIndex * fdc.CurrTrackDatasDSK[fdc.H].SectSize ) << 8;
     else
         cntdata = newPos;
 
     ChangeCurrTrack(nTrack);
-    memcpy(pBuffer, fdc.ImgDsk + cntdata + fdc.PosData, TailleSect);
+    memcpy(pBuffer, fdc.ImgDsk + cntdata + fdc.PosData[fdc.H], TailleSect);
     return TRUE;
 }
 

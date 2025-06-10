@@ -172,6 +172,7 @@ Version 1.0 - ??-Jun-2025 by wavemotion-dave
 * Improved Z80 / CRTC timing so more games run more correctly.
 * Improved Mode 2 rendering so it's a little better positioned 'compressed' on the DS screen.
 * Improved default key mapping that maps Y button to Joystick Fire 2 (used by many homebrews).
+* Another round of improvements for FDC handling of two-sided disks. Orion Prime no longer warns of disk issues.
 * Lots of small cleanups and commenting of the code.
 
 Version 0.9 - 08-Jun-2025 by wavemotion-dave

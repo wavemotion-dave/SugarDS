@@ -94,11 +94,11 @@ typedef struct
 {
     int disk_size;
     int state;
-    CPCEMUTrack CurrTrackDatasDSK;
-    CPCEMUHeader Infos;
+    CPCEMUHeader DiskInfo;
+    CPCEMUTrack  CurrTrackDatasDSK[2]; // For 2 heads/sides
+    int PosData[2];
     int FlagWrite;
     int Image;
-    int PosData;
     int DriveBusy;
     int Status;
     int ST0;

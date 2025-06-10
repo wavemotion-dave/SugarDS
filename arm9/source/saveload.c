@@ -25,7 +25,7 @@
 #include "fdc.h"
 #include "lzav.h"
 
-#define SUGAR_SAVE_VER   0x0003     // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
+#define SUGAR_SAVE_VER   0x0004     // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
 
 /*********************************************************************************
  * Save the current state - save everything we need to a single .sav file.

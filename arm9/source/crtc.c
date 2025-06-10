@@ -104,17 +104,20 @@ void crtc_reset(void)
 }
 
 
-//R52 will return to 0 and the Gate Array will send an interrupt request on any of these conditions:
+// ---------------------------------------------------------------------------------------------------------------
+// R52 will return to 0 and the Gate Array will send an interrupt request on any of these conditions:
 //  - When it exceeds 51
 //  - By setting bit4 of the RMR register of the Gate Array to 1
 //  - At the end of the 2nd HSYNC after the start of the VSYNC
 //
-//When the Gate Array sends an interrupt request:
-//  If the interrupts were authorized at the time of the request, then bit5 of R52 is cleared (but R52 was reset to 0 anyway) and the interrupt takes place
-//  If interrupts are not authorized, then the R52 counter continues to increment and the interrupt remains armed (the Gate Array then maintains its INT signal). 
-//  When interrupts are enabled (using the EI instruction), bit5 of R52 is cleared and the interrupt takes place. This happens only after the instruction that
-//  follows EI as this Z80 instruction has a 1-instruction delay.
-
+// When the Gate Array sends an interrupt request:
+//  If the interrupts were authorized at the time of the request, then bit5 of R52 is cleared (but R52 
+//  was reset to 0 anyway) and the interrupt takes place.
+//  If interrupts are not authorized, then the R52 counter continues to increment and the interrupt 
+//  remains armed (the Gate Array then maintains its INT signal). 
+//  When interrupts are enabled (using the EI instruction), bit5 of R52 is cleared and the interrupt takes place.
+//  This happens only after the instruction that follows EI as this Z80 instruction has a 1-instruction delay.
+// ---------------------------------------------------------------------------------------------------------------
 void crtc_r52_int(void)
 {
     CPU.IRequest = INT_RST38;
@@ -135,9 +138,16 @@ void crtc_new_frame_coming_up(void)
 {
     DISPEN = 1;                 // Next frame coming up... Display On
     cpc_scanline_counter = 0;   // And we're at the top of the raster memory
+    
+    // --------------------------------------------------------------------
+    // With every new 'frame' we recompute the screen page and base offset
+    // --------------------------------------------------------------------
     cpc_ScreenPage = RAM_Memory + (((CRTC[12] & 0x30) >> 4) * 0x4000);
     r12_screen_offset = (((u16)(CRTC[12] & 3) << 8) | CRTC[13]) << 1;
     
+    // -------------------------------------------------------------
+    // A rare game or the occasional demo will make use of 32K mode
+    // -------------------------------------------------------------
     b32K_Mode = ((CRTC[12] & 0xC) == 0xC) ? 1:0;
 }
 
@@ -151,6 +161,11 @@ void crtc_new_frame_coming_up(void)
 // 0    1   Mode 1, 320x200 resolution, 4 colors
 // 1    0   Mode 2, 640x200 resolution, 2 colors
 // 1    1   Mode 3, 160x200 resolution, 4 colors (undocumented)
+//
+// Please note... this is the heart of the CPC system and this routine is not
+// perfectly hardware accurate. It's reasonably close - close enough for most
+// games to run properly including those that smooth scroll vertically and
+// horizontally. But do not use this as the bastion for good CRTC emulation.
 // ----------------------------------------------------------------------------
 ITCM_CODE u8 crtc_render_screen_line(void)
 {
@@ -246,16 +261,14 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             {
                 vSyncSeen = 0;                         // Setup for next VSYNC
                 current_ds_line = -myConfig.screenTop; // Top of LCD screen
-                
-                if (((CRTC[5] & 0x1F) > 0)) // Vertical Total Adjustment?
-                {
-                    // -------------------------------------------
-                    // Extra scanlines before we enable display.
-                    // Add 1 as we will process immediately below.
-                    // -------------------------------------------                
-                    VTAC = (CRTC[5] & 0x1F) + 1;
-                }
-            }
+
+                // --------------------------------------------
+                // Vertical Total Adjustment - these are extra
+                // scanlines before we start a new "frame".
+                // Add 1 as we will process immediately below.
+                // --------------------------------------------                
+                VTAC = (CRTC[5] & 0x1F) + 1;
+            }            
         }
         
         if (VCC == CRTC[6]) // End of visible display?
@@ -313,7 +326,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
     // will modify the HSync width to produce smoother scrolling horizontal
     // effects... we do a very simplified version of that by shifting 4 pixels
     // when we are 'odd' and normal display when we are 'even'. Games like
-    // Super Edge Grinder will now scroll perfectly smoothly... 
+    // Super Edge Grinder will now scroll reasonably smoothly... 
     // ------------------------------------------------------------------------
     if (CRTC[3] & 1) vidBufDS++;
 

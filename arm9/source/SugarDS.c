@@ -576,7 +576,7 @@ void DisplayStatusLine(bool bForce)
                 if (outfile)
                 {
                     // Always skip over the 256 byte .dsk header... that never changes
-                    fseek(outfile, sizeof(fdc.Infos), SEEK_SET);
+                    fseek(outfile, sizeof(fdc.DiskInfo), SEEK_SET);
                     
                     // And write out all changed 4K blocks
                     for (u8 i=0; i < ((fdc.disk_size / 4096)+1); i++)

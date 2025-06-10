@@ -391,7 +391,7 @@ ITCM_CODE void IntZ80(Z80 *R,word Vector)
 
     if((CPU.IFF&IFF_1)||(Vector==INT_NMI))
     {
-      CPU.TStates += (CPU.IFF&IFF_IM2 ? 19:5); // Time to acknowledge interrupt. 
+      CPU.TStates += (CPU.IFF&IFF_IM2 ? 20:4); // Time to acknowledge interrupt. 
 
       /* Save PC on stack */
       M_PUSH(PC);

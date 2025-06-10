@@ -43,8 +43,6 @@ struct Config_t myConfig __attribute((aligned(4))) __attribute__((section(".dtcm
 struct GlobalConfig_t myGlobalConfig;
 extern u32 file_crc;
 
-u16 *pVidFlipBuf  = (u16*) (0x06000000);    // Video flipping buffer
-
 // -----------------------------------------------------------------------
 // Used by our system to map into 8K memory chunks which allows for very
 // rapid banking of memory - very useful for the CPC with 128K of memory.
