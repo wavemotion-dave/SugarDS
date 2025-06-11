@@ -1053,7 +1053,7 @@ ITCM_CODE u32 amstrad_run(void)
         }
     }
     scanline_count++;
-
+    
     return vsync; // Return '1' if end of frame.. '0' if not end of frame
 }
 

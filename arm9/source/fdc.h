@@ -42,8 +42,6 @@ typedef unsigned long           ULONG;
 typedef u8 BOOL;
 #endif
 
-extern int DriveBusy;
-
 void    ChangeCurrTrack( int newTrack );
 void    ReadCHRN( void );
 int     SeekSector( int newSect, int * pos );
@@ -51,17 +49,16 @@ int     ReadFDC( int port );
 void    WriteFDC( int Port, int val );
 void    ResetFDC( void );
 void    EjectDiskFDC( void );
-int     GetCurrTrack( void );
 void    ReadDiskMem(u8 *rom, u32 romsize);
 
 #pragma pack(1)
 typedef struct
 {
-    char  debut[ 0x30 ]; // "MV - CPCEMU Disk-File\r\nDisk-Info\r\n"
+    char  debut[ 0x30 ];        // "MV - CPCEMU Disk-File\r\nDisk-Info\r\n"
     UBYTE NumTracks;
     UBYTE NumHeads;
-    SHORT DataSize; // 0x1300 = 256 + ( 512 * NumberOfSectors )
-    UBYTE Unused[ 0xCC ];
+    SHORT TrackSize;            // For non-Extended disks. 0x1300 = 256 + ( 512 * NumberOfSectors )
+    UBYTE TrackSizes[ 0xCC ];   // For Extended Disks
 } CPCEMUHeader;
 
 typedef struct
@@ -110,6 +107,7 @@ typedef struct
     int R;
     int N;
     int Drive;
+    int Side;
     int EOT;
     int Busy;
     int Inter;
