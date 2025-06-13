@@ -604,7 +604,7 @@ int AMSDOS_GetExtPriority(const char *pFilename)
     {
         if (pFilename[i]=='.')
         {
-            pExtension = &pFilename[i+1];
+            if (pFilename[i+1]) pExtension = &pFilename[i+1];
             break;
         }
     }
@@ -627,7 +627,7 @@ int AMSDOS_GetExtPriority(const char *pFilename)
             return 1;
         if (strcmp(pExtension,"SCR")==0)
             return -3;
-    }
+    } else return 3; // No extension has priority
 
     return 0;
 }
@@ -754,12 +754,6 @@ int AMSDOS_ProcessFiles(const AMSDOS_FORMAT *pFormat,unsigned char *pBuffer, cha
             nPriority += AMSDOS_GetExtPriority(Filename);
             nPriority += (AMSDOS_GetFilenamePriority(Filename)*3);
 
-#if 0
-            static int zzz=0;
-            char tmp[33];
-            sprintf(tmp, "%3d %s", nPriority, Filename);
-            DSPrint(0, zzz++, 6, tmp);
-#endif
             ValidEntries[i].nPriority = nPriority;
         }
 

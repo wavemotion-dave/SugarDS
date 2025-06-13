@@ -165,14 +165,17 @@ Known Issues :
 * Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay is better.
 * Dizzy III requires that you set the 'V52 Sync' option to 'Forgiving' so it plays at the right speed.
 * Sword of Ianna dandinator cart requires a CPU Adjustment of -2 to avoid the stay blue line mid-screen on cut-scene transitions.
+* R-Type Reloaded 128K does not load correctly except for the 3-disk version which does work (despite some loading screen issues).
 
 Version History :
 -----------------------
-Version 1.0 - ??-Jun-2025 by wavemotion-dave
+Version 1.0 - 13-Jun-2025 by wavemotion-dave
 * Improved Z80 / CRTC timing so more games run more correctly.
 * Improved Mode 2 rendering so it's a little better positioned 'compressed' on the DS screen.
 * Improved default key mapping that maps Y button to Joystick Fire 2 (used by many homebrews).
-* Another round of improvements for FDC handling of two-sided disks. Orion Prime no longer warns of disk issues.
+* Another round of improvements for FDC handling of two-sided disks. Orion Prime no longer warns of disk issues, Batman Forever 3.5" loads.
+* Fixed the sound mute handler so that there are less frequent pops/clicks when loading up new games.
+* Improved auto-load detection - more disks load the correct file more often.
 * Lots of small cleanups and commenting of the code.
 
 Version 0.9 - 08-Jun-2025 by wavemotion-dave

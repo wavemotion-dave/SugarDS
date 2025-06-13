@@ -270,6 +270,7 @@ ITCM_CODE mm_word OurSoundMixer(mm_word len, mm_addr dest, mm_stream_formats for
         else
         {
             ay38910Mixer(2*len, dest, &myAY);
+            last_sample = ((s16*)dest)[len*2 - 1];
         }
     }
 
@@ -324,7 +325,7 @@ void newStreamSampleRate(void)
 
 // -----------------------------------------------------------------------
 // Setup the maxmod audio stream - this will be a 16-bit Stereo PCM
-// output at 55KHz which sounds about right for the Amstrad CPC AY chip.
+// output at ~30KHz which sounds about right for the Amstrad CPC AY chip.
 // -----------------------------------------------------------------------
 void setupStream(void)
 {
