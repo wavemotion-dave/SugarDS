@@ -424,6 +424,24 @@ int AMSDOS_GetSectorIndex(int nDrive, int nTrack, int nID)
     return -1;
 }
 
+int SeekSector_Partial(int sect, int *pos )
+{
+    *pos = 0;
+    for ( int i = 0; i < fdc.CurrTrackDatasDSK[fdc.Side].NbSect; i++ )
+    {
+        if ( (fdc.CurrTrackDatasDSK[fdc.Side].Sect[ i ].R == sect) )
+        {
+            return( ( UBYTE )i );
+        }
+        else
+        {
+            *pos += fdc.CurrTrackDatasDSK[fdc.Side].Sect[ i ].SectSize;
+        }
+    }
+
+    return( -1 );
+}
+
 /*--------------------------------------------------------------------------------------*/
 BOOL AMSDOS_GetSector(int nDrive, int nTrack, int nSector, unsigned char *pBuffer)
 {

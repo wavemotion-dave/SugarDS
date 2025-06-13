@@ -37,7 +37,7 @@
 
 // -----------------------------------------------------------------
 // Most handy for development of the emulator is a set of 16 R/W
-// registers and a couple of index vars... we show this when 
+// registers and a couple of index vars... we show this when
 // global settings is set to show the 'Debugger'. It's amazing
 // how handy these general registers are for emulation development.
 // -----------------------------------------------------------------
@@ -174,7 +174,7 @@ u16 keyCoresp[MAX_KEY_OPTIONS] __attribute__((section(".dtcm"))) = {
     META_KBD_SLASH,
     META_KBD_SPACE,  //50
     META_KBD_RETURN,
-    
+
     META_KBD_F1,
     META_KBD_F2,
     META_KBD_F3,
@@ -183,8 +183,8 @@ u16 keyCoresp[MAX_KEY_OPTIONS] __attribute__((section(".dtcm"))) = {
     META_KBD_CURS_DN,
     META_KBD_CURS_LF,
     META_KBD_CURS_RT,
-    META_KBD_CURS_CPY, // 60    
-    
+    META_KBD_CURS_CPY, // 60
+
     META_KBD_PAN_UP16,
     META_KBD_PAN_UP24,
     META_KBD_PAN_UP32,
@@ -277,7 +277,7 @@ ITCM_CODE mm_word OurSoundMixer(mm_word len, mm_addr dest, mm_stream_formats for
 }
 
 // --------------------------------------------------------------------------------------------
-// This is called when we want to sample the audio directly - we grab 4x AY samples that  
+// This is called when we want to sample the audio directly - we grab 4x AY samples that
 // will be played back by the mixer routine directly above...
 // --------------------------------------------------------------------------------------------
 s16 mixbufAY[4]  __attribute__((section(".dtcm")));
@@ -286,7 +286,7 @@ u32 vol __attribute__((section(".dtcm"))) = 0;
 ITCM_CODE void processDirectAudio(void)
 {
     ay38910Mixer(4, mixbufAY, &myAY);
-    
+
     for (u8 i=0; i<4; i++)
     {
         if (breather) {return;}
@@ -297,7 +297,7 @@ ITCM_CODE void processDirectAudio(void)
 }
 
 // -----------------------------------------------------------------------------------------------
-// The user can override the core emulation speed from 80% to 120% to make games play faster/slow 
+// The user can override the core emulation speed from 80% to 120% to make games play faster/slow
 // than normal. We must adjust the MaxMode sample frequency to match or else we will not have the
 // proper number of samples in our sound buffer... this isn't perfect but it's reasonably good!
 // -----------------------------------------------------------------------------------------------
@@ -323,7 +323,7 @@ void newStreamSampleRate(void)
 }
 
 // -----------------------------------------------------------------------
-// Setup the maxmod audio stream - this will be a 16-bit Stereo PCM 
+// Setup the maxmod audio stream - this will be a 16-bit Stereo PCM
 // output at 55KHz which sounds about right for the Amstrad CPC AY chip.
 // -----------------------------------------------------------------------
 void setupStream(void)
@@ -366,13 +366,13 @@ void setupStream(void)
 void sound_chip_reset()
 {
   //  ----------------------------------------
-  //  The AY sound chip for the Amstrad CPC 
+  //  The AY sound chip for the Amstrad CPC
   //  ----------------------------------------
   ay38910Reset(&myAY);             // Reset the "AY" sound chip
   ay38910IndexW(0x07, &myAY);      // Register 7 is ENABLE
   ay38910DataW(0x3F, &myAY);       // All OFF (negative logic)
   ay38910Mixer(4, mixbufAY, &myAY);// Do an initial mix conversion to clear the output
-  
+
   floppy_sound = 0;
   floppy_action = 0;
 
@@ -404,7 +404,7 @@ void ResetAmstrad(void)
 
   sound_chip_reset();                   // Reset the AY chip
   ResetZ80(&CPU);                       // Reset the Z80 CPU core
-  amstrad_reset();                      // Reset the Amstrad memory - will load .dsk or .sna 
+  amstrad_reset();                      // Reset the Amstrad memory - will load .dsk or .sna
 
   // -----------------------------------------------------------
   // Timer 1 is used to time frame-to-frame of actual emulation
@@ -475,7 +475,7 @@ void ShowDebugZ80(void)
         DSPrint(0,idx++,7, tmp);
 
         idx++;
-        
+
         if (debug_area == 1)
         {
             sprintf(tmp, "FDC  %02X %02X %02X %02X", fdc.ST0, fdc.ST1, fdc.ST2, fdc.ST3);
@@ -484,7 +484,7 @@ void ShowDebugZ80(void)
             DSPrint(0,idx++,7, tmp);
             sprintf(tmp, "SECTOR INDEX %-3d", fdc.sector_index);
             DSPrint(0,idx++,7, tmp);
-           
+
             DSPrint(0,idx++,7, "                ");
         }
         else
@@ -540,7 +540,7 @@ void DisplayStatusLine(bool bForce)
 
     if (floppy_sound)
     {
-        if (floppy_sound == 2) 
+        if (floppy_sound == 2)
         {
             mmEffect(SFX_FLOPPY3);  // Play short floppy sound for feedback
         }
@@ -561,7 +561,7 @@ void DisplayStatusLine(bool bForce)
             }
         }
     }
-    
+
     if (fdc.dirty_counter)
     {
         // Persist the the disk image to the SD card
@@ -577,7 +577,7 @@ void DisplayStatusLine(bool bForce)
                 {
                     // Always skip over the 256 byte .dsk header... that never changes
                     fseek(outfile, sizeof(fdc.DiskInfo), SEEK_SET);
-                    
+
                     // And write out all changed 4K blocks
                     for (u8 i=0; i < ((fdc.disk_size / 4096)+1); i++)
                     {
@@ -596,7 +596,7 @@ void DisplayStatusLine(bool bForce)
                             fseek(outfile, 4096, SEEK_CUR);  // Skip to the next 4K block
                         }
                     }
-                    
+
                     fflush(outfile);
                     fclose(outfile);
                     WAITVBL;WAITVBL;
@@ -605,7 +605,7 @@ void DisplayStatusLine(bool bForce)
             }
         }
     }
-    
+
     if (last_special_key)
     {
         if (last_special_key == KBD_KEY_SFT)
@@ -631,17 +631,17 @@ void DiskInsert(char *filename, u8 bForceRead)
 {
     if (strstr(filename, ".dsk") != 0) amstrad_mode = MODE_DSK;
     if (strstr(filename, ".DSK") != 0) amstrad_mode = MODE_DSK;
-    
+
     if (bForceRead)
     {
         last_file_size = ReadFileCarefully(filename, ROM_Memory, MAX_ROM_SIZE, 0);
     }
-    
+
     if (last_file_size)
-    {        
+    {
         strcpy(last_file, filename);
         getcwd(last_path, MAX_FILENAME_LEN);
-        
+
         ReadDiskMem(ROM_Memory, last_file_size);
     }
 }
@@ -655,7 +655,7 @@ typedef struct
 
 // ------------------------------------------------------------------------
 // Show the Mini Menu - highlight the selected row. This can be called
-// up directly from the CPC Keyboard Graphic - allows the user to quit 
+// up directly from the CPC Keyboard Graphic - allows the user to quit
 // the current game, set high scores, save/load game state, etc.
 // ------------------------------------------------------------------------
 u8 mini_menu_items = 0;
@@ -761,7 +761,7 @@ extern u8 pan_mode_offset;
 u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 {
     MaxBrightness();
-    
+
     if (iTy < 37)
     {
         if (iTx < 75)  if (pan_mode_offset > 0)  pan_mode_offset--;
@@ -852,7 +852,7 @@ u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 u8 handle_cpc_numpad_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 {
     MaxBrightness();
-    
+
     if (iTy < 37)
     {
         if (iTx < 75)  if (pan_mode_offset > 0)  pan_mode_offset--;
@@ -928,13 +928,13 @@ u8 handle_cpc_numpad_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 u8 handle_debugger_overlay(u16 iTx, u16 iTy)
 {
     MaxBrightness();
-    
+
     if ((iTy >= 100) && (iTy <= 150))
     {
         debug_area ^= 1;
         WAITVBL;WAITVBL;
     }
-    
+
     if ((iTy >= 165) && (iTy < 192)) // Bottom row is where the debugger keys are...
     {
         if      ((iTx >= 0)   && (iTx <  22))  kbd_key = 'Z';
@@ -1011,7 +1011,7 @@ u8 __attribute__((noinline)) handle_meta_key(u8 meta_key)
             BottomScreenKeyboard();
             SoundUnPause();
             break;
-            
+
         case MENU_CHOICE_DEFINE_KEYS:
             SoundPause();
             SugarDSChangeKeymap();
@@ -1077,7 +1077,7 @@ void SugarDS_main(void)
   emuFps=0;
 
   newStreamSampleRate();
-  
+
   // Force the sound engine to turn on when we start emulation
   bStartSoundEngine = 10;
 
@@ -1089,7 +1089,7 @@ void SugarDS_main(void)
   while(1)
   {
     u8 frame_complete = 0;
-    
+
     // Take a tour of the Z80 and display the screen if necessary
     if (debugger_pause == 1)
     {
@@ -1099,7 +1099,7 @@ void SugarDS_main(void)
     {
         frame_complete = amstrad_run();
     }
-    
+
     // -----------------------------------------------------
     // If we have completed 1 frame (vertical sync seen)...
     // This handles our keyboard polling, joystick polling
@@ -1108,7 +1108,10 @@ void SugarDS_main(void)
     if (frame_complete)
     {
         if (debugger_pause == 2) debugger_pause = 1;
-        
+
+        // Tick one frame on the FDC
+        FDC_frame();
+
         // If we've been asked to start the sound engine, rock-and-roll!
         if (bStartSoundEngine)
         {
@@ -1131,7 +1134,7 @@ void SugarDS_main(void)
             {
                 mode2_frames = 0;
             }
-            
+
             if (mode2_frames > 25) // A half second of mode2 frames in a row is enough to switch...
             {
                  if (myConfig.mode2mode == 0)
@@ -1147,11 +1150,11 @@ void SugarDS_main(void)
                 else if (last_frame_crtc1 <= 43)  myConfig.scaleX = 224;
                 else  myConfig.scaleX = 200;
             }
-            
+
             // Reset counters...
             last_frame_mode2 = last_frame_mode01 = 0;
         }
-        
+
         // -------------------------------------------------------------
         // Stuff to do once/second such as FPS display and Debug Data
         // -------------------------------------------------------------
@@ -1190,7 +1193,7 @@ void SugarDS_main(void)
                         {
                             char cmd[32];
                             char *specified_cmd = strstr(last_file, "[[");
-                            
+
                             // If the .dsk filename on the SD card has a [[cmd]] we simply use that blindly
                             if (specified_cmd)
                             {
@@ -1225,7 +1228,7 @@ void SugarDS_main(void)
             }
         }
         emuActFrames++;
-        
+
         // --------------------------------------------------------------------
         // We only support PAL 50 frames as this is an Amstrad CPC from the UK
         // --------------------------------------------------------------------
@@ -1310,7 +1313,7 @@ void SugarDS_main(void)
                     BottomScreenKeyboard();
                     WAITVBL;WAITVBL;
                 }
-                
+
                 // -------------------------------------------------------------------
                 // If one of the special meta keys was picked, we handle that here...
                 // -------------------------------------------------------------------
@@ -1347,7 +1350,7 @@ void SugarDS_main(void)
                     last_special_key = 0;
                 }
             }
-            
+
           }
       }
 
@@ -1413,7 +1416,7 @@ void SugarDS_main(void)
                 dampen = 2;
                 if (myConfig.scaleX < 320) myConfig.scaleX++;
             }
-        }                  
+        }
       }
       else if  (nds_key & (KEY_UP | KEY_DOWN | KEY_LEFT | KEY_RIGHT | KEY_A | KEY_B | KEY_START | KEY_SELECT | KEY_X | KEY_Y))
       {
@@ -1498,12 +1501,12 @@ void SugarDS_main(void)
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F4)        kbd_key  = KBD_KEY_F4;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_SHIFT)     kbd_key  = KBD_KEY_SFT;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_RETURN)    kbd_key  = KBD_KEY_RET;
-                      
+
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_UP)   kbd_key  = KBD_KEY_CUP;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_DN)   kbd_key  = KBD_KEY_CDN;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_LF)   kbd_key  = KBD_KEY_CLT;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_RT)   kbd_key  = KBD_KEY_CRT;
-                      
+
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_CPY)  kbd_key  = KBD_KEY_CPY;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP16)  {temp_offset = -16;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP24)  {temp_offset = -24;slide_dampen = 15;}
@@ -1511,7 +1514,7 @@ void SugarDS_main(void)
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN16)  {temp_offset =  16;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN24)  {temp_offset =  24;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN32)  {temp_offset =  32;slide_dampen = 15;}
-                      
+
                       if (kbd_key != 0)
                       {
                           kbd_keys[kbd_keys_pressed++] = kbd_key;
@@ -1530,7 +1533,7 @@ void SugarDS_main(void)
       }
 
       if (dampen) dampen--;
-      
+
       // ------------------------------------------------------------------------------------------
       // Finally, check if there are any buffered keys that need to go into the keyboard handling.
       // ------------------------------------------------------------------------------------------
@@ -1725,7 +1728,7 @@ ITCM_CODE void irqVBlank(void)
 {
     // Manage time
     vusCptVBL++;
-    
+
     int cxBG = ((s16)myConfig.offsetX << 8);
     int cyBG = ((s16)myConfig.offsetY+temp_offset) << 8;
     int xdxBG = ((320 / myConfig.scaleX) << 8) | (320 % myConfig.scaleX) ;
@@ -1753,11 +1756,11 @@ ITCM_CODE void irqVBlank(void)
             slide_dampen--;
         }
     }
-    
+
     if (currentBrightness != brightness[myGlobalConfig.keyboardDim])
     {
         HandleBrightness();
-    }    
+    }
 }
 
 // ----------------------------------------------------------------------
@@ -1854,7 +1857,7 @@ int main(int argc, char **argv)
   while(1)
   {
     SugarDSInit();
-    
+
     while(1)
     {
       SoundPause();

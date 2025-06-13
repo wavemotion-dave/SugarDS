@@ -62,7 +62,6 @@ FDC_t fdc;
 
 u8 DISK_IMAGE_BUFFER[1024*1024]; // Big enough for any 3" or 3.5" disk format
 
-
 int SeekSector( int *pos )
 {
     floppy_sound = 2;
@@ -77,27 +76,6 @@ int SeekSector( int *pos )
              (fdc.CurrTrackDatasDSK[fdc.Side].Sect[ i ].N == fdc.N) )
         {
             fdc.sector_index = (i + 1) % fdc.CurrTrackDatasDSK[fdc.Side].NbSect;
-            return( ( UBYTE )i );
-        }
-        else
-        {
-            *pos += fdc.CurrTrackDatasDSK[fdc.Side].Sect[ i ].SectSize;
-        }
-    }
-
-    fdc.ST0 |= ST0_IC1;
-    fdc.ST1 |= ST1_ND;
-    return( -1 );
-}
-
-
-int SeekSector_Partial(int sect, int *pos )
-{
-    *pos = 0;
-    for ( int i = 0; i < fdc.CurrTrackDatasDSK[fdc.Side].NbSect; i++ )
-    {
-        if ( (fdc.CurrTrackDatasDSK[fdc.Side].Sect[ i ].R == sect) )
-        {
             return( ( UBYTE )i );
         }
         else
@@ -224,13 +202,13 @@ static int ReadST3( int val )
     fdc.state = 0;
     fdc.Status &= ~STATUS_CB & ~STATUS_DIO;
 
-    if ( fdc.Motor && ! fdc.Drive )
+    if ( fdc.Motor && !fdc.Drive && fdc.Image)
     {
-        fdc.ST3 |= ST3_RY;
+        fdc.ST3 |= ST3_RY; // Drive ready
     }
     else
     {
-        fdc.ST3 &= ~ST3_RY;
+        fdc.ST3 &= ~ST3_RY; // Drive not ready
     }
 
     if ( fdc.Side )
@@ -662,6 +640,16 @@ pfctFDC fdc_func_lookup[] =
     Nothing,    // 0x1F
 };
 
+void FDC_frame(void)
+{
+    if (fdc.ReadyIn)
+    {
+        if (--fdc.ReadyIn == 0) 
+        {
+            fdc.Image=1;
+        }
+    }
+}
 
 int ReadFDC( int port )
 {
@@ -764,22 +752,28 @@ void ResetFDC( void )
     fdc.ST0 = ST0_SE;
     fdc.ST1 = 0;
     fdc.ST2 = 0;
-    fdc.ST3 = ST3_RY;
+    fdc.ST3 = 0;
     fdc.Busy = 0;
     fdc.Inter = 0;
     fdc.state = 0;
     fdc.Motor = 0;
+    fdc.ReadyIn = 0;
 }
 
-void EjectDiskFDC( void )
-{
-    if (fdc.Image!=0) fdc.Image = 0;
-}
-
+// --------------------------------------------------------------
+// This is called when a disk is inserted into the emulated
+// CPC machine. Only one disk drive (A: or Drive 0) is emulated.
+// --------------------------------------------------------------
 void ReadDiskMem(u8 *rom, u32 romsize)
 {
-    EjectDiskFDC();
+    // --------------------------
+    // Eject current disk image
+    // --------------------------
+    if (fdc.Image!=0) fdc.Image = 0;
 
+    // ----------------------------------------------------
+    // And read in the new disk image into the FDC buffers
+    // ----------------------------------------------------
     fdc.disk_size=romsize-sizeof(fdc.DiskInfo);
 
     fdc.ImgDsk=(u8*)DISK_IMAGE_BUFFER;
@@ -787,7 +781,12 @@ void ReadDiskMem(u8 *rom, u32 romsize)
     memcpy(&fdc.DiskInfo, rom, sizeof(fdc.DiskInfo));
     memcpy(fdc.ImgDsk, rom+sizeof(fdc.DiskInfo), fdc.disk_size);
 
-    fdc.Image=1;
+    // ---------------------------------------------------------------------------
+    // Setting ReadyIn here will mark the status as 'Not Ready' for 10 frames
+    // as there are some games that monitor the status to see if the disk has
+    // actually been ejected and swapped for another disk. Orion Prime does this.
+    // ---------------------------------------------------------------------------
+    fdc.ReadyIn = 10;
     fdc.FlagWrite=0;
 
     // --------------------------------------------------------------------------------------------
@@ -805,5 +804,8 @@ void ReadDiskMem(u8 *rom, u32 romsize)
         fdc.ST3 &= ~ST3_TS; // Clear Two Sides signal
     }
 
+    // ------------------------------------------------------
+    // A new disk so seek to track zero to get us started...
+    // ------------------------------------------------------
     ChangeCurrTrack(0);
 }
