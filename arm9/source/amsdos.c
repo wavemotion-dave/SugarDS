@@ -431,7 +431,7 @@ BOOL AMSDOS_GetSector(int nDrive, int nTrack, int nSector, unsigned char *pBuffe
     static int cntdata = 0, newPos;
     static signed int TailleSect;
 
-    nSectorIndex = SeekSector( nSector, &newPos );
+    nSectorIndex = SeekSector_Partial( nSector, &newPos );
 
     if (nSectorIndex==-1) return FALSE;
 

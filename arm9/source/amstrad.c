@@ -77,6 +77,15 @@ u16 DAN_Config    = 0x00;   // Zones 0 and 1 high address bit
 
 ITCM_CODE void compute_pre_inked(u8 mode)
 {
+    if (mode == 0) // Mode 0
+    {
+        for (int pixel=0; pixel < 256; pixel++)
+        {
+            u8 pixel0 = INK[((pixel & 0x80) >> 7) | ((pixel & 0x20) >> 3) | ((pixel & 0x08) >> 2) | ((pixel & 0x02) << 2)];
+            u8 pixel1 = INK[((pixel & 0x40) >> 6) | ((pixel & 0x10) >> 2) | ((pixel & 0x04) >> 1) | ((pixel & 0x01) << 3)];
+            pre_inked_mode0[pixel] = (pixel1 << 24) | (pixel1 << 16) | (pixel0 << 8) | (pixel0 << 0);
+        }
+    }
     if (mode == 1) // Mode 1
     {
         for (int pixel=0; pixel < 256; pixel++)
@@ -104,15 +113,6 @@ ITCM_CODE void compute_pre_inked(u8 mode)
             pre_inked_mode2b[pixel] = (pixel7 << 24) | (pixel6 << 16) | (pixel5 << 8) | (pixel4 << 0);
             pre_inked_mode2a[pixel] = (pixel3 << 24) | (pixel2 << 16) | (pixel1 << 8) | (pixel0 << 0);
             pre_inked_mode2c[pixel] = (pixel7 << 24) | (pixel5 << 16) | (pixel3 << 8) | (pixel1 << 0);
-        }
-    }
-    else // Mode 0
-    {
-        for (int pixel=0; pixel < 256; pixel++)
-        {
-            u8 pixel0 = INK[((pixel & 0x80) >> 7) | ((pixel & 0x20) >> 3) | ((pixel & 0x08) >> 2) | ((pixel & 0x02) << 2)];
-            u8 pixel1 = INK[((pixel & 0x40) >> 6) | ((pixel & 0x10) >> 2) | ((pixel & 0x04) >> 1) | ((pixel & 0x01) << 3)];
-            pre_inked_mode0[pixel] = (pixel1 << 24) | (pixel1 << 16) | (pixel0 << 8) | (pixel0 << 0);
         }
     }
 }

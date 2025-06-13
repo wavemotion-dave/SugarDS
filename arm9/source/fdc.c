@@ -63,17 +63,40 @@ FDC_t fdc;
 u8 DISK_IMAGE_BUFFER[1024*1024]; // Big enough for any 3" or 3.5" disk format
 
 
-int SeekSector( int newSect, int * pos )
+int SeekSector( int *pos )
 {
-    int i;
-
     floppy_sound = 2;
     floppy_action = 0;
 
     *pos = 0;
-    for ( i = 0; i < fdc.CurrTrackDatasDSK[fdc.Side].NbSect; i++ )
+    for ( int i = 0; i < fdc.CurrTrackDatasDSK[fdc.Side].NbSect; i++ )
     {
-        if ( fdc.CurrTrackDatasDSK[fdc.Side].Sect[ i ].R == newSect )
+        if ( (fdc.CurrTrackDatasDSK[fdc.Side].Sect[ i ].C == fdc.C) &&
+             (fdc.CurrTrackDatasDSK[fdc.Side].Sect[ i ].H == fdc.H) &&
+             (fdc.CurrTrackDatasDSK[fdc.Side].Sect[ i ].R == fdc.R) &&
+             (fdc.CurrTrackDatasDSK[fdc.Side].Sect[ i ].N == fdc.N) )
+        {
+            fdc.sector_index = (i + 1) % fdc.CurrTrackDatasDSK[fdc.Side].NbSect;
+            return( ( UBYTE )i );
+        }
+        else
+        {
+            *pos += fdc.CurrTrackDatasDSK[fdc.Side].Sect[ i ].SectSize;
+        }
+    }
+
+    fdc.ST0 |= ST0_IC1;
+    fdc.ST1 |= ST1_ND;
+    return( -1 );
+}
+
+
+int SeekSector_Partial(int sect, int *pos )
+{
+    *pos = 0;
+    for ( int i = 0; i < fdc.CurrTrackDatasDSK[fdc.Side].NbSect; i++ )
+    {
+        if ( (fdc.CurrTrackDatasDSK[fdc.Side].Sect[ i ].R == sect) )
         {
             return( ( UBYTE )i );
         }
@@ -104,10 +127,11 @@ void ReadCHRN( void )
 
 static void SetST0( void )
 {
-    fdc.ST0 = 0; // drive A
-    if ( ! fdc.Motor || fdc.Drive || ! fdc.Image )
+    fdc.ST0 = 0; // drive 00 (A:)
+    
+    if ( !fdc.Motor || fdc.Drive || !fdc.Image )
     {
-        fdc.ST0 |= ST0_IC1 | ST0_NR;
+        fdc.ST0 |= ST0_IC1 | ST0_NR; // Not ready... No Motor, or No Drive or No Disk Image
     }
 
     if (fdc.Side)
@@ -118,6 +142,8 @@ static void SetST0( void )
     {
         fdc.ST0 &= ~ST0_HD;
     }
+    
+    // Status 1 and 2 will get filled in as we progress
     fdc.ST1 = 0;
     fdc.ST2 = 0;
 }
@@ -148,7 +174,7 @@ static int ReadST0( int val )
         {
             fdc.ST0 |= ST0_IC1 | ST0_IC2;
         }
-        
+
         if (fdc.Side)
         {
             fdc.ST0 |= ST0_HD;
@@ -156,9 +182,9 @@ static int ReadST0( int val )
         else
         {
             fdc.ST0 &= ~ST0_HD;
-        }        
+        }
     }
-    
+
     if (fdc.Motor && fdc.Image && !fdc.Drive)
     {
         fdc.ST0 &= ~ST0_NR;
@@ -171,7 +197,7 @@ static int ReadST0( int val )
             fdc.ST0 |= ( ST0_IC1 | ST0_IC2 );
         }
     }
-    
+
     if (fdc.state++ == 1)
     {
         fdc.Status |= STATUS_DIO;
@@ -194,10 +220,10 @@ static int ReadST3( int val )
         fdc.Status |= STATUS_DIO;
         return( 0 );
     }
-    
+
     fdc.state = 0;
     fdc.Status &= ~STATUS_CB & ~STATUS_DIO;
-    
+
     if ( fdc.Motor && ! fdc.Drive )
     {
         fdc.ST3 |= ST3_RY;
@@ -206,7 +232,7 @@ static int ReadST3( int val )
     {
         fdc.ST3 &= ~ST3_RY;
     }
-    
+
     if ( fdc.Side )
     {
         fdc.ST3 |= ST3_HD;
@@ -294,7 +320,7 @@ static int Scan( int val )
 void ChangeCurrTrack( int newTrack )
 {
     ULONG Pos = 0;
-    
+
     // Set status before we modify newTrack below
     if (newTrack == 0)
     {
@@ -302,9 +328,9 @@ void ChangeCurrTrack( int newTrack )
     }
     else
     {
-        fdc.ST3 &= ~ST3_T0;     // We are not on track 0 
+        fdc.ST3 &= ~ST3_T0;     // We are not on track 0
     }
-    
+
     if ( fdc.Side )
     {
         fdc.ST3 |= ST3_HD;      // Current Head is 1 (side 1)
@@ -312,7 +338,7 @@ void ChangeCurrTrack( int newTrack )
     else
     {
         fdc.ST3 &= ~ST3_HD;     // Current Head is 0 (side 0)
-    }    
+    }
 
     // ---------------------------------------------------------------------
     // If we are double-sided... handle the math for tracks. This gets us
@@ -341,10 +367,10 @@ void ChangeCurrTrack( int newTrack )
         // Read in Side 0/1 (based on head)
         memcpy( &fdc.CurrTrackDatasDSK[head], &fdc.ImgDsk[ Pos ], sizeof( CPCEMUTrack ) );
         fdc.PosData[head] = Pos + sizeof( CPCEMUTrack );
-        
+
         newTrack++; // Side 1 always follows side 0 in the .DSK layout
     }
-    
+
     fdc.sector_index = 0;   // Just one sector index pulse no matter how many sides
     ReadCHRN();             // Read the CHRN data from the current side of the disk
 }
@@ -417,16 +443,25 @@ static int ReadData( int val )
         break;
 
     case 7 :
-        fdc.rd_sect = SeekSector( fdc.R, &fdc.rd_newPos );
+        fdc.rd_sect = SeekSector( &fdc.rd_newPos );
         if (fdc.rd_sect != -1)
         {
-            fdc.rd_SectorSize = 128 << fdc.CurrTrackDatasDSK[fdc.Side].Sect[ fdc.rd_sect ].N;
-			
-            ///TODO: figure out why this is needed... Mission Genocide MV disk
-			if (!fdc.rd_newPos)
+            fdc.ST1 = fdc.CurrTrackDatasDSK[fdc.Side].Sect[fdc.rd_sect].ST1 & 0x25;  // Grab the ST1 field from the sector info 
+            fdc.ST2 = fdc.CurrTrackDatasDSK[fdc.Side].Sect[fdc.rd_sect].ST1 & 0x61;  // Grab the ST2 field from the sector info 
+            
+            if (fdc.CurrTrackDatasDSK[fdc.Side].Sect[fdc.rd_sect].N)
+            {
+                fdc.rd_SectorSize = 128 << fdc.CurrTrackDatasDSK[fdc.Side].Sect[fdc.rd_sect].N;
+            }
+            else
+            {
+                fdc.rd_SectorSize = fdc.CurrTrackDatasDSK[fdc.Side].Sect[fdc.rd_sect].SectSize;
+            }
+
+            if (fdc.DiskInfo.TrackSize != 0) // If we are a standard (non-Extended) disk...
                 fdc.rd_cntdata = ( fdc.rd_sect * fdc.CurrTrackDatasDSK[fdc.Side].SectSize ) << 8;
-			else
-                fdc.rd_cntdata = fdc.rd_newPos;            
+            else
+                fdc.rd_cntdata = fdc.rd_newPos;
         }
         break;
 
@@ -510,17 +545,24 @@ static int WriteData( int val )
         break;
 
     case 7 :
-        fdc.wr_sect = SeekSector( fdc.R, &fdc.wr_newPos );
+        fdc.wr_sect = SeekSector( &fdc.wr_newPos );
         if (fdc.wr_sect != -1)
         {
-            fdc.wr_SectorSize = 128 << fdc.CurrTrackDatasDSK[fdc.Side].Sect[ fdc.wr_sect ].N;
+            if (fdc.CurrTrackDatasDSK[fdc.Side].Sect[ fdc.wr_sect ].N)
+            {
+                fdc.wr_SectorSize = 128 << fdc.CurrTrackDatasDSK[fdc.Side].Sect[ fdc.wr_sect ].N;
+            }
+            else
+            {
+                fdc.wr_SectorSize = fdc.CurrTrackDatasDSK[fdc.Side].Sect[fdc.wr_sect].SectSize;
+            }
             
-            ///TODO: figure out why this is needed... Mission Genocide MV disk
-			if (!fdc.wr_newPos)
+
+            if (fdc.DiskInfo.TrackSize != 0) // If we are a standard (non-Extended) disk...
                 fdc.wr_cntdata = ( fdc.wr_sect * fdc.CurrTrackDatasDSK[fdc.Side].SectSize ) << 8;
-			else
-                fdc.wr_cntdata = fdc.wr_newPos;            
-            
+            else
+                fdc.wr_cntdata = fdc.wr_newPos;
+
         }
         break;
 
@@ -744,14 +786,14 @@ void ReadDiskMem(u8 *rom, u32 romsize)
 
     memcpy(&fdc.DiskInfo, rom, sizeof(fdc.DiskInfo));
     memcpy(fdc.ImgDsk, rom+sizeof(fdc.DiskInfo), fdc.disk_size);
-    
+
     fdc.Image=1;
     fdc.FlagWrite=0;
-    
+
     // --------------------------------------------------------------------------------------------
-    // Note: there is some confusion as to whether two sides should have the bit set or reset. 
+    // Note: there is some confusion as to whether two sides should have the bit set or reset.
     // The CPC wiki says this signal is inverted but I can't find proof of that in the datasheet
-    // and other emulators of the FDC 765 chip do it this way... This also appears to work on 
+    // and other emulators of the FDC 765 chip do it this way... This also appears to work on
     // two-sided disks like the 3.5" version of Orion Prime so I suspect it's correct.
     // --------------------------------------------------------------------------------------------
     if (fdc.DiskInfo.NumHeads > 1)

@@ -44,7 +44,8 @@ typedef u8 BOOL;
 
 void    ChangeCurrTrack( int newTrack );
 void    ReadCHRN( void );
-int     SeekSector( int newSect, int * pos );
+int     SeekSector( int * pos );
+int     SeekSector_Partial( int sect, int * pos );
 int     ReadFDC( int port );
 void    WriteFDC( int Port, int val );
 void    ResetFDC( void );
@@ -54,7 +55,7 @@ void    ReadDiskMem(u8 *rom, u32 romsize);
 #pragma pack(1)
 typedef struct
 {
-    char  debut[ 0x30 ];        // "MV - CPCEMU Disk-File\r\nDisk-Info\r\n"
+    char  debut[ 0x30 ];        // "MV - CPCEMU Disk-File\r\nDisk-Info\r\n" or "EXTENDED CPC DSK File\r\nDisk-Info\r\n"
     UBYTE NumTracks;
     UBYTE NumHeads;
     SHORT TrackSize;            // For non-Extended disks. 0x1300 = 256 + ( 512 * NumberOfSectors )
