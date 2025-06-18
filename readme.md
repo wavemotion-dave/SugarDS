@@ -111,6 +111,8 @@ If the game has minor graphical glitches - say a stray line (e.g. Sword of Ianna
 Because the emulator is doing line-based (vs cycle-based) emulation, the accuracy is only to that of a scanline and sometimes these small tweaks are 
 necessary to get games running as close as possible to real hardware.
 
+A number of commercial games will be auto-recognized and will have some tweaks automatically selected so they run as close to perfect as I can get them.
+
 Key Mapping :
 -----------------------
 Any of the non shoulder buttons can be mapped to any joystick button and/or keyboard key. 
@@ -158,7 +160,9 @@ to save your progress.
 SNA Support :
 -----------------------
 Memory snapshots are supported for both 64K and 128K machines as well as expanded 576K machines.
-You should strongly prefer to use .DSK or .CPR (or .DAN) files as snapshots cannot save data nor can they multi-load.
+You should strongly prefer to use .DSK or .CPR (or .DAN) files as snapshots cannot save data nor can they multi-load
+and the .dsk emulation is fast enough that the difference between a disk load and a snapshot load is just a few
+extra seconds. Think about how long it took to load stuff from cassette/disk when we were kids ... we're so spoiled now!
 
 Known Issues :
 -----------------------
