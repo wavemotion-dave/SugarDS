@@ -8,8 +8,8 @@ Features :
 -----------------------
 * Emulates CPC 464 (64K) and CPC 6128 (128K) with 512K of extended RAM available.
 * Loads .SNA and .DSK files up to 1024K total length (single and double sided).
-* Plus2CPC Cartridge Support to load .CPR files up to 512K (note, this is not a plus/GX4000 emulator but will handle cart files provided they don't require plus-featuers).
-* Partial Dandanator Cartridge Support - Enough for Sword of Ianna and Los Amores de Brunilda. Rename files to .dan to load.
+* Plus2CPC Cartridge Support to load .CPR files up to 512K (note, this is not a plus/GX4000 emulator but will handle cart files provided they don't require plus-features).
+* Partial Dandanator Cartridge Support - Enough for Sword of Ianna and Los Amores de Brunilda. Rename files to .dan to load into the emulator properly.
 * Emulates CRTC Type 0 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll.
 * Full button mapping - supporting all 3 possible joystick buttons of the Amstrad as well as mapping buttons to keyboard keys.
 * Full touch-screen Amstrad keyboard styled after the colorful CPC 464.
@@ -112,6 +112,10 @@ Because the emulator is doing line-based (vs cycle-based) emulation, the accurac
 necessary to get games running as close as possible to real hardware.
 
 A number of commercial games will be auto-recognized and will have some tweaks automatically selected so they run as close to perfect as I can get them.
+
+Mode 2 (up to 640 horizontal pixels) is a bitch for the poor little DS with only 256 pixel resolution. To that end, we have a mode 2 setting called 
+'PAN+SCAN' which renders the screen much bigger but requires that you press the upper left/right (where the AMSTRAD logo is) of the touch screen to 
+scroll left/right. This will allow games like Orion Prime to be playable so you can actually read the emails you're getting in-game.
 
 Key Mapping :
 -----------------------
