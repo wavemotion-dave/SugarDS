@@ -15,6 +15,7 @@
 #include <fat.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <ctype.h>
 #include <maxmod9.h>
 
 #include "SugarDS.h"
@@ -790,13 +791,13 @@ void SetDefaultGameConfig(void)
     myConfig.scaleX      = 256;                         // Scale the 320 pixels of display to the DS 256 pixels (squashed... booo!)
     myConfig.scaleY      = 200;                         // Scale the 200 pixels of display to the DS 200 (yes, there is only 192 so this will cut... use PAN UP/DN)
     
-    myConfig.autoSize    = 1;                           // Default to Auto-Size of screen
+    myConfig.autoSize    = 1;                           // Default to Auto-Size the screen
     myConfig.cpuAdjust   = 0;                           // No CPU adjustment by default
-    myConfig.waveDirect  = 0;                           // Normal sound driver
+    myConfig.waveDirect  = 0;                           // Default is normal sound driver
     myConfig.screenTop   = 0;                           // Normal screen top position
     myConfig.mode2mode   = 0;                           // Default to compressed 640
     myConfig.diskWrite   = 1;                           // Default is to allow write back to SD
-    myConfig.reserved6   = 0;
+    myConfig.crtcDriver  = CRTC_DRV_STANDARD;           // Default is standard driver
     myConfig.reserved7   = 0;
     myConfig.reserved8   = 0;
     myConfig.reserved9   = 0;
@@ -832,18 +833,46 @@ void LoadConfig(void)
         SetDefaultGameConfig();
         SetDefaultGlobalConfig();
         SaveConfig(FALSE);
-    }}
+    }
+}
 
 // -------------------------------------------------------------------------
 // Try to match our loaded game to a configuration my matching CRCs
 // -------------------------------------------------------------------------
-void FindConfig(void)
+void FindConfig(char *filename)
 {
     // -----------------------------------------------------------------
     // Start with defaults.. if we find a match in our config database
     // below, we will fill in the config with data read from the file.
     // -----------------------------------------------------------------
     SetDefaultGameConfig();
+    
+    // ---------------------------------------------------------------------
+    // And now some special cases for games that require different settings
+    // ---------------------------------------------------------------------
+    static char szName[MAX_FILENAME_LEN+1];
+    strcpy(szName, filename);
+    for (int j=0; j<strlen(szName); j++) szName[j] = toupper(szName[j]);
+
+    if (strstr(szName, "PINBALL")       != 0)   myConfig.crtcDriver = CRTC_DRV_STANDARD;    // Pinball Dreams doesn't handle the advanced driver well
+    if (strstr(szName, "PD.")           != 0)   myConfig.crtcDriver = CRTC_DRV_STANDARD;    // Pinball Dreams doesn't handle the advanced driver well
+    if (strstr(szName, "FOREVER")       != 0)   myConfig.crtcDriver = CRTC_DRV_STANDARD;    // Batman Forever Demo doesn't handle the advanced driver well
+    if (strstr(szName, "CAULDRON")      != 0)   myConfig.crtcDriver = CRTC_DRV_ADVANCED;    // Super Cauldron needs the Advanced Driver
+    if (strstr(szName, "PREHISTORIK")   != 0)   myConfig.crtcDriver = CRTC_DRV_ADVANCED;    // Prehistorik II needs the Advanced Driver
+    if (strstr(szName, "CHIPS")         != 0)   myConfig.crtcDriver = CRTC_DRV_ADVANCED;    // Chips Challenge works slightly better with the Advanced Driver
+    if (strstr(szName, "ORION")         != 0)   myConfig.crtcDriver = CRTC_DRV_ADVANCED;    // Orion Prime is slightly better with the Advanced Driver
+    
+    if (strstr(szName, "IANNA")         != 0)   myConfig.cpuAdjust   = 5;  // -2 CPU Adjust to remove graphical artifacts
+    if (strstr(szName, "DIZZY3")        != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
+    if (strstr(szName, "DIZZY 3")       != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
+    if (strstr(szName, "DIZZY-III")     != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
+    if (strstr(szName, "DIZZY III")     != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
+    if (strstr(szName, "FANTASY WORLD") != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
+    
+    if (strstr(szName, "ROBOCOP")       != 0)   myConfig.waveDirect  = 1;  // Robocop uses digitized voice
+    if (strstr(szName, "CHASEH")        != 0)   myConfig.waveDirect  = 1;  // Chase HQ uses digitized voice
+    if (strstr(szName, "CHASE H")       != 0)   myConfig.waveDirect  = 1;  // Chase HQ uses digitized voice
+    if (strstr(szName, "MANIC")         != 0)   myConfig.waveDirect  = 1;  // Manic Miner uses digitized sounds
 
     for (u16 slot=0; slot<MAX_CONFIGS; slot++)
     {
@@ -866,7 +895,7 @@ void FindConfig(void)
 struct options_t
 {
     const char  *label;
-    const char  *option[12];
+    const char  *option[18];
     u8          *option_val;
     u8           option_max;
 };
@@ -879,15 +908,17 @@ const struct options_t Option_Table[2][20] =
         {"AUTO SIZE",      {"OFF", "ON"},                                                       &myConfig.autoSize,          2},        
         {"AUTO FIRE",      {"OFF", "ON"},                                                       &myConfig.autoFire,          2},
         {"LCD JITTER",     {"OFF", "LIGHT", "HEAVY"},                                           &myConfig.jitter,            3},
-        {"SCREEN TOP",     {"+0","+1","+2","+3","+4","+5","+6","+7","+8","+9","+10"},           &myConfig.screenTop,         11},        
+        {"SCREEN TOP",     {"+0","+1","+2","+3","+4","+5","+6","+7","+8","+9","+10",
+                            "+11","+12","+13","+14","+15","+16"},                               &myConfig.screenTop,        17},
         {"NDS D-PAD",      {"NORMAL", "DIAGONALS", "SLIDE-N-GLIDE"},                            &myConfig.dpad,              3},
         {"GAME SPEED",     {"100%", "110%", "120%", "90%", "80%"},                              &myConfig.gameSpeed,         5},
-        {"MODE 2",         {"640 COMPRESS", "320 PAN"},                                         &myConfig.mode2mode,         2},
+        {"MODE 2",         {"640 COMPRESS", "320 PAN+SCAN"},                                    &myConfig.mode2mode,         2},
         {"R52  VSYNC",     {"NORMAL", "FORGIVING", "STRICT"},                                   &myConfig.r52IntVsync,       3},
         {"CPU ADJUST",     {"+0 (NONE)", "+1 CYCLES", "+2 CYCLES", "-4 CYCLES", 
                             "-3 CYCLES", "-2 CYCLES", "-1 CYCLES"},                             &myConfig.cpuAdjust,         7},
         {"SOUND DRV",      {"NORMAL", "WAVE DIRECT"},                                           &myConfig.waveDirect,        2},        
         {"DISK WRITE",     {"OFF", "ALLOWED"},                                                  &myConfig.diskWrite,         2},        
+        {"CRTC DRIVER",    {"STANDARD", "ADVANCED"},                                            &myConfig.crtcDriver,        2},
 
         {NULL,             {"",      ""},                                                       NULL,                        1},
     },
@@ -1285,7 +1316,7 @@ void ReadFileCRCAndConfig(void)
     // Grab the all-important file CRC - this also loads the file into ROM_Memory[]
     getfile_crc(gpFic[ucGameChoice].szName);
 
-    FindConfig();    // Try to find keymap and config for this file...
+    FindConfig(gpFic[ucGameChoice].szName);    // Try to find keymap and config for this file...
 }
 
 

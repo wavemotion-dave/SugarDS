@@ -52,11 +52,11 @@ u32  pre_inked_mode2a[256]  = {0};  // Not used often enough to soak up fast mem
 u32  pre_inked_mode2b[256]  = {0};  // Not used often enough to soak up fast memory
 u32  pre_inked_mode2c[256]  = {0};  // Not used often enough to soak up fast memory
 
-u8 CRTC_MASKS[0x20] = {0xFF, 0xFF, 0xFF, 0x0F,
+u8 CRTC_MASKS[0x20] = {0xFF, 0xFF, 0xFF, 0xFF,
                        0x7F, 0x1F, 0x7F, 0x7F,
-                       0x03, 0x1F, 0x7F, 0x1F,
+                       0xF3, 0x1F, 0x7F, 0x1F,
                        0x3F, 0xFF, 0x3F, 0xFF,
-                       0x00, 0x00, 0x00, 0x00,
+                       0x3F, 0xFF, 0x00, 0x00,
                        0x00, 0x00, 0x00, 0x00,
                        0x00, 0x00, 0x00, 0x00,
                        0x00, 0x00, 0x00, 0x00};
@@ -66,6 +66,10 @@ s16 CPU_ADJUST[] __attribute__((section(".dtcm"))) = {0, 1, 2, -4, -3, -2, -1};
 int cpu_targ __attribute__((section(".dtcm"))) = 0;
 
 extern u8 last_special_key;
+
+u8 sna_last_motor = 0;
+u8 sna_last_track = 0;
+
 
 // ----------------------------------------------------
 // Dandanator Mini support - mostly for Sword of IANNA
@@ -118,16 +122,16 @@ ITCM_CODE void compute_pre_inked(u8 mode)
 }
 
 // --------------------------------------------------------------------
-// We use the back-end 512K of the DISK IMAGE BUFFER as the place
-// to store our 32 banks (0..31) of 16K each. This buffer is otherwise
-// unused when we have a cartridge inserted. In theory, we could still
-// keep the disk active for loading and limit ourselves to 512K worth
-// of .dsk which is plenty for this emulation.
+// We use the back-end of the DISK IMAGE BUFFER as the place to store
+// our 32 banks (0..31) of 16K each. This buffer is otherwise unused
+// when we have a cartridge inserted. In theory, we could still keep
+// the disk active for loading and limit ourselves to 400K worth of
+// .dsk space which is plenty for this emulation.
 // --------------------------------------------------------------------
 u8 *CartBankPtr[32] = {0}; // The 32 banks of 16K ROM cart chunks
 void CartLoad(void)
 {
-    u8 *cart_buffer = (u8 *) (DISK_IMAGE_BUFFER + (512 * 1024));
+    u8 *cart_buffer = (u8 *) (DISK_IMAGE_BUFFER + (400 * 1024));
 
     memset(cart_buffer, 0x00, (512 * 1024)); // Nothing out there to start...
 
@@ -236,7 +240,7 @@ ITCM_CODE void ConfigureMemory(void)
     // so there is less chance of the two memory ends meeting and causing
     // a catastrophe of biblical proportions.
     // ------------------------------------------------------------------
-    ram_highwater = ((MMR >> 3) & 7);
+    if (((MMR >> 3) & 7) > ram_highwater) ram_highwater = ((MMR >> 3) & 7);    
     switch ((MMR >> 3) & 7)
     {
         case 0: upper_ram_block = RAM_Memory+0x10000; break;
@@ -433,9 +437,30 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
         return ReadFDC(Port);
     }
 
-    if ((Port & 0x4200) == 0x0200) // CRTC Register Read
+    // -------------------------------------
+    // We are loosely emulating CRTC Type 0
+    // -------------------------------------
+    if ((Port & 0x4200) == 0x0200) // CRTC Read
     {
-        return CRTC[CRT_Idx];
+        if ((Port & 0x0100) == 0) // Status
+        {
+            return 0xFF;    // No status register on CRTC 0
+        }
+        else // Register
+        {
+            u8 reg_val = 0x00;
+            
+            // Registers 12-17 can be read-back on CRTC 0
+            if (CRT_Idx == 12) reg_val = CRTC[CRT_Idx] & 0x3F;
+            if (CRT_Idx == 13) reg_val = CRTC[CRT_Idx] & 0xFF;
+            if (CRT_Idx == 14) reg_val = CRTC[CRT_Idx] & 0x3F;
+            if (CRT_Idx == 15) reg_val = CRTC[CRT_Idx] & 0xFF;
+            if (CRT_Idx == 16) reg_val = CRTC[CRT_Idx] & 0x3F;
+            if (CRT_Idx == 17) reg_val = CRTC[CRT_Idx] & 0xFF;
+            
+            // For CRTC 0 all other registers return 0x00
+            return reg_val;
+        }
     }
 
     if (!(Port & 0x0800)) // PPI - PSG
@@ -587,7 +612,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                 break;
         }
     }
-
+    
     return 0xFF;  // Unused port returns 0xFF
 }
 
@@ -651,6 +676,10 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                     {
                         portC &= ~(1 << bit);
                     }
+                }
+                else // Port Direction...
+                {
+                    // Nothing to do here...
                 }
                 break;
             }
@@ -807,24 +836,37 @@ void amstrad_reset(void)
 
     scanline_count = 1;
     cpu_targ = 0;
+    
+    sna_last_motor = 0;
+    sna_last_track = 0;
 
+    // The current Color Palette
+    for (int ink=0; ink<17; ink++)
+    {
+       INK[ink] = ink_map[0];
+    }
+
+    border_color = (INK[16] << 24) | (INK[16] << 16) | (INK[16] << 8) | (INK[16] << 0);
+
+    compute_pre_inked(0);
+    compute_pre_inked(1);
+    compute_pre_inked(2);
+    
     if (amstrad_mode == MODE_DSK)
     {
-        // The current Color Palette
-        for (int ink=0; ink<17; ink++)
+        // Check if this is MEGABLASTERS 2020 Re-Release
+        if (getCRC32(ROM_Memory+0x100, 0x1000) == 0xC7119924)
         {
-           INK[ink] = ink_map[0];
+            amstrad_mode = MODE_MEG;
         }
-
-        border_color = (INK[16] << 24) | (INK[16] << 16) | (INK[16] << 8) | (INK[16] << 0);
-
-        compute_pre_inked(0);
-        compute_pre_inked(1);
-        compute_pre_inked(2);
-
-        DiskInsert(initial_file, false);
+        else
+        {
+            DiskInsert(initial_file, false);
+        }
     }
-    else if (amstrad_mode == MODE_CPR)
+    
+    
+    if (amstrad_mode == MODE_CPR)
     {
         CartLoad();
         ConfigureMemory();
@@ -834,8 +876,13 @@ void amstrad_reset(void)
         DandanatorLoad();
         ConfigureMemory();
     }
-    else // Must be SNA snapshot
+    else if ((amstrad_mode == MODE_SNA) || (amstrad_mode == MODE_MEG))
     {
+        if (amstrad_mode == MODE_MEG)
+        {
+            memcpy(ROM_Memory, MEGALOAD, sizeof(MEGALOAD));
+        }
+        
         // ----------------------------------
         // The memory .SNA snapshot format.
         // ----------------------------------
@@ -919,6 +966,10 @@ void amstrad_reset(void)
         //portA = ROM_Memory[0x56];
         //portB = ROM_Memory[0x57];
         portC = ROM_Memory[0x58];
+        
+        // Some disk status if available
+        sna_last_motor = ROM_Memory[0x9C];
+        sna_last_track = ROM_Memory[0x9D];
 
         for (u8 i=0; i<16; i++)
         {
@@ -928,16 +979,20 @@ void amstrad_reset(void)
         ay38910IndexW(ROM_Memory[0x5A], &myAY);
 
         u32 dump_size = ROM_Memory[0x6B] * 1024;
-
+        
         if (dump_size > 0)
         {
             memcpy(RAM_Memory, ROM_Memory+0x100, dump_size);
         }
         else // Compressed MEM0, MEM1, etc...
         {
+            // -----------------------------------------------
+            // We always have MEM0 so we process that now...
+            // -----------------------------------------------
             u32 ram_idx = 0;
             u8 *romPtr = ROM_Memory+0x104;
             u32 comp_size = romPtr[0] | (romPtr[1] << 8);
+
             romPtr += 4;
             for (int i=0; i<comp_size; i++)
             {
@@ -961,13 +1016,15 @@ void amstrad_reset(void)
                 }
             }
 
-            // And now look for MEM1 in case it's present...
+            // -----------------------------------------------------------------------
+            // And now look for MEM1 in case it's present... That brings us to 128K
+            // -----------------------------------------------------------------------
             romPtr += comp_size;
             if ((romPtr[0] == 'M') && (romPtr[1] == 'E') && (romPtr[2] == 'M') && (romPtr[3] == '1'))
             {
                 romPtr += 4;
-                u32 ram_idx = 0x10000;
-                u32 comp_size = romPtr[0] | (romPtr[1] << 8);
+                ram_idx = 0x10000;
+                comp_size = romPtr[0] | (romPtr[1] << 8);
                 romPtr += 4;
                 for (int i=0; i<comp_size; i++)
                 {
@@ -991,7 +1048,49 @@ void amstrad_reset(void)
                     }
                 }
             }
+            
+            // ------------------------------------------------------------------------------------
+            // Finally, check for any extended memory blocks 2-8... For possible 512K expanded SNA
+            // ------------------------------------------------------------------------------------
+            for (int ex_mem = 0; ex_mem < 7; ex_mem++)
+            {            
+                romPtr += comp_size;
+                if ((romPtr[0] == 'M') && (romPtr[1] == 'E') && (romPtr[2] == 'M') && (romPtr[3] == '2'+ex_mem))
+                {
+                    romPtr += 4;
+                    u32 rom_idx = 0xF0000 - (0x10000 * ex_mem);
+                    comp_size = romPtr[0] | (romPtr[1] << 8);
+                    romPtr += 4;
+                    for (int i=0; i<comp_size; i++)
+                    {
+                        if (romPtr[i] == 0xE5)
+                        {
+                            i++;
+                            u16 repeat = romPtr[i];
+                            if (repeat == 0) ROM_Memory[rom_idx++] = 0xe5;
+                            else
+                            {
+                                i++;
+                                for (int j=0; j<repeat; j++)
+                                {
+                                    ROM_Memory[rom_idx++] = romPtr[i];
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ROM_Memory[rom_idx++] = romPtr[i];
+                        }
+                    }
+                }
+            }
         }
+        
+        // If MEGABLASTERS, switch back the original diskette
+        if (amstrad_mode == MODE_MEG)
+        {
+            DiskInsert(initial_file, true);
+        }        
     }
 
     return;

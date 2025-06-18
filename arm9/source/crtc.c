@@ -44,29 +44,29 @@
 //R16   Light Pen Address (High)                    0      Hold the MSB of the cursor position when the lightpen was ON
 //R17   Light Pen Address (Low)                     0      Hold the LSB of the cursor position when the lightpen was ON
 
-u32 HCC     __attribute__((section(".dtcm"))) = 0;                // Horizontal Character Counter
-u32 HSC     __attribute__((section(".dtcm"))) = 0;                // Horizontal Sync Counter
-u32 VCC     __attribute__((section(".dtcm"))) = 0;                // Vertical Character Counter
-u32 VSC     __attribute__((section(".dtcm"))) = 0;                // Vertical Sync Counter
-u32 VLC     __attribute__((section(".dtcm"))) = 0;                // Vertical Line Counter
-u32 R52     __attribute__((section(".dtcm"))) = 0;                // Raster flip-flop counter for interrupt generation every 52 scanlines
-u32 VTAC    __attribute__((section(".dtcm"))) = 0;                // Vertical Total Adjust Counter (we count down instead of up)
-u8  DISPEN  __attribute__((section(".dtcm"))) = 0;                // Set to 1 when display is visible and drawing
+u32 HCC      __attribute__((section(".dtcm"))) = 0;                // Horizontal Character Counter
+u32 HSC      __attribute__((section(".dtcm"))) = 0;                // Horizontal Sync Counter
+u32 VCC      __attribute__((section(".dtcm"))) = 0;                // Vertical Character Counter
+u32 VSC      __attribute__((section(".dtcm"))) = 0;                // Vertical Sync Counter
+u32 VLC      __attribute__((section(".dtcm"))) = 0;                // Vertical Line Counter
+u32 R52      __attribute__((section(".dtcm"))) = 0;                // Raster flip-flop counter for interrupt generation every 52 scanlines
+u32 VTAC     __attribute__((section(".dtcm"))) = 0;                // Vertical Total Adjust Counter (we count down instead of up)
+u8  DISPEN   __attribute__((section(".dtcm"))) = 0;                // Set to 1 when display is visible and drawing
 
 int current_ds_line      __attribute__((section(".dtcm"))) = 0;    // Used to track where we are drawing on the DS/DSi LCD
 u32 vsync_plus_two       __attribute__((section(".dtcm"))) = 0;    // Generate interrupt 2 raster lines after VSync
 u32 r12_screen_offset    __attribute__((section(".dtcm"))) = 0;    // Latched R12/R13 at VSync
-u8  crtc_force_vsync     __attribute__((section(".dtcm"))) = 0;    // Set to 1 to force rupture to occur by writing R7 to zero
 u8  vsync_off_count      __attribute__((section(".dtcm"))) = 0;    // Set to 16 when VSYNC occurs to count down to turning it off
 u8  *cpc_ScreenPage      __attribute__((section(".dtcm"))) = 0;    // Screen Memory address to pull video pixel data
-u16 escapeClause         __attribute__((section(".dtcm"))) = 0;    // To ensure we never let the DS get stuck 
-u32 cpc_scanline_counter __attribute__((section(".dtcm"))) = 0;    // This is where we are in the CPC graphics memory 
+u16 escapeClause         __attribute__((section(".dtcm"))) = 0;    // To ensure we never let the DS get stuck
+u32 raster_counter       __attribute__((section(".dtcm"))) = 0;    // This is where we are in the CPC graphics memory
 
 int R52_INT_ON_VSYNC[]   __attribute__((section(".dtcm"))) = {28, 16, 32};
 u8 vSyncSeen             __attribute__((section(".dtcm"))) = 0;    // Set to '1' when we've seen a CRTC VSYNC
 u8 display_disable_in    __attribute__((section(".dtcm"))) = 0;    // Number of scanlines before we disable the output
 u8 b32K_Mode             __attribute__((section(".dtcm"))) = 0;    // Set to '1' if we are in 32K CRTC mode (wrap into next block of RAM)
-u8 pan_mode_offset       __attribute__((section(".dtcm"))) = 0;    // For the Mode 2 PAN/SCAN handling - best we can do...
+u8 pan_mode_offset       __attribute__((section(".dtcm"))) = 0;    // For the Mode 2 PAN/SCAN handling - offset position (horizontal)
+u16 pan_mode_scale       __attribute__((section(".dtcm"))) = 0;    // For the Mode 2 PAN/SCAN handling - scale (horizontal)
 
 void crtc_reset(void)
 {
@@ -84,23 +84,32 @@ void crtc_reset(void)
     current_ds_line = 0;
     vsync_plus_two = 0;
     r12_screen_offset = 0;
-    crtc_force_vsync = 0;
     vsync_off_count = 0;
-    escapeClause = 320;
+    escapeClause = 400;
     vSyncSeen = 0;
-    display_disable_in = 0;
+
+    CRTC[0]  = 63;
+    CRTC[1]  = 40;
+    CRTC[2]  = 46;
+    CRTC[3]  = 0x8E;
+    CRTC[4]  = 38;
+    CRTC[5]  = 0;
+    CRTC[6]  = 25;
+    CRTC[7]  = 30;
+    CRTC[8]  = 0;
+    CRTC[9]  = 7;
+    CRTC[10] = 0;
+    CRTC[11] = 0;
+    CRTC[12] = 0x20;
+    CRTC[13] = 0x00;
+    CRTC[14] = 0;
+    CRTC[15] = 0;
+    CRTC[16] = 0;
+    CRTC[17] = 0;
+    CRTC[31] = 0; // CRTC v0
     
-    CRTC[0] = 63;
-    CRTC[1] = 40;
-    CRTC[2] = 46;
-    CRTC[4] = 38;
-    CRTC[5] = 0;
-    CRTC[6] = 25;
-    CRTC[7] = 30;
-    CRTC[8] = 0;
-    CRTC[9] = 7;
-    CRTC[12] = 0;
-    CRTC[13] = 0;
+    // Clear the screen
+    memset((u8*)(0x06000000), 0x00, 0x20000);
 }
 
 
@@ -111,10 +120,10 @@ void crtc_reset(void)
 //  - At the end of the 2nd HSYNC after the start of the VSYNC
 //
 // When the Gate Array sends an interrupt request:
-//  If the interrupts were authorized at the time of the request, then bit5 of R52 is cleared (but R52 
+//  If the interrupts were authorized at the time of the request, then bit5 of R52 is cleared (but R52
 //  was reset to 0 anyway) and the interrupt takes place.
-//  If interrupts are not authorized, then the R52 counter continues to increment and the interrupt 
-//  remains armed (the Gate Array then maintains its INT signal). 
+//  If interrupts are not authorized, then the R52 counter continues to increment and the interrupt
+//  remains armed (the Gate Array then maintains its INT signal).
 //  When interrupts are enabled (using the EI instruction), bit5 of R52 is cleared and the interrupt takes place.
 //  This happens only after the instruction that follows EI as this Z80 instruction has a 1-instruction delay.
 // ---------------------------------------------------------------------------------------------------------------
@@ -136,15 +145,22 @@ void crtc_r52_int(void)
 // ------------------------------------------------------------------------------------
 void crtc_new_frame_coming_up(void)
 {
-    DISPEN = 1;                 // Next frame coming up... Display On
-    cpc_scanline_counter = 0;   // And we're at the top of the raster memory
-    
+    DISPEN = 1;     // Next 'frame' (or at least chunk of new screen) coming up... Display On
+
+    raster_counter = 0; // For the 'Standard Driver'
+
+    if (myConfig.crtcDriver == CRTC_DRV_ADVANCED)
+    {
+        VCC = 0;        // And we're at the top of the raster memory
+        VLC = 0;        // And start a new line count
+    }
+
     // --------------------------------------------------------------------
     // With every new 'frame' we recompute the screen page and base offset
     // --------------------------------------------------------------------
     cpc_ScreenPage = RAM_Memory + (((CRTC[12] & 0x30) >> 4) * 0x4000);
     r12_screen_offset = (((u16)(CRTC[12] & 3) << 8) | CRTC[13]) << 1;
-    
+
     // -------------------------------------------------------------
     // A rare game or the occasional demo will make use of 32K mode
     // -------------------------------------------------------------
@@ -172,8 +188,8 @@ ITCM_CODE u8 crtc_render_screen_line(void)
     u8 vSyncDS = 0;             // To inform caller if we are at DS VSync
     u32 *vidBufDS;              // This is where we draw to on the DS LCD
 
-    cpc_scanline_counter++;
-    
+    raster_counter++;
+
     // -------------------------------------------------
     // See if the inks have changed since the last call.
     // -------------------------------------------------
@@ -207,7 +223,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             if (R52 >= R52_INT_ON_VSYNC[myConfig.r52IntVsync]) crtc_r52_int();
             R52 = 0;                // Always reset the R52 counter on VSync+2
             vSyncDS = 1;            // Inform caller of frame end - our DS 'vSync' if you will...
-            escapeClause = 320;     // Reset watchdog
+            escapeClause = 400;     // Reset CRTC watchdog
         }
     }
 
@@ -221,75 +237,92 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             portB &= ~0x01;         // Clear VSYNC
         }
     }
-    
-    // We are currently not using this force vsync mechanism...
-    // Unsure if it's possible to force a VSYNC with most CRTC versions.
-    if (crtc_force_vsync)
-    {
-        crtc_force_vsync = 0; // Only one force per frame
-        portB |= 0x01;        // Set VSYNC
-        vsync_plus_two = 2;   // Interrupt in 2 raster lines
-        vsync_off_count = 16; // And turn off in 16 scanlines
-        vSyncSeen = 1;        // We've seen a vSync
-    }
 
-    // -------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------
     // The heart of the CRTC system we use the internal counters to 'time' the
     // vertical character generation, increment line counters and handle VSYNC.
-    // -------------------------------------------------------------------------
+    // We have two different drivers.. the 'Standard' driver is a bit looser
+    // and is generally going to work well for 90% of the games and the 'Advanced'
+    // driver adheres to the CRTC specification much closer but requires very
+    // tight timing. Some games need the 'Advanced' driver such as Prehistorik II
+    // and Super Cauldron - but most games can get away with the 'Standard' one.
+    // ---------------------------------------------------------------------------
     VLC = (VLC + 1) & 0x1F;
-    if (VLC >= (CRTC[9]+1))
+    if (VLC >= (CRTC[9]+1)) // CRTC v3 and v4 both do greater-than-or-equal
     {
-        VLC = 0;    // Reset counter - build up the next character line
-        VCC++;      // We have finished one vertical character
+        VLC = 0;                // Reset counter - build up the next character line
+        VCC = (VCC+1) & 0x7F;   // We have finished one vertical character
 
-        // --------------------------------------------------------------
-        // This isn't right - it should be equals-equals (==) but the
-        // timing on Amstrad CPC games is tight and the line-based
-        // emulation is not perfect so we have to cheat a bit. This
-        // works well enough and tends to not cause any NEW problems
-        // (that is - games that already have issues are not helped 
-        // by making this more 'correct' and we lose some functionality
-        // if we tighten the screws on this one).
-        // --------------------------------------------------------------
-        if (VCC >= (CRTC[4]+1)) // Full "Screen" rendered?
+        if (myConfig.crtcDriver == CRTC_DRV_ADVANCED) // 'ADVANCED' Driver
         {
-            VTAC = 1;   // Assume no extra lines... may adjust below
-            VCC = 0;    // Start counting characters again
-            
-            if (vSyncSeen)
+            if (VCC == (CRTC[4]+1)) // Full "frame" rendered?
             {
-                vSyncSeen = 0;                         // Setup for next VSYNC
-                current_ds_line = -myConfig.screenTop; // Top of LCD screen
-
-                // --------------------------------------------
-                // Vertical Total Adjustment - these are extra
-                // scanlines before we start a new "frame".
-                // Add 1 as we will process immediately below.
-                // --------------------------------------------                
+                // -----------------------------------------------------------------
+                // Vertical Total Adjustment - these are extra scanlines before we
+                // start a new "frame". Add 1 as we will process further below.
+                // -----------------------------------------------------------------
                 VTAC = (CRTC[5] & 0x1F) + 1;
-            }            
-        }
-        
-        if (VCC == CRTC[6]) // End of visible display?
-        {
-            if ((CRTC[5] & 0x1F) > 0) // Vertical Total Adjustment?
-            {
-                display_disable_in = (CRTC[5] & 0x1F);
+
+                if (vSyncSeen)
+                {
+                    vSyncSeen = 0;                         // Setup for next VSYNC
+                    current_ds_line = -myConfig.screenTop; // Top of LCD screen
+                }
             }
-            else
+
+            if (VCC == CRTC[6]) // End of visible display?
             {
                 DISPEN = 0; // Turn off display (render border)
             }
+
+            if (VCC == CRTC[7]) // Vertical Sync reached?
+            {
+                portB |= 0x01;        // Set VSYNC
+                vsync_plus_two = 2;   // Interrupt in 2 raster lines
+                vsync_off_count = 16; // And turn off in 16 scanlines
+                vSyncSeen = 1;        // We've seen a vSync
+            }
         }
-        
-        if (VCC == CRTC[7]) // Vertical Sync reached?
+        else // 'STANDARD' Driver
         {
-            portB |= 0x01;        // Set VSYNC
-            vsync_plus_two = 2;   // Interrupt in 2 raster lines
-            vsync_off_count = 16; // And turn off in 16 scanlines
-            vSyncSeen = 1;        // We've seen a vSync
-        }    
+            // ---------------------------------------------------------------------------------------------------------------------------------------
+            // This isn't right - it should be equals-equals (==) but the timing on Amstrad CPC games is tight and the line-based  emulation is
+            // not perfect so we have to cheat a bit. This works well enough and tends to not cause any NEW problems (that is - games that
+            // already have issues are not helped by making this more 'correct' and we lose some functionality if we tighten the screws on this one).
+            // ---------------------------------------------------------------------------------------------------------------------------------------
+            if (VCC >= (CRTC[4]+1)) // Full "frame" rendered?
+            {
+                VTAC = 1;   // Assume no extra lines... may adjust below
+                VCC = 0;    // Start counting characters again
+
+                if (vSyncSeen)
+                {
+                    vSyncSeen = 0;                         // Setup for next VSYNC
+                    current_ds_line = -myConfig.screenTop; // Top of LCD screen
+                    VTAC = (CRTC[5] & 0x1F) + 1;           // Vertical total adjust
+                }
+            }
+
+            if (VCC == CRTC[6]) // End of visible display?
+            {
+                if ((CRTC[5] & 0x1F) > 0) // Vertical Total Adjustment?
+                {
+                    display_disable_in = (CRTC[5] & 0x1F);
+                }
+                else
+                {
+                    DISPEN = 0; // Turn off display (render border)
+                }
+            }
+
+            if (VCC == CRTC[7]) // Vertical Sync reached?
+            {
+                portB |= 0x01;        // Set VSYNC
+                vsync_plus_two = 2;   // Interrupt in 2 raster lines
+                vsync_off_count = 16; // And turn off in 16 scanlines
+                vSyncSeen = 1;        // We've seen a vSync
+            }
+        }
     }
 
     // -------------------------------------------------------
@@ -302,13 +335,13 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             crtc_new_frame_coming_up();
         }
     }
-    
+
     // ---------------------------------------------------------------
     // Check watchdog... Ensure we never get into a no-sync situation.
     // ---------------------------------------------------------------
     if (--escapeClause == 0)
     {
-        escapeClause = 320;     // Reset the watchdog
+        escapeClause = 400;     // Reset the watchdog
         VCC = 0;                // Start again... something went wrong
         vSyncDS = 1;            // Inform caller of frame end - our DS 'vSync' if you will...
     }
@@ -320,13 +353,13 @@ ITCM_CODE u8 crtc_render_screen_line(void)
     // emulation on a 60Hz DSi LCD refresh... but good enough!
     // ----------------------------------------------------------
     vidBufDS = (u32*)(0x06000000 + (current_ds_line * 512));
-    
+
     // ------------------------------------------------------------------------
     // This is a poor-mans horizontal sync "scroll trick". Some CPC games
     // will modify the HSync width to produce smoother scrolling horizontal
     // effects... we do a very simplified version of that by shifting 4 pixels
     // when we are 'odd' and normal display when we are 'even'. Games like
-    // Super Edge Grinder will now scroll reasonably smoothly... 
+    // Super Edge Grinder will now scroll reasonably smoothly...
     // ------------------------------------------------------------------------
     if (CRTC[3] & 1) vidBufDS++;
 
@@ -343,20 +376,29 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             // The pixel data is stored in 2K chunks of memory within a 16K block of memory. This is a bit
             // unusual, but we follow the addressing formula completely including wrapping at 2K blocks.
             // ------------------------------------------------------------------------------------------------
-            u8 *pixelPtr2K = (cpc_ScreenPage + (((cpc_scanline_counter) % (CRTC[9]+1)) * 2048));
+            u8 *pixelPtr2K;
+            u32 offset;
+            if (myConfig.crtcDriver == CRTC_DRV_ADVANCED)
+            {
+                pixelPtr2K = (cpc_ScreenPage + ((VLC&7) * 2048));
+                offset = (VCC * (CRTC[1]<<1));    // Base offset is based on current scanline
+            }
+            else
+            {
+                pixelPtr2K = (cpc_ScreenPage + (((raster_counter) % (CRTC[9]+1)) * 2048));
+                offset = (((raster_counter)/(CRTC[9]+1)) * (CRTC[1]<<1));
+            }
+            offset += r12_screen_offset;          // As defined in R12/R13 - offset is in WORDs (2 bytes)
 
-            u32 offset = (((cpc_scanline_counter)/(CRTC[9]+1)) * (CRTC[1]<<1));  // Base offset is based on current scanline
-            offset += r12_screen_offset;                                         // As defined in R12/R13 - offset is in WORDs (2 bytes)
-            
             // ------------------------------------------------------------------------------
-            // For the rare '32K video buffer' we handle a 'wrap' into the next memory block
+            // For the rare 32K video buffer' we handle a 'wrap' into the next memory block
             // ------------------------------------------------------------------------------
             if (((offset&0xFFF) >= 0x800) && b32K_Mode)
             {
                 offset += 0x4000; // We address into the next bank of memory
             }
-            
-            offset &= 0x47FF;                                               // Wrap is on 2K boundary
+
+            offset &= 0x47FF;  // Wrap is on 2K boundary
 
             // -------------------------------------------------------------------------------------
             // With 2, 4 or 8 pixels per byte, there are always 80 bytes of horizontal screen data
@@ -369,19 +411,20 @@ ITCM_CODE u8 crtc_render_screen_line(void)
                     *vidBufDS++ = pre_inked_mode0[pixelPtr2K[offset++]];    // Fast draw pixel with pre-rendered lookup
                     *vidBufDS++ = pre_inked_mode0[pixelPtr2K[offset++]];    // Fast draw pixel with pre-rendered lookup
                     // -------------------------------------------------------------
-                    // For the rare '32K video buffer - used by a few amazing games
+                    // For the rare 32K video buffer - used by a few amazing games
                     // -------------------------------------------------------------
                     if (b32K_Mode)
                     {
                         if ((offset&0xFFF) >= 0x800) offset += 0x4000; // We address into the next bank of memory
-                    }                    
+                    }
 
-                    offset &= 0x47FF;                                  // Wrap is always at the 2K boundary
+                    offset &= 0x47FF;  // Wrap is always at the 2K boundary
                 }
 
-                // Draw border out to at least 320 pixels
-                for (u16 i=0; i<16;i++)
+                // Draw border out to at least 320 pixels + 64 for overscan
+                for (u16 i=CRTC[1]; i<48;i++)
                 {
+                    *vidBufDS++ = border_color;
                     *vidBufDS++ = border_color;
                 }
             }
@@ -393,18 +436,19 @@ ITCM_CODE u8 crtc_render_screen_line(void)
                     *vidBufDS++ = pre_inked_mode1[pixelPtr2K[offset++]];  // Fast draw pixel with pre-rendered lookup
                     *vidBufDS++ = pre_inked_mode1[pixelPtr2K[offset++]];  // Fast draw pixel with pre-rendered lookup
                     // -------------------------------------------------------------
-                    // For the rare '32K video buffer - used by a few amazing games
+                    // For the rare 32K video buffer - used by a few amazing games
                     // -------------------------------------------------------------
                     if (b32K_Mode)
                     {
                         if ((offset&0xFFF) >= 0x800) offset += 0x4000; // We address into the next bank of memory
-                    }                    
-                    offset &= 0x47FF;                                  // Wrap is always at the 2K boundary
+                    }
+                    offset &= 0x47FF;  // Wrap is always at the 2K boundary
                 }
 
-                // Draw border out to at least 320 pixels
-                for (u16 i=0; i<16;i++)
+                // Draw border out to at least 320 pixels + 64 for overscan
+                for (u16 i=CRTC[1]; i<48;i++)
                 {
+                    *vidBufDS++ = border_color;
                     *vidBufDS++ = border_color;
                 }
             }
@@ -413,24 +457,25 @@ ITCM_CODE u8 crtc_render_screen_line(void)
                 last_frame_mode2++;
                 if (myConfig.mode2mode == 0) // Show compressed?
                 {
-                    u8 limit = (CRTC[1] <= 32) ? CRTC[1] : 32;
-                    for (int x=0; x<limit*2; x++)    // Best we can do is show 320 pixels
+                    u8 limit = (CRTC[1] <= 48) ? CRTC[1] : 48;
+                    for (int x=0; x<limit; x++)    // Best we can do is render 512 pixels
                     {
-                        *vidBufDS++ = pre_inked_mode2a[pixelPtr2K[offset]];  // Fast draw pixel with pre-rendered lookup
-                        *vidBufDS++ = pre_inked_mode2b[pixelPtr2K[offset]];  // Fast draw pixel with pre-rendered lookup
+                        *vidBufDS++ = pre_inked_mode2c[pixelPtr2K[offset]];  // Fast draw pixel with pre-rendered lookup
+                        offset++;
+                        *vidBufDS++ = pre_inked_mode2c[pixelPtr2K[offset]];  // Fast draw pixel with pre-rendered lookup
                         offset++;
                         // -------------------------------------------------------------
-                        // For the rare '32K video buffer - used by a few amazing games
+                        // For the rare 32K video buffer - used by a few amazing games
                         // -------------------------------------------------------------
                         if (b32K_Mode)
                         {
                             if ((offset&0xFFF) >= 0x800) offset += 0x4000; // We address into the next bank of memory
                         }
-                        offset &= 0x47FF;                                  // Wrap is always at the 2K boundary                        
+                        offset &= 0x47FF;  // Wrap is always at the 2K boundary
                     }
-                    
+
                     // Render the border out to the full 512 pixels for the DS (that's all we have)
-                    for (int x=limit; x<32; x++)
+                    for (int x=limit; x<48; x++)
                     {
                         *vidBufDS++ = border_color;
                         *vidBufDS++ = border_color;
@@ -442,13 +487,13 @@ ITCM_CODE u8 crtc_render_screen_line(void)
                     {
                         offset = (offset+pan_mode_offset) & 0x47FF;
                         // -------------------------------------------------------------
-                        // For the rare '32K video buffer - used by a few amazing games
+                        // For the rare 32K video buffer - used by a few amazing games
                         // -------------------------------------------------------------
                         if (b32K_Mode)
                         {
                             if ((offset&0xFFF) >= 0x800) offset += 0x4000; // We address into the next bank of memory
                         }
-                        offset &= 0x47FF;                                  // Wrap is always at the 2K boundary                                          
+                        offset &= 0x47FF;                                  // Wrap is always at the 2K boundary
                     }
 
                     for (int x=0; x<40; x++)    // Best we can do is show 320 pixels
@@ -459,13 +504,13 @@ ITCM_CODE u8 crtc_render_screen_line(void)
                             *vidBufDS++ = pre_inked_mode2b[pixelPtr2K[offset]];  // Fast draw pixel with pre-rendered lookup
                             offset++;
                             // -------------------------------------------------------------
-                            // For the rare '32K video buffer - used by a few amazing games
+                            // For the rare 32K video buffer - used by a few amazing games
                             // -------------------------------------------------------------
                             if (b32K_Mode)
                             {
                                 if ((offset&0xFFF) >= 0x800) offset += 0x4000; // We address into the next bank of memory
                             }
-                            offset &= 0x47FF;                                  // Wrap is always at the 2K boundary                        
+                            offset &= 0x47FF;  // Wrap is always at the 2K boundary
                         }
                         else
                         {
@@ -479,7 +524,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             {
                 // -------------------------------------------------------------------
                 // Mode 3 is an 'unofficial' mode that is a consequence / side-effect
-                // of how the hardware works. It's basically Mode 0 with a limit of 
+                // of how the hardware works. It's basically Mode 0 with a limit of
                 // 4 colors and  so has no practical uses. We could support it. For
                 // now we increment a debug counter registers so we can detect it.
                 // -------------------------------------------------------------------
@@ -488,10 +533,11 @@ ITCM_CODE u8 crtc_render_screen_line(void)
         }
         else // Display not enabled - render border
         {
-            int limit = (CRTC[1]<<1)+16;   // Draw the full border line plus a little 'extra'
-            if (limit > 128) limit = 128;  // This is the extent of our video buffer (512 horizontal pixels)
+            int limit = CRTC[1]+8;        // Draw the full border line plus a little 'extra'
+            if (limit > 50) limit = 50;   // Draw no further than a bit beyond the 400 pixel mark
             for (int x=0; x<limit; x++)
             {
+                *vidBufDS++ = border_color;
                 *vidBufDS++ = border_color;
             }
         }

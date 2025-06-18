@@ -96,7 +96,7 @@ void amstradSaveState()
     if (retVal) retVal = fwrite(&current_ds_line,   sizeof(current_ds_line),    1, handle);
     if (retVal) retVal = fwrite(&vsync_plus_two,    sizeof(vsync_plus_two),     1, handle);
     if (retVal) retVal = fwrite(&r12_screen_offset, sizeof(r12_screen_offset),  1, handle);
-    if (retVal) retVal = fwrite(&crtc_force_vsync,  sizeof(crtc_force_vsync),   1, handle);
+    if (retVal) retVal = fwrite(&raster_counter,    sizeof(raster_counter),     1, handle);
     if (retVal) retVal = fwrite(&vsync_off_count,   sizeof(vsync_off_count),    1, handle);
     if (retVal) retVal = fwrite(&escapeClause,      sizeof(escapeClause),       1, handle);
     if (retVal) retVal = fwrite(&vSyncSeen,         sizeof(vSyncSeen),          1, handle);
@@ -249,7 +249,7 @@ void amstradLoadState()
             if (retVal) retVal = fread(&current_ds_line,   sizeof(current_ds_line),    1, handle);
             if (retVal) retVal = fread(&vsync_plus_two,    sizeof(vsync_plus_two),     1, handle);
             if (retVal) retVal = fread(&r12_screen_offset, sizeof(r12_screen_offset),  1, handle);
-            if (retVal) retVal = fread(&crtc_force_vsync,  sizeof(crtc_force_vsync),   1, handle);
+            if (retVal) retVal = fread(&raster_counter,    sizeof(raster_counter),     1, handle);
             if (retVal) retVal = fread(&vsync_off_count,   sizeof(vsync_off_count),    1, handle);
             if (retVal) retVal = fread(&escapeClause,      sizeof(escapeClause),       1, handle);
             if (retVal) retVal = fread(&vSyncSeen,         sizeof(vSyncSeen),          1, handle);

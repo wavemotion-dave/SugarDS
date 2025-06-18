@@ -13,6 +13,7 @@
 
 #include <nds.h>
 #include <string.h>
+#include "printf.h"
 
 extern u32 debug[0x10];
 extern u32 DX, DY;
@@ -30,6 +31,9 @@ extern u32 last_frame_mode01;
 extern u8 last_frame_crtc1;
 extern int8 currentBrightness;
 extern u8 ram_highwater;
+extern u8 sna_last_motor;
+extern u8 sna_last_track;
+
 
 // These are the various special icons/menu operations
 #define MENU_CHOICE_NONE        0x00
@@ -163,7 +167,7 @@ extern u8 ram_highwater;
 #define MODE_CPR            2
 #define MODE_DAN            3
 #define MODE_SNA            4
-
+#define MODE_MEG            5
 
 #define WAITVBL swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank(); swiWaitForVBlank();
 
@@ -171,6 +175,8 @@ extern unsigned char BASIC_6128[16384];
 extern unsigned char OS_6128[16384];
 extern unsigned char AMSDOS[16384];
 extern unsigned char PARADOS[16384];
+extern unsigned char MEGALOAD[40377];
+
 extern u8 DISK_IMAGE_BUFFER[];
 
 extern u8 CRTC[];
@@ -207,11 +213,10 @@ extern u8  DISPEN;
 extern int current_ds_line;
 extern u32 vsync_plus_two;
 extern u32 r12_screen_offset;
-extern u8  crtc_force_vsync;
 extern u8  vsync_off_count;
 extern u8  *cpc_ScreenPage;
 extern u16 escapeClause;
-extern u32 cpc_scanline_counter;
+extern u32 raster_counter;
 extern u8 vSyncSeen;
 extern u8 display_disable_in;
 

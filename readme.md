@@ -10,7 +10,7 @@ Features :
 * Loads .SNA and .DSK files up to 1024K total length (single and double sided).
 * Plus2CPC Cartridge Support to load .CPR files up to 512K (note, this is not a plus/GX4000 emulator but will handle cart files provided they don't require plus-featuers).
 * Partial Dandanator Cartridge Support - Enough for Sword of Ianna and Los Amores de Brunilda. Rename files to .dan to load.
-* Emulates CRTC Type 3 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll.
+* Emulates CRTC Type 0 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll.
 * Full button mapping - supporting all 3 possible joystick buttons of the Amstrad as well as mapping buttons to keyboard keys.
 * Full touch-screen Amstrad keyboard styled after the colorful CPC 464.
 * Save / Load state so you can pick up where you left off.
@@ -157,19 +157,27 @@ to save your progress.
 
 SNA Support :
 -----------------------
-Memory snapshots are supported for both 64K and 128K machines. You should strongly prefer
-to use .DSK or .CPR (or .DAN) files as snapshots cannot save data nor can they multi-load.
+Memory snapshots are supported for both 64K and 128K machines as well as expanded 576K machines.
+You should strongly prefer to use .DSK or .CPR (or .DAN) files as snapshots cannot save data nor can they multi-load.
 
 Known Issues :
 -----------------------
-* Prehistorik II has major graphical glitches.
 * Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay is better.
-* Dizzy III requires that you set the 'V52 Sync' option to 'Forgiving' so it plays at the right speed.
-* Sword of Ianna dandinator cart requires a CPU Adjustment of -2 to avoid the stay blue line mid-screen on cut-scene transitions.
 * R-Type Reloaded 128K does not load correctly except for the 3-disk version which does work (despite some loading screen issues).
+* Megablasters has issues with the emulated CRTC type detection and won't start except for one version which I've added a patch for: The 2020 ENGLISH Re-Release version (4 disks).
+* B.A.T. won't load the 2nd disk. Cause unknown.
 
 Version History :
 -----------------------
+Version 1.1 - 18-Jun-2025 by wavemotion-dave
+* New 'Advanced' CRTC driver that renders Prehistorik II and Super Cauldron (among others) playable. Should auto-detect.
+* Megablasters 2020 Re-release (ENGLISH) is now supported - start by loading Disk A (Disk 0).
+* SNA snapshots can now be up to 576K of RAM memory.
+* Improved Mode 2 driver to better render graphics on the small screen.
+* Improved Mode 0/1 driver so we don't swap too quickly between modes (less screen flash/shifts).
+* Improved all CRT rendering so we have less graphical issues especially when moving from screen to screen. Games like Monty on the Run are good examples of how clean this is now.
+* Lots of other little cleanups and improvements as time permitted.
+
 Version 1.0 - 13-Jun-2025 by wavemotion-dave
 * Improved Z80 / CRTC timing so more games run more correctly.
 * Improved Mode 2 rendering so it's a little better positioned 'compressed' on the DS screen.

@@ -16,6 +16,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <ctype.h>
 #include <sys/stat.h>
 #include <fat.h>
 #include <maxmod9.h>
@@ -109,6 +110,13 @@ int bg0, bg1, bg0b, bg1b;      // Some vars for NDS background screen handling
 u16 vusCptVBL = 0;             // We use this as a basic timer for the Mario sprite... could be removed if another timer can be utilized
 u8 touch_debounce = 0;         // A bit of touch-screen debounce
 u8 key_debounce = 0;           // A bit of key debounce to ensure the key is held pressed for a minimum amount of time
+
+u8 last_special_key = 0;
+u8 last_special_key_dampen = 0;
+u8 last_kbd_key = 0;
+extern u8  pan_mode_offset;
+extern u16 pan_mode_scale;
+
 
 // The DS/DSi has 10 keys that can be mapped
 u16 NDS_keyMap[10] __attribute__((section(".dtcm"))) = {KEY_UP, KEY_DOWN, KEY_LEFT, KEY_RIGHT, KEY_A, KEY_B, KEY_X, KEY_Y, KEY_START, KEY_SELECT};
@@ -630,8 +638,7 @@ void DisplayStatusLine(bool bForce)
 // ---------------------------------
 void DiskInsert(char *filename, u8 bForceRead)
 {
-    if (strstr(filename, ".dsk") != 0) amstrad_mode = MODE_DSK;
-    if (strstr(filename, ".DSK") != 0) amstrad_mode = MODE_DSK;
+    amstrad_mode = MODE_DSK;
 
     if (bForceRead)
     {
@@ -644,6 +651,15 @@ void DiskInsert(char *filename, u8 bForceRead)
         getcwd(last_path, MAX_FILENAME_LEN);
 
         ReadDiskMem(ROM_Memory, last_file_size);
+    }
+
+    // If we were an SNA and we've loaded a new disk, setup track/motor
+    if (sna_last_motor || sna_last_track) 
+    {
+        fdc.Motor = 1;
+        ChangeCurrTrack(sna_last_track);
+        
+        sna_last_track = sna_last_motor = 0;
     }
 }
 
@@ -753,12 +769,6 @@ u8 MiniMenu(void)
 // Keyboard handler - mapping DS touch screen virtual keys to keyboard keys that we
 // can feed into the key processing handler in amstrad.c when the IO port is read.
 // ---------------------------------------------------------------------------------
-
-u8 last_special_key = 0;
-u8 last_special_key_dampen = 0;
-u8 last_kbd_key = 0;
-extern u8 pan_mode_offset;
-
 u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 {
     MaxBrightness();
@@ -766,7 +776,7 @@ u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
     if (iTy < 37)
     {
         if (iTx < 75)  if (pan_mode_offset > 0)  pan_mode_offset--;
-        if (iTx > 185) if (pan_mode_offset < 48) pan_mode_offset++; // A little wiggle room
+        if (iTx > 185) if (pan_mode_offset < 40) pan_mode_offset++;
         swiWaitForVBlank();
     }
     else
@@ -1124,37 +1134,44 @@ void SugarDS_main(void)
         // and guestimate the proper screen horizontal size...
         // We don't touch the vertical offset/scale.
         // -----------------------------------------------------
-        if (myConfig.autoSize)
+        static u8 mode2_frames = 0;
+        if (last_frame_mode2 > 128) // Did we draw than half the frames in mode2?
         {
-            static u8 mode2_frames = 0;
-            if (last_frame_mode2 > 128) // Did we draw than half the frames in mode2?
-            {
-                if (mode2_frames < 128) mode2_frames++;
-            }
-            else
-            {
-                mode2_frames = 0;
-            }
+            if (mode2_frames < 128) mode2_frames++;
+        }
+        else
+        {
+            mode2_frames = 0;
+        }
 
-            if (mode2_frames > 25) // A half second of mode2 frames in a row is enough to switch...
+        if (mode2_frames > 25) // A half second of mode2 frames in a row is enough to switch...
+        {
+            if (myConfig.mode2mode) // Pan-and-Scan overrides normal autosize rules
             {
-                 if (myConfig.mode2mode == 0)
-                     myConfig.scaleX = 160; // Compress screen as much as we dare...
-                 else
-                     myConfig.scaleX = 320; // Fixed at 34 displayed chars max
+                pan_mode_scale = 320;
             }
-            else
+            else if (myConfig.autoSize)
             {
-                     if (last_frame_crtc1 <= 34)  myConfig.scaleX = 320;
+                pan_mode_scale = 0;
+                myConfig.scaleX = 256;  // Max compression is best we can do
+            }
+        }
+        else
+        {
+            pan_mode_scale = 0;
+            if (myConfig.autoSize)
+            {
+                     if (last_frame_crtc1 <= 24)  asm("nop");
+                else if (last_frame_crtc1 <= 34)  myConfig.scaleX = 320;
                 else if (last_frame_crtc1 <= 37)  myConfig.scaleX = 288;
                 else if (last_frame_crtc1 <= 41)  myConfig.scaleX = 256;
                 else if (last_frame_crtc1 <= 43)  myConfig.scaleX = 224;
                 else  myConfig.scaleX = 200;
             }
-
-            // Reset counters...
-            last_frame_mode2 = last_frame_mode01 = 0;
         }
+
+        // Reset counters...
+        last_frame_mode2 = last_frame_mode01 = 0;
 
         // -------------------------------------------------------------
         // Stuff to do once/second such as FPS display and Debug Data
@@ -1207,7 +1224,7 @@ void SugarDS_main(void)
                                 {
                                     if (specified_cmd[i] == ']') break;
                                     if (specified_cmd[i] == 0)   break;
-                                    BufferKey(specified_cmd[i]);
+                                    BufferKey(toupper(specified_cmd[i]));
                                 }
                                 BufferKey(KBD_KEY_RET);
                             }
@@ -1734,6 +1751,11 @@ ITCM_CODE void irqVBlank(void)
     int cyBG = ((s16)myConfig.offsetY+temp_offset) << 8;
     int xdxBG = ((320 / myConfig.scaleX) << 8) | (320 % myConfig.scaleX) ;
     int ydyBG = ((200 / myConfig.scaleY) << 8) | (200 % myConfig.scaleY);
+    
+    if (pan_mode_scale) // Special scaline for pan-and-scan
+    {
+        xdxBG = ((320 / pan_mode_scale) << 8) | (320 % pan_mode_scale) ;
+    }
 
     REG_BG2X = cxBG;
     REG_BG2Y = cyBG;

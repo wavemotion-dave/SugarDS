@@ -60,7 +60,7 @@ typedef int ( * pfctFDC )( int );
 
 FDC_t fdc;
 
-u8 DISK_IMAGE_BUFFER[1024*1024]; // Big enough for any 3" or 3.5" disk format
+u8 DISK_IMAGE_BUFFER[896*1024]; // Big enough for any 3" or 3.5" disk format
 
 int SeekSector( int *pos )
 {
@@ -782,11 +782,11 @@ void ReadDiskMem(u8 *rom, u32 romsize)
     memcpy(fdc.ImgDsk, rom+sizeof(fdc.DiskInfo), fdc.disk_size);
 
     // ---------------------------------------------------------------------------
-    // Setting ReadyIn here will mark the status as 'Not Ready' for 10 frames
+    // Setting ReadyIn here will mark the status as 'Not Ready' for 12 frames
     // as there are some games that monitor the status to see if the disk has
     // actually been ejected and swapped for another disk. Orion Prime does this.
     // ---------------------------------------------------------------------------
-    fdc.ReadyIn = 10;
+    fdc.ReadyIn = 12;
     fdc.FlagWrite=0;
 
     // --------------------------------------------------------------------------------------------

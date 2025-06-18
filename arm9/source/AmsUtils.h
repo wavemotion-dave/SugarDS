@@ -15,12 +15,12 @@
 #include "cpu/z80/Z80_interface.h"
 #include "cpu/ay38910/AY38910.h"
 
-#define MAX_FILES                   2048
+#define MAX_FILES                   1024
 #define MAX_FILENAME_LEN            160
 #define MAX_ROM_SIZE               (1024*1024) // 1024K is big enough for any disk / cart / snapshot
 
 #define MAX_CONFIGS                 890
-#define CONFIG_VERSION              0x0005
+#define CONFIG_VERSION              0x0006
 
 #define AMSTRAD_FILE                0x01
 #define DIRECTORY                   0x02
@@ -32,6 +32,9 @@
 #define DPAD_NORMAL                 0
 #define DPAD_DIAGONALS              1
 #define DPAD_SLIDE_N_GLIDE          2
+
+#define CRTC_DRV_STANDARD           0
+#define CRTC_DRV_ADVANCED           1
 
 extern char last_path[MAX_FILENAME_LEN];
 extern char last_file[MAX_FILENAME_LEN];
@@ -102,7 +105,7 @@ struct __attribute__((__packed__)) Config_t
     u8  screenTop;
     u8  mode2mode;
     u8  diskWrite;
-    u8  reserved6;
+    u8  crtcDriver;
     u8  reserved7;
     u8  reserved8;
     u8  reserved9;
