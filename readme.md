@@ -167,6 +167,10 @@ of the Amstrad CPC file you wish to run in double brackets like this:
 This when that .dsk file is loaded, the emulator will sense what's between the double
 brackets and issue the proper RUN "ORION" command
 
+Note that sometimes one disk version of a game won't load properly but a different version will.
+Keep looking - you're very likely to find a version that will load and play correctly. Such is
+life with emulation and potentially dodgy disk dumps.
+
 Cartridge Support :
 -----------------------
 Although .CPR cartridges up to 512K are supported, this is not a CPC+ (plus) emulator.
