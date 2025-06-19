@@ -119,12 +119,12 @@ If you are playing a game like Robocop, Chase HQ or Manic Miner which hits the A
 similar digitizied effects, you should set the **Sound Driver** to 'WAVE DIRECT'. This is a bit more taxing on the emulator
 but it will render speech and other digitized effects quite well.
 
-Of primary importance to gameplay are these two: **V52 Sync** and **CPU Adjust**.
+Of primary importance to gameplay are these two: **R52 vSync** and **CPU Adjust**.
 
 Normally you shouldn't touch either adjustment... unless the game is not running correctly. In that case, try the following:
 
-* If the game is running slower than on real hardware (e.g. Dizzy III which slows down when you move) then adjust the V52 Sync to 'Forgiving'.
-* If the game has minor graphical glitches - say a stray line (e.g. Sword of Ianna on screen transitions) then try a CPU Adjust of -1 (or -2 at most).
+* If the game is running slower than on real hardware (e.g. Dizzy III which slows down when you move) then adjust the R52 vSync to 'Forgiving'.
+* If the game has minor graphical glitches - say a stray line (e.g. Sword of Ianna on screen transitions) then try a CPU Adjust of -1 or -2 at most.
 
 Because the emulator is doing line-based (vs cycle-based) emulation, the accuracy is only to that of a scanline and sometimes these small tweaks are 
 necessary to get games running as close as possible to real hardware.
