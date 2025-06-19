@@ -90,6 +90,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 ```
 
+Main Menu :
+-----------------------
+After the emulator launches (unless you've directly launched a game via Twilight Menu++), you will be 
+presented with the main menu screen. From here you can load up a disk or cart file to play.
+
+![image](./png/mainmenu.png)
+
 
 Configuration :
 -----------------------
