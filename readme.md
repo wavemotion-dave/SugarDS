@@ -10,7 +10,7 @@ Features :
 * Loads .SNA and .DSK files up to 1024K total length (single and double sided).
 * Plus2CPC Cartridge Support to load .CPR files up to 512K (note, this is not a plus/GX4000 emulator but will handle cart files provided they don't require plus-features).
 * Partial Dandanator Cartridge Support - Enough for Sword of Ianna and Los Amores de Brunilda. Rename files to .dan to load into the emulator properly.
-* Emulates CRTC Type 0 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll.
+* Emulates CRTC Type 3 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll.
 * Full button mapping - supporting all 3 possible joystick buttons of the Amstrad as well as mapping buttons to keyboard keys.
 * Full touch-screen Amstrad keyboard styled after the colorful CPC 464.
 * Save / Load state so you can pick up where you left off.

@@ -442,24 +442,42 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
     // -------------------------------------
     if ((Port & 0x4200) == 0x0200) // CRTC Read
     {
-        if ((Port & 0x0100) == 0) // Status
+        if (0==1) // CRTC 0 - Not Ready Yet....
         {
-            return 0xFF;    // No status register on CRTC 0
+            if ((Port & 0x0100) == 0) // Status
+            {
+                return 0xFF;    // No status register on CRTC 0
+            }
+            else // Register
+            {
+                u8 reg_val = 0x00;
+                
+                // Registers 12-17 can be read-back on CRTC 0
+                if (CRT_Idx == 12) reg_val = CRTC[CRT_Idx] & 0x3F;
+                if (CRT_Idx == 13) reg_val = CRTC[CRT_Idx] & 0xFF;
+                if (CRT_Idx == 14) reg_val = CRTC[CRT_Idx] & 0x3F;
+                if (CRT_Idx == 15) reg_val = CRTC[CRT_Idx] & 0xFF;
+                if (CRT_Idx == 16) reg_val = CRTC[CRT_Idx] & 0x3F;
+                if (CRT_Idx == 17) reg_val = CRTC[CRT_Idx] & 0xFF;
+                
+                // For CRTC 0 all other registers return 0x00
+                return reg_val;
+            }
         }
-        else // Register
+        else // CRTC 3 - both Status and Register reads return the Registers
         {
-            u8 reg_val = 0x00;
-            
-            // Registers 12-17 can be read-back on CRTC 0
-            if (CRT_Idx == 12) reg_val = CRTC[CRT_Idx] & 0x3F;
-            if (CRT_Idx == 13) reg_val = CRTC[CRT_Idx] & 0xFF;
-            if (CRT_Idx == 14) reg_val = CRTC[CRT_Idx] & 0x3F;
-            if (CRT_Idx == 15) reg_val = CRTC[CRT_Idx] & 0xFF;
-            if (CRT_Idx == 16) reg_val = CRTC[CRT_Idx] & 0x3F;
-            if (CRT_Idx == 17) reg_val = CRTC[CRT_Idx] & 0xFF;
-            
-            // For CRTC 0 all other registers return 0x00
-            return reg_val;
+            // CRTC 3 uses an odd mapping of Index to Registers
+            switch (CRT_Idx & 0x07)
+            {
+                case 0x00:  return CRTC[16];
+                case 0x01:  return CRTC[17];
+                case 0x02:  return CRTC[10];
+                case 0x03:  return CRTC[11];
+                case 0x04:  return CRTC[12];
+                case 0x05:  return CRTC[13];
+                case 0x06:  return CRTC[14];
+                case 0x07:  return CRTC[15];
+            }
         }
     }
 

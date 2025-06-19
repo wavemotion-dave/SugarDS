@@ -960,7 +960,10 @@ u8 display_options_list(bool bFullDisplay)
         }
     }
 
-    DSPrint(1,22, 0, (char *)" B=EXIT, X=GLOBAL, START=SAVE   ");
+    if (option_table == 1)
+        DSPrint(1,22, 0, (char *)" B=EXIT, X=OPTIONS, START=SAVE  ");
+    else
+        DSPrint(1,22, 0, (char *)" B=EXIT, X=GLOBAL, START=SAVE   ");
     DSPrint(1,23, 0, (char *)"                                ");
     return len;
 }

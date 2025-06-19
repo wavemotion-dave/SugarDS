@@ -85,7 +85,7 @@ void crtc_reset(void)
     vsync_plus_two = 0;
     r12_screen_offset = 0;
     vsync_off_count = 0;
-    escapeClause = 400;
+    escapeClause = 350;
     vSyncSeen = 0;
 
     CRTC[0]  = 63;
@@ -223,7 +223,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             if (R52 >= R52_INT_ON_VSYNC[myConfig.r52IntVsync]) crtc_r52_int();
             R52 = 0;                // Always reset the R52 counter on VSync+2
             vSyncDS = 1;            // Inform caller of frame end - our DS 'vSync' if you will...
-            escapeClause = 400;     // Reset CRTC watchdog
+            escapeClause = 350;     // Reset CRTC watchdog
         }
     }
 
@@ -341,7 +341,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
     // ---------------------------------------------------------------
     if (--escapeClause == 0)
     {
-        escapeClause = 400;     // Reset the watchdog
+        escapeClause = 350;     // Reset the watchdog
         VCC = 0;                // Start again... something went wrong
         vSyncDS = 1;            // Inform caller of frame end - our DS 'vSync' if you will...
     }
