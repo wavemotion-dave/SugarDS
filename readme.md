@@ -97,6 +97,10 @@ presented with the main menu screen. From here you can load up a disk or cart fi
 
 ![image](./png/mainmenu.png)
 
+Filenames can be no longer than 160 characters (and the DS can only display 32 at a time and will scroll
+the title of a game as needed) - so please keep your filenames on the shorter side. You can have no more 
+than 1024 game files in a directory - but can have as many directories as you want.
+
 
 Configuration :
 -----------------------
