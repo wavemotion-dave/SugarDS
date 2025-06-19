@@ -48,7 +48,7 @@ lzav compression (for save states) is Copyright (c) 2023-2025 Aleksey
 Vaneev and used by permission of the generous MIT license.
 
 The Amstrad CPC logo is used without permission but with the maximum
-of respect and love.
+of respect and love. Thank you Alan.
 
 The SugarDS emulator is offered as-is, without any warranty.
 
