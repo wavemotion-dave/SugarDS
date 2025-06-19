@@ -101,7 +101,13 @@ presented with the main menu screen. From here you can load up a disk or cart fi
 Configuration :
 -----------------------
 There is quite a few configuration options that you can explore. Some options are global for the emulator
-and some are specific to one game. 
+and some are specific to one game.
+
+![image](./png/options.png)
+![image](./png/global.png)
+
+When you change options, you must hit the START button on the DS to save out the new configuration to your SD card. 
+Otherwise the options will only work for this game play session.
 
 If you are playing a game like Robocop, Chase HQ or Manic Miner which hits the AY sound chip hard to produce "speech" or 
 similar digitizied effects, you should set the **Sound Driver** to 'WAVE DIRECT'. This is a bit more taxing on the emulator
