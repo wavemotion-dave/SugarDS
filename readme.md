@@ -105,7 +105,9 @@ than 1024 game files in a directory - but can have as many directories as you wa
 Configuration :
 -----------------------
 There is quite a few configuration options that you can explore. Some options are global for the emulator
-and some are specific to one game.
+and some are specific to one game. Please note that the options are associated with the filename (e.g. your
+.dsk file on the SD card) of the game you are playing. If you change the filename, the options will have
+to be re-entered.
 
 ![image](./png/options.png)
 ![image](./png/global.png)
