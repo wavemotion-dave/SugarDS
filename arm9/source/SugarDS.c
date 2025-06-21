@@ -198,7 +198,8 @@ u16 keyCoresp[MAX_KEY_OPTIONS] __attribute__((section(".dtcm"))) = {
     META_KBD_PAN_UP32,
     META_KBD_PAN_DN16,
     META_KBD_PAN_DN24, // 65
-    META_KBD_PAN_DN32
+    META_KBD_PAN_DN32,
+    META_KBD_ESCAPE    // 67
 };
 
 static char tmp[64];    // For various sprintf() calls
@@ -377,15 +378,16 @@ void sound_chip_reset()
   //  ----------------------------------------
   //  The AY sound chip for the Amstrad CPC
   //  ----------------------------------------
-  ay38910Reset(&myAY);             // Reset the "AY" sound chip
-  ay38910IndexW(0x07, &myAY);      // Register 7 is ENABLE
-  ay38910DataW(0x3F, &myAY);       // All OFF (negative logic)
-  ay38910Mixer(4, mixbufAY, &myAY);// Do an initial mix conversion to clear the output
+  ay38910Reset(&myAY);               // Reset the "AY" sound chip
+  ay38910IndexW(0x07, &myAY);        // Register 7 is ENABLE
+  ay38910DataW(0x3F, &myAY);         // All OFF (negative logic)
+  ay38910Mixer(4, mixbufAY, &myAY);  // Do an initial mix conversion to clear the output
+  last_sample = ((s16*)mixbufAY)[3]; // To avoid initial pop-click coming out of mute
 
-  floppy_sound = 0;
-  floppy_action = 0;
+  floppy_sound = 0;                  // For when we play the disk seek SFX
+  floppy_action = 0;                 // Floppy read or write flag
 
-  memset(mixbufAY, 0x00, sizeof(mixbufAY));
+  memset(mixbufAY, 0x00, sizeof(mixbufAY)); 
 }
 
 // -----------------------------------------------------------------------
@@ -515,8 +517,6 @@ void ShowDebugZ80(void)
         sprintf(tmp, "CRT %02X %02X %02X %02X", CRTC[8],  CRTC[9],  CRTC[10], CRTC[11]); DSPrint(0,idx++, 7, tmp);
         sprintf(tmp, "CRT %02X %02X %02X %02X", CRTC[12], CRTC[13], CRTC[14], CRTC[15]); DSPrint(0,idx++, 7, tmp);
 
-        // CPU Disassembly!
-
         // Put out the debug registers...
         idx = 2;
         for (u8 i=0; i<16; i++)
@@ -570,6 +570,13 @@ void DisplayStatusLine(bool bForce)
             }
         }
     }
+    
+    static u8 bClearWriteText = 0;
+    if (bClearWriteText)
+    {
+        bClearWriteText = 0;
+        DSPrint(19, 0, 6, "          "); // Cleared after 1 second showing 'DISK WRITE'
+    }
 
     if (fdc.dirty_counter)
     {
@@ -608,9 +615,8 @@ void DisplayStatusLine(bool bForce)
 
                     fflush(outfile);
                     fclose(outfile);
-                    WAITVBL;WAITVBL;
                 }
-                DSPrint(19, 0, 6, "          ");
+                bClearWriteText = 1;
             }
         }
     }
@@ -775,8 +781,9 @@ u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 
     if (iTy < 37)
     {
-        if (iTx < 75)  if (pan_mode_offset > 0)  pan_mode_offset--;
-        if (iTx > 185) if (pan_mode_offset < 40) pan_mode_offset++;
+             if (iTx < 90)  {if (pan_mode_offset > 0)  pan_mode_offset--;}
+        else if (iTx > 165) {if (pan_mode_offset < 40) pan_mode_offset++;}
+        else pan_mode_offset = 22;
         swiWaitForVBlank();
     }
     else
@@ -866,8 +873,9 @@ u8 handle_cpc_numpad_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 
     if (iTy < 37)
     {
-        if (iTx < 75)  if (pan_mode_offset > 0)  pan_mode_offset--;
-        if (iTx > 185) if (pan_mode_offset < ((CRTC[1] < 40) ? CRTC[1]:40)) pan_mode_offset++;
+             if (iTx < 90)  {if (pan_mode_offset > 0)  pan_mode_offset--;}
+        else if (iTx > 165) {if (pan_mode_offset < 40) pan_mode_offset++;}
+        else pan_mode_offset = 22;
         swiWaitForVBlank();
     }
     else
@@ -1055,6 +1063,7 @@ u8 slide_n_glide_key_left = 0;
 u8 slide_n_glide_key_right = 0;
 
 static u8 dampen = 0;
+static u8 bWasOffsetShift = 0;
 
 // ------------------------------------------------------------------------
 // The main emulation loop is here... call into the Z80 and render frame
@@ -1392,24 +1401,29 @@ void SugarDS_main(void)
         {
             if (nds_key & KEY_UP)
             {
-                dampen = 2;
+                if (bWasOffsetShift) dampen = 1; else dampen = 15;
+                bWasOffsetShift = 1;
                 myConfig.offsetY++;
             }
-            if (nds_key & KEY_DOWN)
+            else if (nds_key & KEY_DOWN)
             {
-                dampen = 2;
+                if (bWasOffsetShift) dampen = 1; else dampen = 15;
+                bWasOffsetShift = 1;
                 if (myConfig.offsetY > -32) myConfig.offsetY--;
             }
-            if (nds_key & KEY_LEFT)
+            else if (nds_key & KEY_LEFT)
             {
-                dampen = 2;
+                if (bWasOffsetShift) dampen = 1; else dampen = 15;
+                bWasOffsetShift = 1;
                 if (myConfig.offsetX < 96) myConfig.offsetX++;
             }
-            if (nds_key & KEY_RIGHT)
+            else if (nds_key & KEY_RIGHT)
             {
-                dampen = 2;
+                if (bWasOffsetShift) dampen = 1; else dampen = 15;
+                bWasOffsetShift = 1;
                 if (myConfig.offsetX > -32) myConfig.offsetX--;
             }
+            else bWasOffsetShift = 0;
         }
         else
         if((nds_key & KEY_L) && !dampen)
@@ -1526,6 +1540,7 @@ void SugarDS_main(void)
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_RT)   kbd_key  = KBD_KEY_CRT;
 
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_CPY)  kbd_key  = KBD_KEY_CPY;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_ESCAPE)    kbd_key  = KBD_KEY_ESC;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP16)  {temp_offset = -16;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP24)  {temp_offset = -24;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP32)  {temp_offset = -32;slide_dampen = 15;}
@@ -1543,6 +1558,7 @@ void SugarDS_main(void)
       }
       else // No NDS keys pressed...
       {
+          bWasOffsetShift = 0;
           if (slide_n_glide_key_up)    slide_n_glide_key_up--;
           if (slide_n_glide_key_down)  slide_n_glide_key_down--;
           if (slide_n_glide_key_left)  slide_n_glide_key_left--;

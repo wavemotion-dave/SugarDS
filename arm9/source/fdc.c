@@ -554,7 +554,7 @@ static int WriteData( int val )
             floppy_sound = 2;
             floppy_action = 1;
 
-            fdc.dirty_counter = 3;
+            fdc.dirty_counter = 2;
             fdc.bDirtyFlags[(fdc.PosData[fdc.Side] + fdc.wr_cntdata) / 4096] = 1;
 
             fdc.ImgDsk[ fdc.PosData[fdc.Side] + fdc.wr_cntdata++ ] = ( UBYTE )val;
@@ -791,17 +791,17 @@ void ReadDiskMem(u8 *rom, u32 romsize)
 
     // --------------------------------------------------------------------------------------------
     // Note: there is some confusion as to whether two sides should have the bit set or reset.
-    // The CPC wiki says this signal is inverted but I can't find proof of that in the datasheet
-    // and other emulators of the FDC 765 chip do it this way... This also appears to work on
-    // two-sided disks like the 3.5" version of Orion Prime so I suspect it's correct.
+    // The CPC wiki says this signal is inverted and so does the French Floppy Guide so that's
+    // what we're going with here. Basically we clear the TWO SIDES signal in ST3 if the disk
+    // we have loaded indicates it has more than one side.
     // --------------------------------------------------------------------------------------------
     if (fdc.DiskInfo.NumHeads > 1)
     {
-        fdc.ST3 |= ST3_TS;  // Set Two Sides signal
+        fdc.ST3 &= ~ST3_TS; // Clear Two Sides signal (inverted means two-sided drive)
     }
     else
     {
-        fdc.ST3 &= ~ST3_TS; // Clear Two Sides signal
+        fdc.ST3 |= ST3_TS;  // Set Two Sides signal (inverted means one-sided drive)
     }
 
     // ------------------------------------------------------

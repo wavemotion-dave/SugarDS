@@ -79,7 +79,7 @@ void crtc_reset(void)
     VTAC = 0;
     DISPEN = 0;
     b32K_Mode = 0;
-    pan_mode_offset = 0;
+    pan_mode_offset = 22;
 
     current_ds_line = 0;
     vsync_plus_two = 0;
@@ -525,7 +525,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
                 // -------------------------------------------------------------------
                 // Mode 3 is an 'unofficial' mode that is a consequence / side-effect
                 // of how the hardware works. It's basically Mode 0 with a limit of
-                // 4 colors and  so has no practical uses. We could support it. For
+                // 4 colors and so has no practical uses. We could support it. For
                 // now we increment a debug counter registers so we can detect it.
                 // -------------------------------------------------------------------
                 DY++;

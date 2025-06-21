@@ -4,6 +4,14 @@
 
 SugarDS is an Amstrad CPC 646 and 6128 Emulator for the DS/DSi
 
+The Amstrad CPC was released in 1984 and competed with the ZX Spectrum and C64 
+in the UK and Eastern EU. Although a latecomer to the market, the solid engineering
+"all-in-one" design gathered support. There are still many fans of the system today
+and plenty of great homebrew games that fully take advantage of the system strengths.
+
+This emulator is not perfect - but it should be capable enough to render most games
+playable on the tiny handheld so you can get your Amstrad gaming on-the-go!
+
 Features :
 -----------------------
 * Emulates CPC 464 (64K) and CPC 6128 (128K) with 512K of extended RAM available.
@@ -198,9 +206,20 @@ Known Issues :
 * R-Type Reloaded 128K does not load correctly except for the 3-disk version which does work (despite some loading screen issues).
 * Megablasters has issues with the emulated CRTC type detection and won't start except for one version which I've added a patch for: The 2020 ENGLISH Re-Release version (4 disks).
 * B.A.T. won't load the 2nd disk. Cause unknown.
+* Turrican 128K won't run properly - major graphical glitches. Likely CRTC timing issue.
 
 Version History :
 -----------------------
+Version 1.2 - 22-Jun-2025 by wavemotion-dave
+* Less pops clicks when going in/out of selecting games.
+* Cleaner/Faster Disk Writes (less pause, better "DISK WRITE" notification)
+* Improved Z80 timing - found a few more instructions that needed timing tweaks.
+* Improved CRTC emulation - fixed regression on Pinball Dreams, etc. Back to emulation of Type 3.
+* Fix for two-sided drive signal for FDC (nothing seemed to be affected by this... but better to be accurate).
+* Improved pan/scan for Mode 2 - auto-center and smoother scroll.
+* Improved offset handling - cleaner 1 pixel move and faster press-and-hold.
+* Added ESC as a possible key map.
+
 Version 1.1 - 18-Jun-2025 by wavemotion-dave
 * New 'Advanced' CRTC driver that renders Prehistorik II and Super Cauldron (among others) playable. Should auto-detect.
 * Megablasters 2020 Re-release (ENGLISH) is now supported - start by loading Disk A (Disk 0).

@@ -466,7 +466,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
         }
         else // CRTC 3 - both Status and Register reads return the Registers
         {
-            // CRTC 3 uses an odd mapping of Index to Registers
+            // CRTC 3 uses an odd mapping of Index to Registers on read-back
             switch (CRT_Idx & 0x07)
             {
                 case 0x00:  return CRTC[16];
@@ -713,6 +713,11 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
 
             case 0x01:
                 CRTC[CRT_Idx] = Value & CRTC_MASKS[CRT_Idx];
+                if (CRT_Idx == 9)
+                {
+                    // On CRTC 0/3 if we write R[9] lower than VLC, then VLC resets to zero
+                    if (CRTC[9] < VLC)  VLC = 0;
+                }
                 break;
         }
     }
@@ -1162,9 +1167,11 @@ ITCM_CODE u32 amstrad_run(void)
             // running by skewing the CRTC VCC counter and the CPU line-based emulation. 
             // The one game that definitely is improved by this is Galactic Tomb 128K.
             // ---------------------------------------------------------------------------
+            debug[DX++ & 0xf] = scanline_count;
             if (scanline_count < (250 * 16))
             {
                 VCC = 0; // Shock the monkey!
+                VLC = 0;
             }
             scanline_count = 0; // Will be incremented to 1 directly below
         }

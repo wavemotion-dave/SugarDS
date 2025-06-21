@@ -141,6 +141,8 @@ const char szKeyName[MAX_KEY_OPTIONS][16] = {
   "PAN DN 16",
   "PAN DN 24",   // 65
   "PAN DN 32",
+  
+  "KEYBOARD ESC",
 };
 
 
@@ -1093,15 +1095,15 @@ void SwapKeymap(void)
     keyMapType = (keyMapType+1) % 5;
     switch (keyMapType)
     {
-        case 0: MapPlayer1();  DSPrint(10,17,0,(" JOYSTICK 1 ")); break;
-        case 1: MapAllJoy();   DSPrint(10,17,0,("JOY FIRE 123")); break;
-        case 2: MapQAOP();     DSPrint(10,17,0,("    QAOP    ")); break;
-        case 3: MapZXSpace();  DSPrint(10,17,0,("  ZX SPACE  ")); break;
-        case 4: MapCursors();  DSPrint(10,17,0,("  CURSORS   ")); break;
+        case 0: MapPlayer1();  DSPrint(7,18,0,("**  JOYSTICK 1  **")); break;
+        case 1: MapAllJoy();   DSPrint(7,18,0,("** JOY FIRE 123 **")); break;
+        case 2: MapQAOP();     DSPrint(7,18,0,("**     QAOP     **")); break;
+        case 3: MapZXSpace();  DSPrint(7,18,0,("**   ZX SPACE   **")); break;
+        case 4: MapCursors();  DSPrint(7,18,0,("** CURSOR KEYS  **")); break;
         
     }
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-    DSPrint(10,17,0,("            "));
+    DSPrint(7,18,0,("                  "));
 }
 
 

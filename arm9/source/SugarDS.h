@@ -127,8 +127,9 @@ extern u8 sna_last_track;
 #define META_KBD_PAN_DN16   0xF03A
 #define META_KBD_PAN_DN24   0xF03B
 #define META_KBD_PAN_DN32   0xF03C
+#define META_KBD_ESCAPE     0xF03D
 
-#define MAX_KEY_OPTIONS     67
+#define MAX_KEY_OPTIONS     68
 
 // -----------------------------
 // For the Full Keyboard...
