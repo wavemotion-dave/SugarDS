@@ -27,6 +27,7 @@
 u8  portA               __attribute__((section(".dtcm"))) = 0x00;
 u8  portB               __attribute__((section(".dtcm"))) = 0xFF;
 u8  portC               __attribute__((section(".dtcm"))) = 0x00;
+u8  portDIR             __attribute__((section(".dtcm"))) = 0x00;
 
 u32 last_file_size      __attribute__((section(".dtcm"))) = 0;
 u32 scanline_count      __attribute__((section(".dtcm"))) = 1;
@@ -697,7 +698,12 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                 }
                 else // Port Direction...
                 {
-                    // Nothing to do here...
+                    // CPC will clear the latch on a direction change of PortA
+                    if ((portDIR & 0x10) != (Value & 0x10))
+                    {                    
+                        portC = 0x00;
+                    }
+                    portDIR = Value;
                 }
                 break;
             }
@@ -856,6 +862,7 @@ void amstrad_reset(void)
     portA               = 0x00;
     portB               = 0xFF;     // 50Hz, Amstrad, VSync set
     portC               = 0x00;
+    portDIR             = 0x00;
 
     scanline_count = 1;
     cpu_targ = 0;

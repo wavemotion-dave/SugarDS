@@ -130,7 +130,7 @@ extern u8 BufferedKeys[32];
 extern u8 BufferedKeysWriteIdx;
 extern u8 BufferedKeysReadIdx;
 
-extern u8 portA, portB, portC;
+extern u8 portA, portB, portC, portDIR;
 
 extern u8 ROM_Memory[MAX_ROM_SIZE];
 extern u8 RAM_Memory[0x20000]; // 64K plus an expanded 512K

@@ -123,7 +123,8 @@ void amstradSaveState()
     if (retVal) retVal = fwrite(&DAN_Zone1,         sizeof(DAN_Zone1),          1, handle);
     if (retVal) retVal = fwrite(&DAN_Config,        sizeof(DAN_Config),         1, handle);
 
-    if (retVal) retVal = fwrite(spare,              256,                        1, handle);
+    if (retVal) retVal = fwrite(&portDIR,           sizeof(portDIR),            1, handle);
+    if (retVal) retVal = fwrite(spare,              255,                        1, handle);
 
     // The RAM highwater tells us how many extra RAM banks were utilized
     if (retVal) retVal = fwrite(&ram_highwater,     sizeof(ram_highwater),      1, handle);
@@ -276,7 +277,8 @@ void amstradLoadState()
             if (retVal) retVal = fread(&DAN_Zone1,         sizeof(DAN_Zone1),          1, handle);
             if (retVal) retVal = fread(&DAN_Config,        sizeof(DAN_Config),         1, handle);            
             
-            if (retVal) retVal = fread(spare,              256,                        1, handle);
+            if (retVal) retVal = fread(&portDIR,           sizeof(portDIR),            1, handle);
+            if (retVal) retVal = fread(spare,              255,                        1, handle);
             
             // The RAM highwater tells us how many extra RAM banks were utilized
             if (retVal) retVal = fread(&ram_highwater,     sizeof(ram_highwater),      1, handle);            

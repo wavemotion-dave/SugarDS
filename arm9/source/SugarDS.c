@@ -782,7 +782,7 @@ u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
     if (iTy < 37)
     {
              if (iTx < 90)  {if (pan_mode_offset > 0)  pan_mode_offset--;}
-        else if (iTx > 165) {if (pan_mode_offset < 44) pan_mode_offset++;}
+        else if (iTx > 165) {if (pan_mode_offset < 48) pan_mode_offset++;}
         else pan_mode_offset = 22;
         swiWaitForVBlank();
     }
@@ -874,7 +874,7 @@ u8 handle_cpc_numpad_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
     if (iTy < 37)
     {
              if (iTx < 90)  {if (pan_mode_offset > 0)  pan_mode_offset--;}
-        else if (iTx > 165) {if (pan_mode_offset < 44) pan_mode_offset++;}
+        else if (iTx > 165) {if (pan_mode_offset < 48) pan_mode_offset++;}
         else pan_mode_offset = 22;
         swiWaitForVBlank();
     }
