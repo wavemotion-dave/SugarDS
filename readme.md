@@ -206,7 +206,7 @@ Known Issues :
 * R-Type Reloaded 128K does not load correctly except for the 3-disk version which does work (despite some loading screen issues).
 * Megablasters has issues with the emulated CRTC type detection and won't start except for one version which I've added a patch for: The 2020 ENGLISH Re-Release version (4 disks).
 * B.A.T. won't load the 2nd disk. Cause unknown.
-* Turrican 128K won't run properly - major graphical glitches. Likely CRTC timing issue.
+* Turrican 128K works fine with the two disk version but the single disk version has issues. 
 
 Version History :
 -----------------------
