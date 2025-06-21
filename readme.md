@@ -35,7 +35,7 @@ everything to the original sources, I believe all sources have
 released their material under the GNU General Public License and, 
 as such, the SugarDS emulator follows suit.
 
-If I've misrepresented any pervious authors work here, please 
+If I've misrepresented any previous authors work here, please
 contact me and I'll put it right.
 
 * CrocoDS: CPC Emulator for the DS - Copyright (c) 2013 Miguel Vanhove (Kyuran)
