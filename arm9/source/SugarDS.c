@@ -782,7 +782,7 @@ u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
     if (iTy < 37)
     {
              if (iTx < 90)  {if (pan_mode_offset > 0)  pan_mode_offset--;}
-        else if (iTx > 165) {if (pan_mode_offset < 40) pan_mode_offset++;}
+        else if (iTx > 165) {if (pan_mode_offset < 44) pan_mode_offset++;}
         else pan_mode_offset = 22;
         swiWaitForVBlank();
     }
@@ -874,7 +874,7 @@ u8 handle_cpc_numpad_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
     if (iTy < 37)
     {
              if (iTx < 90)  {if (pan_mode_offset > 0)  pan_mode_offset--;}
-        else if (iTx > 165) {if (pan_mode_offset < 40) pan_mode_offset++;}
+        else if (iTx > 165) {if (pan_mode_offset < 44) pan_mode_offset++;}
         else pan_mode_offset = 22;
         swiWaitForVBlank();
     }
@@ -1401,25 +1401,25 @@ void SugarDS_main(void)
         {
             if (nds_key & KEY_UP)
             {
-                if (bWasOffsetShift) dampen = 1; else dampen = 15;
+                if (bWasOffsetShift) dampen = 1; else dampen = 10;
                 bWasOffsetShift = 1;
                 myConfig.offsetY++;
             }
             else if (nds_key & KEY_DOWN)
             {
-                if (bWasOffsetShift) dampen = 1; else dampen = 15;
+                if (bWasOffsetShift) dampen = 1; else dampen = 10;
                 bWasOffsetShift = 1;
                 if (myConfig.offsetY > -32) myConfig.offsetY--;
             }
             else if (nds_key & KEY_LEFT)
             {
-                if (bWasOffsetShift) dampen = 1; else dampen = 15;
+                if (bWasOffsetShift) dampen = 1; else dampen = 10;
                 bWasOffsetShift = 1;
                 if (myConfig.offsetX < 96) myConfig.offsetX++;
             }
             else if (nds_key & KEY_RIGHT)
             {
-                if (bWasOffsetShift) dampen = 1; else dampen = 15;
+                if (bWasOffsetShift) dampen = 1; else dampen = 10;
                 bWasOffsetShift = 1;
                 if (myConfig.offsetX > -32) myConfig.offsetX--;
             }
