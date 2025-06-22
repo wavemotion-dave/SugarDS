@@ -52,16 +52,7 @@ typedef struct
   u32 uCrc;
 } FIAmstrad;
 
-
 extern u32 file_size;
-
-typedef struct
-{
-    char description[33];
-    u16  block_id;
-} TapePositionTable_t;
-
-extern TapePositionTable_t TapePositionTable[];
 
 struct __attribute__((__packed__)) GlobalConfig_t
 {
@@ -169,7 +160,5 @@ extern void BufferKey(u8 key);
 extern void BufferKeys(char *keys);
 extern void ProcessBufferedKeys(void);
 extern void SugarDSChangeKeymap(void);
-extern void pok_select(void);
-extern void pok_init();
 
 #endif // _AMSUTILS_H_

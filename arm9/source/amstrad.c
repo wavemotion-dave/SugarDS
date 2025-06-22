@@ -1174,11 +1174,11 @@ ITCM_CODE u32 amstrad_run(void)
             // running by skewing the CRTC VCC counter and the CPU line-based emulation. 
             // The one game that definitely is improved by this is Galactic Tomb 128K.
             // ---------------------------------------------------------------------------
-            debug[DX++ & 0xf] = scanline_count;
             if (scanline_count < (250 * 16))
             {
                 VCC = 0; // Shock the monkey!
                 VLC = 0;
+                R52 = 0;
             }
             scanline_count = 0; // Will be incremented to 1 directly below
         }

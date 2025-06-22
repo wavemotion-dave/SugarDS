@@ -533,9 +533,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
         }
         else // Display not enabled - render border
         {
-            int limit = CRTC[1]+8;        // Draw the full border line plus a little 'extra'
-            if (limit > 50) limit = 50;   // Draw no further than a bit beyond the 400 pixel mark
-            for (int x=0; x<limit; x++)
+            for (int x=0; x<(isDSiMode() ? 64:50); x++) // Draw out to the 512 pixel mark on DSi... DS-Lite to 400.
             {
                 *vidBufDS++ = border_color;
                 *vidBufDS++ = border_color;

@@ -44,11 +44,11 @@ extern u8 sna_last_track;
 #define MENU_CHOICE_DEFINE_KEYS 0x05
 #define MENU_CHOICE_CONFIG_GAME 0x06
 #define MENU_CHOICE_SWAP_DISK   0x07
-#define MENU_CHOICE_TOGGLE_KBD  0xFE        // Toggle Keyboard
+#define MENU_CHOICE_TOGGLE_KBD  0xFE        // Toggle Keyboard for Keypad
 #define MENU_CHOICE_MENU        0xFF        // Special brings up a mini-menu of choices
 
 // ------------------------------------------------------------------------------
-// Joystick UP, RIGHT, LEFT, DOWN and the FIRE button for the Kempston Joystick.
+// Joystick UP, RIGHT, LEFT, DOWN and FIRE 1+2 buttons for the Amstrad Joystick.
 // Designed specifically so each has its own bit so we can press more than one
 // direction/fire at the same time.  Keyboard keys are grafted onto this below.
 // ------------------------------------------------------------------------------
@@ -218,11 +218,14 @@ extern u8  vsync_off_count;
 extern u8  *cpc_ScreenPage;
 extern u16 escapeClause;
 extern u32 raster_counter;
-extern u8 vSyncSeen;
-extern u8 display_disable_in;
+extern u8  vSyncSeen;
+extern u8  display_disable_in;
 
 extern u8 floppy_sound;
 extern u8 floppy_action;
+
+extern char initial_file[];
+extern char initial_path[];
 
 extern u8 amstrad_mode;
 extern u8 kbd_keys_pressed;
@@ -230,17 +233,15 @@ extern u8 kbd_keys[12];
 extern u16 emuFps;
 extern u16 emuActFrames;
 extern u16 timingFrames;
-extern char initial_file[];
-extern char initial_path[];
 extern u16 nds_key;
 extern u8  kbd_key;
 extern u16 vusCptVBL;
 extern u16 keyCoresp[MAX_KEY_OPTIONS];
 extern u16 NDS_keyMap[];
-extern u8 soundEmuPause;
+extern u8  soundEmuPause;
 extern int bg0, bg1, bg0b, bg1b;
 extern u32 last_file_size;
-extern u8 b32K_Mode;
+extern u8  b32K_Mode;
 
 extern u8 SugarDSChooseGame(u8 bDiskOnly);
 extern void CartLoad(void);
@@ -255,8 +256,6 @@ extern void BottomScreenOptions(void);
 extern void TopScreenOptions(void);
 extern void TopScreenImage(void);
 extern void BottomScreenKeyboard(void);
-extern void PauseSound(void);
-extern void UnPauseSound(void);
 extern void ReadFileCRCAndConfig(void);
 extern void DisplayStatusLine(bool bForce);
 extern void DiskInsert(char *filename, u8 bForceRead);
