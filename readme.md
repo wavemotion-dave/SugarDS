@@ -210,11 +210,17 @@ Known Issues :
 * Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay is better.
 * R-Type Reloaded 128K does not load correctly except for the 3-disk version which does work (despite some loading screen issues).
 * Megablasters has issues with the emulated CRTC type detection and won't start except for one version which I've added a patch for: The 2020 ENGLISH Re-Release version (4 disks).
-* B.A.T. won't load the 2nd disk. Cause unknown.
+* Enlightenment (aka Druid 2) has major graphical glitching. Cause is likely CRTC timing issues.
 * Turrican 128K works fine with the two disk version but the single disk version has issues. 
 
 Version History :
 -----------------------
+Version 1.3 - ??-Jun-2025 by wavemotion-dave
+* Use [[CPM]] in title of .dsk file to launch game via |cpm
+* Improved FDC emulation so games like BAT load
+* Improved PPI emulation so keyboard scanning works in games like Barbarian
+
+
 Version 1.2 - 22-Jun-2025 by wavemotion-dave
 * Less pops clicks when going in/out of selecting games.
 * Cleaner/Faster Disk Writes (less pause, better "DISK WRITE" notification)
