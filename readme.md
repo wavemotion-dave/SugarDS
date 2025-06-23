@@ -208,9 +208,10 @@ extra seconds. Think about how long it took to load stuff from cassette/disk whe
 Known Issues :
 -----------------------
 * Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay is better.
-* R-Type Reloaded 128K does not load correctly except for the 3-disk version which does work (despite some loading screen issues).
+* R-Type Reloaded 128K does not load correctly except for the 3-disk version which does work (despite some loading screen issues - when the screen shows horizontal lines, insert disk 2).
 * Megablasters has issues with the emulated CRTC type detection and won't start except for one version which I've added a patch for: The 2020 ENGLISH Re-Release version (4 disks).
-* Enlightenment (aka Druid 2) has major graphical glitching. Cause is likely CRTC timing issues.
+* Enlightenment (aka Druid 2) has major graphical glitching. Cause is likely inaccurate CRTC emulation.
+* Imperial Mahjongg does not run. Cause is likely inaccurate CRTC emulation.
 * Turrican 128K works fine with the two disk version but the single disk version has issues. 
 
 Version History :
