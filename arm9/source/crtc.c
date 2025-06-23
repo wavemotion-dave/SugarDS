@@ -251,40 +251,45 @@ ITCM_CODE u8 crtc_render_screen_line(void)
     if (VLC >= (CRTC[9]+1)) // CRTC v3 and v4 both do greater-than-or-equal
     {
         VLC = 0;                // Reset counter - build up the next character line
-        VCC = (VCC+1) & 0x7F;   // We have finished one vertical character
 
         if (myConfig.crtcDriver == CRTC_DRV_ADVANCED) // 'ADVANCED' Driver
         {
-            if (VCC == (CRTC[4]+1)) // Full "frame" rendered?
+            if (!VTAC) // If we are in the 'extra counting' of an adjustment, we no longer increment VCC
             {
-                // -----------------------------------------------------------------
-                // Vertical Total Adjustment - these are extra scanlines before we
-                // start a new "frame". Add 1 as we will process further below.
-                // -----------------------------------------------------------------
-                VTAC = (CRTC[5] & 0x1F) + 1;
-
-                if (vSyncSeen)
+                VCC = (VCC+1) & 0x7F;   // We have finished one vertical character
+                if (VCC == (CRTC[4]+1)) // Full "frame" rendered?
                 {
-                    vSyncSeen = 0;                         // Setup for next VSYNC
-                    current_ds_line = -myConfig.screenTop; // Top of LCD screen
+                    // -----------------------------------------------------------------
+                    // Vertical Total Adjustment - these are extra scanlines before we
+                    // start a new "frame". Add 1 as we will process further below.
+                    // -----------------------------------------------------------------
+                    VTAC = (CRTC[5] & 0x1F) + 1;
+
+                    if (vSyncSeen)
+                    {
+                        vSyncSeen = 0;                         // Setup for next VSYNC
+                        current_ds_line = -myConfig.screenTop; // Top of LCD screen
+                    }
                 }
-            }
 
-            if (VCC == CRTC[6]) // End of visible display?
-            {
-                DISPEN = 0; // Turn off display (render border)
-            }
+                if (VCC == CRTC[6]) // End of visible display?
+                {
+                    DISPEN = 0; // Turn off display (render border)
+                }
 
-            if (VCC == CRTC[7]) // Vertical Sync reached?
-            {
-                portB |= 0x01;        // Set VSYNC
-                vsync_plus_two = 2;   // Interrupt in 2 raster lines
-                vsync_off_count = 16; // And turn off in 16 scanlines
-                vSyncSeen = 1;        // We've seen a vSync
+                if (VCC == CRTC[7]) // Vertical Sync reached?
+                {
+                    portB |= 0x01;        // Set VSYNC
+                    vsync_plus_two = 2;   // Interrupt in 2 raster lines
+                    vsync_off_count = 16; // And turn off in 16 scanlines
+                    vSyncSeen = 1;        // We've seen a vSync
+                }
             }
         }
         else // 'STANDARD' Driver
         {
+            VCC = (VCC+1) & 0x7F;   // We have finished one vertical character
+
             // ---------------------------------------------------------------------------------------------------------------------------------------
             // This isn't right - it should be equals-equals (==) but the timing on Amstrad CPC games is tight and the line-based  emulation is
             // not perfect so we have to cheat a bit. This works well enough and tends to not cause any NEW problems (that is - games that

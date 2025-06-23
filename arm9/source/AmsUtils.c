@@ -1682,6 +1682,12 @@ void ProcessBufferedKeys(void)
             kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
             buf_held = '-';
         }
+        else if (buf_held == '|')
+        {
+            last_special_key = 1;
+            kbd_keys[kbd_keys_pressed++] = KBD_KEY_SFT;
+            buf_held = '@';
+        }
     }
     else if (dampen >= (next_dampen_time/2))
     {

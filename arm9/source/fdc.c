@@ -648,6 +648,21 @@ void FDC_frame(void)
         {
             fdc.Image=1;
         }
+
+        if (fdc.Motor && fdc.Image && !fdc.Drive)
+        {
+            fdc.ST0 &= ~ST0_NR;
+            fdc.ST0 &= ~ST0_IC1 & ~ST0_IC2;
+        }
+        else
+        {
+            fdc.ST0 |= ST0_NR;
+            if ( !fdc.Image )
+            {
+                fdc.ST0 |= ( ST0_IC1 | ST0_IC2 );
+            }
+        }
+        
     }
 }
 
