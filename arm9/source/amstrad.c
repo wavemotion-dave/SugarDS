@@ -64,8 +64,6 @@ u8 CRTC_MASKS[0x20] = {0xFF, 0xFF, 0xFF, 0xFF,
 
 s16 CPU_ADJUST[] __attribute__((section(".dtcm"))) = {0, 1, 2, -4, -3, -2, -1};
 
-int cpu_targ __attribute__((section(".dtcm"))) = 0;
-
 extern u8 last_special_key;
 
 u8 sna_last_motor = 0;
@@ -865,8 +863,7 @@ void amstrad_reset(void)
     portDIR             = 0x00;
 
     scanline_count = 1;
-    cpu_targ = 0;
-    
+   
     sna_last_motor = 0;
     sna_last_track = 0;
 
@@ -1148,23 +1145,23 @@ ITCM_CODE u32 amstrad_run(void)
     // then the back-half of the CPU line. This way we're no more than half
     // a line "wrong" at any time which is good enough for 98% of CPC games.
     // -----------------------------------------------------------------------
-    cpu_targ += 128;
-    ExecZ80(cpu_targ);
+    CPU.Target += 128;
+    ExecZ80(CPU.Target);
 
     // Process 1 scanline for the mighty CRTC controller chip
     u8 vsync = crtc_render_screen_line();
 
     // Finish the scanline plus any user-called for adjustment...
-    cpu_targ += (128+CPU_ADJUST[myConfig.cpuAdjust]);
-    ExecZ80(cpu_targ);
+    CPU.Target += (128+CPU_ADJUST[myConfig.cpuAdjust]);
+    ExecZ80(CPU.Target);
     
     if (vsync) // Will return non-zero if VSYNC started
     {
         if (++refresh_tstates & 0x10) // Every 16 Frames, reset counters to prevent overflow
         {
             refresh_tstates = 0;
-            CPU.TStates = CPU.TStates - cpu_targ;
-            cpu_targ = 0;
+            CPU.TStates = CPU.TStates - CPU.Target;
+            CPU.Target = 0;
             
             // ---------------------------------------------------------------------------
             // If we came up significantly short we make an attempt to adjust the VCC to

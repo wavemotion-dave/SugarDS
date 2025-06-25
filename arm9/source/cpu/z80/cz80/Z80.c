@@ -653,10 +653,10 @@ void EI_Enable(void)
    }
 }
 
-// -----------------------------------------------------------------------------------
-// The main Z80 instruction loop. We put this 15K chunk into fast memory as we 
-// want to make the Z80 run as quickly as possible - this is the heart of the system.
-// -----------------------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------
+// The main Z80 instruction loop. We put this 15K chunk into fast memory as we want to make
+// the Z80 run as quickly as possible - this, along with the CRTC, is the heart of the system.
+// --------------------------------------------------------------------------------------------
 ITCM_CODE void ExecZ80(u32 RunToCycles)
 {
   register byte I;

@@ -105,7 +105,7 @@ typedef struct
   u32  R;                           /* Refresh register - masked on read    */
   u32  TStates;                     /* Total CPU Cycles - reset 256 frames  */
   word EI_Delay;                    /* Enable Interrupt instruction delay   */
-  u32  Reserved;                    /* For future use...                    */
+  u32  Target;                      /* CPU Target cycle to attain           */
 } Z80;
 
 
