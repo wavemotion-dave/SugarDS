@@ -3,8 +3,8 @@
 //
 // Copying and distribution of this emulator, its source code and associated
 // readme files, with or without modification, are permitted in any medium without
-// royalty provided this copyright notice is used and wavemotion-dave (Phoenix-Edition),
-// Alekmaul (original port) and Marat Fayzullin (ColEM core) are thanked profusely.
+// royalty provided this copyright notice is used and wavemotion-dave and Marat
+// Fayzullin (ColEM core) are thanked profusely.
 //
 // The SugarDS emulator is offered as-is, without any warranty. Please see readme.md
 // =====================================================================================

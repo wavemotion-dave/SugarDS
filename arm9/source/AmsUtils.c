@@ -1129,6 +1129,8 @@ void SugarDSChangeKeymap(void)
   DSPrint(1 ,21,0,("       X : SWAP KEYMAP TYPE  "));
   DSPrint(1 ,22,0,("   START : SAVE KEYMAP       "));
   DisplayKeymapName(ucY);
+  
+  bIndTch = myConfig.keymap[0];
 
   // -----------------------------------------------------------------------
   // Clear out any keys that might be pressed on the way in - make sure
@@ -1292,6 +1294,7 @@ void NoGameSelected(u32 ucY)
     DSPrint(5,10,0,("   NO GAME SELECTED   "));
     DSPrint(5,12,0,("  PLEASE, USE OPTION  "));
     DSPrint(5,14,0,("      LOAD  GAME      "));
+    WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
     while (!(keysCurrent()  & (KEY_START | KEY_A)));
     while (keysCurrent()  & (KEY_START | KEY_A));
     dmaFillWords(dmaVal | (dmaVal<<16),(void*) bgGetMapPtr(bg1b)+5*32*2,32*18*2);

@@ -216,11 +216,12 @@ Known Issues :
 
 Version History :
 -----------------------
-Version 1.3 - ??-Jun-2025 by wavemotion-dave
+Version 1.3 - 13-Sep-2025 by wavemotion-dave
 * Use [[CPM]] in title of .dsk file to launch game via |cpm
 * Improved FDC emulation so games like BAT load
 * Improved PPI emulation so keyboard scanning works in games like Barbarian
-
+* Fixed the map keys handling so changing the first key slot doesn't always revert back to 'A'
+* Other minor improvements and tweaks under the hood.
 
 Version 1.2 - 22-Jun-2025 by wavemotion-dave
 * Less pops clicks when going in/out of selecting games.
