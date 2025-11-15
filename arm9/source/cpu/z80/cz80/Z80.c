@@ -49,9 +49,6 @@ extern void ConfigureMemory(void);
 extern u8 *MemoryMapR[4];
 extern u8 *MemoryMapW[4];
 
-typedef u8 (*patchFunc)(void);
-#define PatchLookup ((patchFunc*)0x06860000)
-
 // ------------------------------------------------------
 // These defines and inline functions are to map maximum
 // speed/efficiency onto the memory system we have.

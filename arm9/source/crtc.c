@@ -112,7 +112,6 @@ void crtc_reset(void)
     memset((u8*)(0x06000000), 0x00, 0x20000);
 }
 
-
 // ---------------------------------------------------------------------------------------------------------------
 // R52 will return to 0 and the Gate Array will send an interrupt request on any of these conditions:
 //  - When it exceeds 51
@@ -357,7 +356,16 @@ ITCM_CODE u8 crtc_render_screen_line(void)
     // some slight tearing effects as we're dealing with 50Hz
     // emulation on a 60Hz DSi LCD refresh... but good enough!
     // ----------------------------------------------------------
-    vidBufDS = (u32*)(0x06000000 + (current_ds_line * 512));
+    if (isDSiMode())
+    {
+        // For the DSi we can double-buffer. Render to off-screen area first.
+        vidBufDS = (u32*)(((u32)(emuTotFrames & 1) ? PING_A:PING_B) + (current_ds_line * 512));
+    }
+    else
+    {
+        vidBufDS = (u32*)(0x06000000 + (current_ds_line * 512));
+    }
+    
 
     // ------------------------------------------------------------------------
     // This is a poor-mans horizontal sync "scroll trick". Some CPC games

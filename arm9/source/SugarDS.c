@@ -87,6 +87,7 @@ static uint16 dimDampen = 0;
 u16 emuFps          __attribute__((section(".dtcm"))) = 0;
 u16 emuActFrames    __attribute__((section(".dtcm"))) = 0;
 u16 timingFrames    __attribute__((section(".dtcm"))) = 0;
+u32 emuTotFrames    __attribute__((section(".dtcm"))) = 0;
 
 // Set to 1 to pause (mute) sound, 0 is sound unmuted (sound channels active)
 u8 soundEmuPause    __attribute__((section(".dtcm"))) = 1;
@@ -101,9 +102,11 @@ u8 last_mapped_key   __attribute__((section(".dtcm"))) = 0;       // The last ma
 u8 kbd_keys_pressed  __attribute__((section(".dtcm"))) = 0;       // Each frame we check for keys pressed - since we can map keyboard keys to the NDS, there may be several pressed at once
 u8 kbd_keys[12]      __attribute__((section(".dtcm")));           // Up to 12 possible keys pressed at the same time (we have 12 NDS physical buttons though it's unlikely that more than 2 or maybe 3 would be pressed)
 u8 last_frame_crtc1  __attribute__((section(".dtcm"))) = 0;       // Tracking the number of characters written in the last non-mode2 draw
+u8 backgroundRender  __attribute__((section(".dtcm"))) = 0;       // Set to 1 to double-buffer the screen (DSi only)
 
 u32 last_frame_mode2  __attribute__((section(".dtcm"))) = 0;      // To track number of mode2 draws - for auto-scaling use...
 u32 last_frame_mode01 __attribute__((section(".dtcm"))) = 0;      // To track number of mode0 and mode1 draws - for auto-scaling use...
+
 
 u8 bStartSoundEngine = 0;      // Set to true to unmute sound after 1 frame of rendering...
 int bg0, bg1, bg0b, bg1b;      // Some vars for NDS background screen handling
@@ -237,8 +240,8 @@ u16 mixer_write     __attribute__((section(".dtcm"))) = 0;
 s16 mixer[WAVE_DIRECT_BUF_SIZE+1];
 
 
-// The games normally run at the proper 100% speed, but user can override from 80% to 120%
-u16 GAME_SPEED_PAL[]  __attribute__((section(".dtcm"))) = {655, 596, 547, 728, 818 };
+// The games normally run at the proper 100% speed, but user can override from 80% to 130%
+u16 GAME_SPEED_PAL[]  __attribute__((section(".dtcm"))) = {655, 596, 547, 500, 728, 818 };
 
 // -------------------------------------------------------------------------------------------
 // maxmod will call this routine when the buffer is half-empty and requests that
@@ -1267,6 +1270,13 @@ void SugarDS_main(void)
             }
         }
         emuActFrames++;
+        
+        // Render the previous frame as we work on the next one...
+        if (isDSiMode())
+        {        
+            backgroundRender = 0x80 | (emuTotFrames & 1);
+        }
+        emuTotFrames++;
 
         // --------------------------------------------------------------------
         // We only support PAL 50 frames as this is an Amstrad CPC from the UK
@@ -1609,7 +1619,7 @@ void SugarDS_main(void)
 void useVRAM(void)
 {
   vramSetBankB(VRAM_B_LCD);        // 128K VRAM used for snapshot DCAP buffer - but could be repurposed during emulation ...
-  vramSetBankD(VRAM_D_LCD);        // Not using this for video but 128K of faster RAM always useful!  Mapped at 0x06860000 -   256K Used for tape patch look-up
+  vramSetBankD(VRAM_D_LCD);        // Not using this for video but 128K of faster RAM always useful!  Mapped at 0x06860000 -   256K Used for double buffer
   vramSetBankE(VRAM_E_LCD);        // Not using this for video but 64K of faster RAM always useful!   Mapped at 0x06880000 -   ..
   vramSetBankF(VRAM_F_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x06890000 -   ..
   vramSetBankG(VRAM_G_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x06894000 -   ..
@@ -1769,11 +1779,19 @@ void HandleBrightness(void)
     }
 }
 
-
 ITCM_CODE void irqVBlank(void)
 {
     // Manage time
     vusCptVBL++;
+    
+    // --------------------------------------------------------------------------------------
+    // Check if we are double-buffering and copy the buffered screen to the main LCD display
+    // --------------------------------------------------------------------------------------
+    if (backgroundRender)
+    {  
+        dmaCopyWordsAsynch(3, (u16*)((backgroundRender & 1) ? PING_A:PING_B), (u16*)0x06000000, 512*256);
+        backgroundRender = 0;
+    }
 
     int cxBG = ((s16)myConfig.offsetX << 8);
     int cyBG = ((s16)myConfig.offsetY+temp_offset) << 8;

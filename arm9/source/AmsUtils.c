@@ -44,6 +44,16 @@ struct Config_t myConfig __attribute((aligned(4))) __attribute__((section(".dtcm
 struct GlobalConfig_t myGlobalConfig;
 extern u32 file_crc;
 
+#define MAX_FAVS  1024
+
+typedef struct
+{
+  u32   name_hash;  // Repurpose the lower bit for love vs like
+} Favorites_t;
+
+Favorites_t myFavs[MAX_FAVS]; // Total of 4K of space with 32 bit hash
+
+
 // -----------------------------------------------------------------------
 // Used by our system to map into 8K memory chunks which allows for very
 // rapid banking of memory - very useful for the CPC with 128K of memory.
@@ -256,6 +266,89 @@ u8 showMessage(char *szCh1, char *szCh2)
   return uRet;
 }
 
+// --------------------------------------------------------------
+// Provide an array of filename hashes to store game "Favorites"
+// --------------------------------------------------------------
+void LoadFavorites(void)
+{
+    memset(myFavs, 0x00, sizeof(myFavs));
+    FILE *fp = fopen("/data/SugarDS.fav", "rb");
+    if (fp)
+    {
+        fread(&myFavs, sizeof(myFavs), 1, fp);
+        fclose(fp);
+    }
+}
+
+void SaveFavorites(void)
+{
+    // --------------------------------------------------
+    // Now save the config file out o the SD card...
+    // --------------------------------------------------
+    DIR* dir = opendir("/data");
+    if (dir)
+    {
+        closedir(dir);  // directory exists.
+    }
+    else
+    {
+        mkdir("/data", 0777);   // Doesn't exist - make it...
+    }
+        
+    FILE *fp = fopen("/data/SugarDS.fav", "wb");
+    if (fp)
+    {
+        fwrite(&myFavs, sizeof(myFavs), 1, fp);
+        fclose(fp);
+    }
+}
+
+u8 IsFavorite(char *name)
+{
+    u32 filename_crc32 = getCRC32((u8 *)name, strlen(name));
+    
+    for (int i=0; i<MAX_FAVS; i++)
+    {
+        if ((myFavs[i].name_hash & 0xFFFFFFFE) == (filename_crc32 & 0xFFFFFFFE)) return (1 + (myFavs[i].name_hash&1));
+    }
+    return 0;
+}
+
+void ToggleFavorite(char *name)
+{
+    int firstZero = 0;
+    u32 filename_crc32 = getCRC32((u8 *)name, strlen(name));
+    
+    for (int i=0; i<MAX_FAVS; i++)
+    {
+        // We use the lower bit of the filename hash (CRC32) as the flag for 'like' vs 'love'
+        // Basically there are 3 states:
+        //    - No hash found... not a favorite
+        //    - Hash found with lower bit 0... Love
+        //    - Hash found with lower bit 1... Like
+        if ((myFavs[i].name_hash & 0xFFFFFFFE) == (filename_crc32 & 0xFFFFFFFE))
+        {
+            if ((myFavs[i].name_hash & 1) == 0)
+            {
+                myFavs[i].name_hash |= 1;
+                return;
+            }
+            else
+            {
+                myFavs[i].name_hash = 0x00000000;
+                return;
+            }
+        }
+        
+        if (myFavs[i].name_hash == 0x00000000)
+        {
+            if (!firstZero) firstZero = i;
+        }
+    }
+    
+    myFavs[firstZero].name_hash = (filename_crc32 & 0xFFFFFFFE);
+}
+
 /*********************************************************************************
  * Show The 14 games on the list to allow the user to choose a new game.
  ********************************************************************************/
@@ -287,11 +380,19 @@ void dsDisplayFiles(u16 NoDebGame, u8 ucSel)
       {
         sprintf(szName,"%-30s",strupr(szName));
         DSPrint(1,6+ucBcl,(ucSel == ucBcl ? 2 : 0 ),szName);
+        if (IsFavorite(gpFic[ucGame].szName))
+        {
+            DSPrint(0,6+ucBcl,(IsFavorite(gpFic[ucGame].szName) == 1) ? 0:2,(char*)"@");
+        }
+        else
+        {
+            DSPrint(0,6+ucBcl,0,(char*)" ");
+        }
       }
     }
     else
     {
-        DSPrint(1,6+ucBcl,(ucSel == ucBcl ? 2 : 0 ),"                              ");
+        DSPrint(0,6+ucBcl,(ucSel == ucBcl ? 2 : 0 ),"                               ");
     }
   }
 }
@@ -542,6 +643,21 @@ u8 SugarDSChooseGame(u8 bDiskOnly)
     }
     else {
       ucSHaut = 0;
+    }
+
+    // The SELECT key will toggle favorites
+    if (keysCurrent() & KEY_SELECT)
+    {
+        if (gpFic[ucGameAct].uType != DIRECTORY)
+        {
+            ToggleFavorite(gpFic[ucGameAct].szName);
+            dsDisplayFiles(firstRomDisplay,romSelected);
+            SaveFavorites();
+            while (keysCurrent() & KEY_SELECT)
+            {
+                WAITVBL;
+            }
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -913,7 +1029,7 @@ const struct options_t Option_Table[2][20] =
         {"SCREEN TOP",     {"+0","+1","+2","+3","+4","+5","+6","+7","+8","+9","+10",
                             "+11","+12","+13","+14","+15","+16"},                               &myConfig.screenTop,        17},
         {"NDS D-PAD",      {"NORMAL", "DIAGONALS", "SLIDE-N-GLIDE"},                            &myConfig.dpad,              3},
-        {"GAME SPEED",     {"100%", "110%", "120%", "90%", "80%"},                              &myConfig.gameSpeed,         5},
+        {"GAME SPEED",     {"100%", "110%", "120%", "130%", "90%", "80%"},                      &myConfig.gameSpeed,         6},
         {"MODE 2",         {"640 COMPRESS", "320 PAN+SCAN"},                                    &myConfig.mode2mode,         2},
         {"R52  VSYNC",     {"NORMAL", "FORGIVING", "STRICT"},                                   &myConfig.r52IntVsync,       3},
         {"CPU ADJUST",     {"+0 (NONE)", "+1 CYCLES", "+2 CYCLES", "-4 CYCLES", 

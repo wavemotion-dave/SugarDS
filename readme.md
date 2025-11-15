@@ -216,6 +216,11 @@ Known Issues :
 
 Version History :
 -----------------------
+Version 1.4 - ??-Nov-2025 by wavemotion-dave
+* DSi now double-buffers LCD rendering for smoother performance.
+* Added Favorites system - use SELECT when loading games to toggle between like/love.
+* Added new 130% rendering speed as a per-game option.
+
 Version 1.3 - 13-Sep-2025 by wavemotion-dave
 * Use [[CPM]] in title of .dsk file to launch game via |cpm
 * Improved FDC emulation so games like BAT load

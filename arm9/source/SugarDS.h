@@ -15,6 +15,9 @@
 #include <string.h>
 #include "printf.h"
 
+#define PING_A (0x06860000)
+#define PING_B (0x06880000)
+
 extern u32 debug[0x10];
 extern u32 DX, DY;
 
@@ -33,7 +36,7 @@ extern int8 currentBrightness;
 extern u8 ram_highwater;
 extern u8 sna_last_motor;
 extern u8 sna_last_track;
-
+extern u8 backgroundRender;
 
 // These are the various special icons/menu operations
 #define MENU_CHOICE_NONE        0x00
@@ -232,6 +235,7 @@ extern u8 kbd_keys_pressed;
 extern u8 kbd_keys[12];
 extern u16 emuFps;
 extern u16 emuActFrames;
+extern u32 emuTotFrames;
 extern u16 timingFrames;
 extern u16 nds_key;
 extern u8  kbd_key;
