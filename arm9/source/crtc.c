@@ -65,8 +65,11 @@ int R52_INT_ON_VSYNC[]   __attribute__((section(".dtcm"))) = {28, 16, 32};
 u8 vSyncSeen             __attribute__((section(".dtcm"))) = 0;    // Set to '1' when we've seen a CRTC VSYNC
 u8 display_disable_in    __attribute__((section(".dtcm"))) = 0;    // Number of scanlines before we disable the output
 u8 b32K_Mode             __attribute__((section(".dtcm"))) = 0;    // Set to '1' if we are in 32K CRTC mode (wrap into next block of RAM)
-u8 pan_mode_offset       __attribute__((section(".dtcm"))) = 0;    // For the Mode 2 PAN/SCAN handling - offset position (horizontal)
-u16 pan_mode_scale       __attribute__((section(".dtcm"))) = 0;    // For the Mode 2 PAN/SCAN handling - scale (horizontal)
+
+u8  mode1_offset         __attribute__((section(".dtcm"))) = 0;    // For the Mode 1 PAN/SCAN handling - offset position (horizontal)
+u16 mode1_scale          __attribute__((section(".dtcm"))) = 0;    // For the Mode 1 PAN/SCAN handling - scale (horizontal)
+u8  mode2_offset         __attribute__((section(".dtcm"))) = 0;    // For the Mode 2 PAN/SCAN handling - offset position (horizontal)
+u16 mode2_scale          __attribute__((section(".dtcm"))) = 0;    // For the Mode 2 PAN/SCAN handling - scale (horizontal)
 
 void crtc_reset(void)
 {
@@ -79,7 +82,12 @@ void crtc_reset(void)
     VTAC = 0;
     DISPEN = 0;
     b32K_Mode = 0;
-    pan_mode_offset = 22;
+
+    mode1_offset = 0;
+    mode1_scale = 0;
+
+    mode2_offset = 22;
+    mode2_scale = 0;
 
     current_ds_line = 0;
     vsync_plus_two = 0;
@@ -443,6 +451,23 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             }
             else if ((RMR & 0x03) == 0x01) // Mode 1 (320x256)
             {
+                last_frame_mode1++;
+                if (myConfig.panAndScan != 0) // Pan and Scan enabled?
+                {
+                    if (mode1_offset)
+                    {
+                        offset = (offset+mode1_offset) & 0x47FF;
+                        // -------------------------------------------------------------
+                        // For the rare 32K video buffer - used by a few amazing games
+                        // -------------------------------------------------------------
+                        if (b32K_Mode)
+                        {
+                            if ((offset&0xFFF) >= 0x800) offset += 0x4000; // We address into the next bank of memory
+                        }
+                        offset &= 0x47FF;                                  // Wrap is always at the 2K boundary
+                    }
+                }
+                
                 last_frame_crtc1 = CRTC[1];
                 for (int x=0; x<(CRTC[1]); x++)
                 {
@@ -468,7 +493,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
             else if ((RMR & 0x03) == 0x02) // Mode 2 (640x256)
             {
                 last_frame_mode2++;
-                if (myConfig.mode2mode == 0) // Show compressed?
+                if (myConfig.panAndScan == 0) // Show compressed?
                 {
                     u8 limit = (CRTC[1] <= 48) ? CRTC[1] : 48;
                     for (int x=0; x<limit; x++)    // Best we can do is render 512 pixels
@@ -496,9 +521,9 @@ ITCM_CODE u8 crtc_render_screen_line(void)
                 }
                 else
                 {
-                    if (pan_mode_offset)
+                    if (mode2_offset)
                     {
-                        offset = (offset+pan_mode_offset) & 0x47FF;
+                        offset = (offset+mode2_offset) & 0x47FF;
                         // -------------------------------------------------------------
                         // For the rare 32K video buffer - used by a few amazing games
                         // -------------------------------------------------------------
@@ -511,7 +536,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
 
                     for (int x=0; x<40; x++)    // Best we can do is show 320 pixels
                     {
-                        if (x+pan_mode_offset < (CRTC[1]*2))
+                        if (x+mode2_offset < (CRTC[1]*2))
                         {
                             *vidBufDS++ = pre_inked_mode2a[pixelPtr2K[offset]];  // Fast draw pixel with pre-rendered lookup
                             *vidBufDS++ = pre_inked_mode2b[pixelPtr2K[offset]];  // Fast draw pixel with pre-rendered lookup

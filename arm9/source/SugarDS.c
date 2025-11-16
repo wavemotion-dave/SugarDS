@@ -105,8 +105,7 @@ u8 last_frame_crtc1  __attribute__((section(".dtcm"))) = 0;       // Tracking th
 u8 backgroundRender  __attribute__((section(".dtcm"))) = 0;       // Set to 1 to double-buffer the screen (DSi only)
 
 u32 last_frame_mode2  __attribute__((section(".dtcm"))) = 0;      // To track number of mode2 draws - for auto-scaling use...
-u32 last_frame_mode01 __attribute__((section(".dtcm"))) = 0;      // To track number of mode0 and mode1 draws - for auto-scaling use...
-
+u32 last_frame_mode1  __attribute__((section(".dtcm"))) = 0;      // To track number of mode1 draws - for auto-scaling use...
 
 u8 bStartSoundEngine = 0;      // Set to true to unmute sound after 1 frame of rendering...
 int bg0, bg1, bg0b, bg1b;      // Some vars for NDS background screen handling
@@ -117,8 +116,10 @@ u8 key_debounce = 0;           // A bit of key debounce to ensure the key is hel
 u8 last_special_key = 0;
 u8 last_special_key_dampen = 0;
 u8 last_kbd_key = 0;
-extern u8  pan_mode_offset;
-extern u16 pan_mode_scale;
+extern u8  mode2_offset;
+extern u16 mode2_scale;
+extern u8  mode1_offset;
+extern u16 mode1_scale;
 
 
 // The DS/DSi has 10 keys that can be mapped
@@ -195,14 +196,21 @@ u16 keyCoresp[MAX_KEY_OPTIONS] __attribute__((section(".dtcm"))) = {
     META_KBD_CURS_LF,
     META_KBD_CURS_RT,
     META_KBD_CURS_CPY, // 60
+    
+    META_KBD_BACKSLASH,// 61
+    META_KBD_ESCAPE,   // 62
 
     META_KBD_PAN_UP16,
     META_KBD_PAN_UP24,
-    META_KBD_PAN_UP32,
+    META_KBD_PAN_UP32, // 65
+    META_KBD_PAN_UP48,
+    META_KBD_PAN_UP64,
+    
     META_KBD_PAN_DN16,
-    META_KBD_PAN_DN24, // 65
-    META_KBD_PAN_DN32,
-    META_KBD_ESCAPE    // 67
+    META_KBD_PAN_DN24,
+    META_KBD_PAN_DN32, // 70
+    META_KBD_PAN_DN48,
+    META_KBD_PAN_DN64,
 };
 
 static char tmp[64];    // For various sprintf() calls
@@ -640,6 +648,13 @@ void DisplayStatusLine(bool bForce)
         DSPrint(1, 19, 6, (char*)" ");
         DSPrint(2, 23, 6, (char*)" ");
     }
+    
+    // Paste up the little left/right PAN/SCAN arrows
+    if (mode2_scale || mode1_scale)
+    {
+        DSPrint(0,  0, 2, (char*)"Z");
+        DSPrint(31, 0, 2, (char*)"Y");
+    }
 }
 
 // ---------------------------------
@@ -786,9 +801,9 @@ u8 handle_cpc_keyboard_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 
     if (iTy < 37)
     {
-             if (iTx < 90)  {if (pan_mode_offset > 0)  pan_mode_offset--;}
-        else if (iTx > 165) {if (pan_mode_offset < 48) pan_mode_offset++;}
-        else pan_mode_offset = 22;
+             if (iTx < 90)  {if (mode2_offset > 0)  mode2_offset--; if (mode1_offset > 0)  mode1_offset--;}
+        else if (iTx > 165) {if (mode2_offset < 48) mode2_offset++; if (mode1_offset < 16) mode1_offset++;}
+        else {mode2_offset = 22; mode1_offset = 8;}
         swiWaitForVBlank();
     }
     else
@@ -878,9 +893,9 @@ u8 handle_cpc_numpad_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 
     if (iTy < 37)
     {
-             if (iTx < 90)  {if (pan_mode_offset > 0)  pan_mode_offset--;}
-        else if (iTx > 165) {if (pan_mode_offset < 48) pan_mode_offset++;}
-        else pan_mode_offset = 22;
+             if (iTx < 90)  {if (mode2_offset > 0)  mode2_offset--;}
+        else if (iTx > 165) {if (mode2_offset < 48) mode2_offset++;}
+        else mode2_offset = 22;
         swiWaitForVBlank();
     }
     else
@@ -1157,22 +1172,53 @@ void SugarDS_main(void)
         {
             mode2_frames = 0;
         }
-
-        if (mode2_frames > 25) // A half second of mode2 frames in a row is enough to switch...
+        
+        static u8 mode1_frames = 0;
+        if (last_frame_mode1 > 128) // Did we draw than half the frames in mode1?
         {
-            if (myConfig.mode2mode) // Pan-and-Scan overrides normal autosize rules
-            {
-                pan_mode_scale = 320;
-            }
-            else if (myConfig.autoSize)
-            {
-                pan_mode_scale = 0;
-                myConfig.scaleX = 256;  // Max compression is best we can do
-            }
+            if (mode1_frames < 128) mode1_frames++;
         }
         else
         {
-            pan_mode_scale = 0;
+            mode1_frames = 0;
+        }
+        
+        if (myConfig.panAndScan)
+        {
+            if (mode1_frames > 25) // A half second of mode1 frames in a row is enough to switch...
+            {
+                mode2_scale = 0;
+                if (myConfig.panAndScan) // Pan-and-Scan overrides normal autosize rules
+                {
+                    mode1_scale = 320;
+                }
+                else if (myConfig.autoSize)
+                {
+                    mode1_scale = 0;
+                    myConfig.scaleX = 256;  // Max compression is best we can do
+                }
+            }
+            else if (mode2_frames > 25) // A half second of mode2 frames in a row is enough to switch...
+            {
+                mode1_scale = 0;
+                if (myConfig.panAndScan) // Pan-and-Scan overrides normal autosize rules
+                {
+                    mode2_scale = 320;
+                }
+                else if (myConfig.autoSize)
+                {
+                    mode2_scale = 0;
+                    myConfig.scaleX = 256;  // Max compression is best we can do
+                }
+            }
+            else
+            {
+                mode1_scale = mode2_scale = 0;
+            }
+        }
+        
+        if ((mode1_scale == 0) && (mode2_scale == 0))
+        {
             if (myConfig.autoSize)
             {
                      if (last_frame_crtc1 <= 24)  asm("nop");
@@ -1184,8 +1230,8 @@ void SugarDS_main(void)
             }
         }
 
-        // Reset counters...
-        last_frame_mode2 = last_frame_mode01 = 0;
+        // Reset frame mode counters...
+        last_frame_mode1 = last_frame_mode2 = 0;
 
         // -------------------------------------------------------------
         // Stuff to do once/second such as FPS display and Debug Data
@@ -1563,12 +1609,17 @@ void SugarDS_main(void)
 
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_CPY)  kbd_key  = KBD_KEY_CPY;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_ESCAPE)    kbd_key  = KBD_KEY_ESC;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_BACKSLASH) kbd_key  = KBD_KEY_BSL;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP16)  {temp_offset = -16;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP24)  {temp_offset = -24;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP32)  {temp_offset = -32;slide_dampen = 15;}
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP48)  {temp_offset = -48;slide_dampen = 15;}
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP64)  {temp_offset = -64;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN16)  {temp_offset =  16;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN24)  {temp_offset =  24;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN32)  {temp_offset =  32;slide_dampen = 15;}
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN48)  {temp_offset =  48;slide_dampen = 15;}
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN64)  {temp_offset =  64;slide_dampen = 15;}
 
                       if (kbd_key != 0)
                       {
@@ -1779,6 +1830,7 @@ void HandleBrightness(void)
     }
 }
 
+#define VCOUNT *((u16*)(0x4000006))
 ITCM_CODE void irqVBlank(void)
 {
     // Manage time
@@ -1791,6 +1843,7 @@ ITCM_CODE void irqVBlank(void)
     {  
         dmaCopyWordsAsynch(3, (u16*)((backgroundRender & 1) ? PING_A:PING_B), (u16*)0x06000000, 512*256);
         backgroundRender = 0;
+        VCOUNT = (VCOUNT - 50);  // Trickery! This will put the DSi back 50 scanlines and elongate the vBLANK period so it matches a 50Hz refresh rate (262 vs 312 scanlines)
     }
 
     int cxBG = ((s16)myConfig.offsetX << 8);
@@ -1798,10 +1851,15 @@ ITCM_CODE void irqVBlank(void)
     int xdxBG = ((320 / myConfig.scaleX) << 8) | (320 % myConfig.scaleX) ;
     int ydyBG = ((200 / myConfig.scaleY) << 8) | (200 % myConfig.scaleY);
     
-    if (pan_mode_scale) // Special scaline for pan-and-scan
+    if (mode2_scale) // Special scaline for pan-and-scan
     {
-        xdxBG = ((320 / pan_mode_scale) << 8) | (320 % pan_mode_scale) ;
+        xdxBG = ((320 / mode2_scale) << 8) | (320 % mode2_scale) ;
     }
+    
+    if (mode1_scale) // Special scaline for pan-and-scan
+    {
+        xdxBG = ((320 / mode1_scale) << 8) | (320 % mode1_scale);
+    }    
 
     REG_BG2X = cxBG;
     REG_BG2Y = cyBG;
@@ -1879,6 +1937,9 @@ int main(int argc, char **argv)
   // with the game that was selected later...
   // -----------------------------------------------------------------
   LoadConfig();
+  
+  // Do an initial load of the Favorites file
+  LoadFavorites();
 
   //  Handle command line argument... mostly for TWL++
   if  (argc > 1)

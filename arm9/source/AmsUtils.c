@@ -144,15 +144,19 @@ const char szKeyName[MAX_KEY_OPTIONS][16] = {
   "CURSOR LEFT",
   "CURSOR RIGHT",
   "CURSOR COPY", // 60
+  "KEYBOARD BACKSL",
+  "KEYBOARD ESC",
     
   "PAN UP 16",
   "PAN UP 24",
-  "PAN UP 32",
+  "PAN UP 32",   // 65
+  "PAN UP 48",
+  "PAN UP 64",
   "PAN DN 16",
-  "PAN DN 24",   // 65
-  "PAN DN 32",
-  
-  "KEYBOARD ESC",
+  "PAN DN 24",
+  "PAN DN 32",   // 70
+  "PAN DN 48",
+  "PAN DN 64",
 };
 
 
@@ -913,7 +917,7 @@ void SetDefaultGameConfig(void)
     myConfig.cpuAdjust   = 0;                           // No CPU adjustment by default
     myConfig.waveDirect  = 0;                           // Default is normal sound driver
     myConfig.screenTop   = 0;                           // Normal screen top position
-    myConfig.mode2mode   = 0;                           // Default to compressed 640
+    myConfig.panAndScan   = 0;                           // Default to compressed 640
     myConfig.diskWrite   = 1;                           // Default is to allow write back to SD
     myConfig.crtcDriver  = CRTC_DRV_STANDARD;           // Default is standard driver
     myConfig.reserved7   = 0;
@@ -1030,7 +1034,7 @@ const struct options_t Option_Table[2][20] =
                             "+11","+12","+13","+14","+15","+16"},                               &myConfig.screenTop,        17},
         {"NDS D-PAD",      {"NORMAL", "DIAGONALS", "SLIDE-N-GLIDE"},                            &myConfig.dpad,              3},
         {"GAME SPEED",     {"100%", "110%", "120%", "130%", "90%", "80%"},                      &myConfig.gameSpeed,         6},
-        {"MODE 2",         {"640 COMPRESS", "320 PAN+SCAN"},                                    &myConfig.mode2mode,         2},
+        {"MODE 1/2",       {"SCALE/COMPRESS", "320 PAN+SCAN"},                                  &myConfig.panAndScan,        2},
         {"R52  VSYNC",     {"NORMAL", "FORGIVING", "STRICT"},                                   &myConfig.r52IntVsync,       3},
         {"CPU ADJUST",     {"+0 (NONE)", "+1 CYCLES", "+2 CYCLES", "-4 CYCLES", 
                             "-3 CYCLES", "-2 CYCLES", "-1 CYCLES"},                             &myConfig.cpuAdjust,         7},

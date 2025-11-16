@@ -94,7 +94,7 @@ struct __attribute__((__packed__)) Config_t
     u8  cpuAdjust;
     u8  waveDirect;
     u8  screenTop;
-    u8  mode2mode;
+    u8  panAndScan;
     u8  diskWrite;
     u8  crtcDriver;
     u8  reserved7;
@@ -136,6 +136,7 @@ extern int ucGameAct;
 extern int ucGameChoice;
 
 extern void LoadConfig(void);
+extern void LoadFavorites(void);
 extern u8   showMessage(char *szCh1, char *szCh2);
 extern void sugarDSFindFiles();
 extern void sugarDSChangeOptions(void);

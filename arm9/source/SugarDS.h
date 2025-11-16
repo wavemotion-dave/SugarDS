@@ -29,8 +29,8 @@ extern u8 CRTC[0x20];
 extern u8 CRT_Idx;
 extern u32 R52;
 extern u32 border_color;
+extern u32 last_frame_mode1;
 extern u32 last_frame_mode2;
-extern u32 last_frame_mode01;
 extern u8 last_frame_crtc1;
 extern int8 currentBrightness;
 extern u8 ram_highwater;
@@ -123,16 +123,22 @@ extern u8 backgroundRender;
 #define META_KBD_CURS_LF    0xF034
 #define META_KBD_CURS_RT    0xF035
 #define META_KBD_CURS_CPY   0xF036
+#define META_KBD_BACKSLASH  0xF037
+#define META_KBD_ESCAPE     0xF038
 
-#define META_KBD_PAN_UP16   0xF037
-#define META_KBD_PAN_UP24   0xF038
-#define META_KBD_PAN_UP32   0xF039
-#define META_KBD_PAN_DN16   0xF03A
-#define META_KBD_PAN_DN24   0xF03B
-#define META_KBD_PAN_DN32   0xF03C
-#define META_KBD_ESCAPE     0xF03D
+#define META_KBD_PAN_UP16   0xF039
+#define META_KBD_PAN_UP24   0xF03A
+#define META_KBD_PAN_UP32   0xF03B
+#define META_KBD_PAN_UP48   0xF03C
+#define META_KBD_PAN_UP64   0xF03D
 
-#define MAX_KEY_OPTIONS     68
+#define META_KBD_PAN_DN16   0xF03E
+#define META_KBD_PAN_DN24   0xF03F
+#define META_KBD_PAN_DN32   0xF040
+#define META_KBD_PAN_DN48   0xF041
+#define META_KBD_PAN_DN64   0xF042
+
+#define MAX_KEY_OPTIONS     73
 
 // -----------------------------
 // For the Full Keyboard...
