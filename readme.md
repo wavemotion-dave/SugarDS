@@ -109,6 +109,12 @@ Filenames can be no longer than 160 characters (and the DS can only display 32 a
 the title of a game as needed) - so please keep your filenames on the shorter side. You can have no more 
 than 1024 game files in a directory - but can have as many directories as you want.
 
+Loading Games :
+-----------------------
+TBD
+
+![image](./png/loadgame.png)
+
 
 Configuration :
 -----------------------

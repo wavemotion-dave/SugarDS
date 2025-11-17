@@ -54,9 +54,12 @@ u8 RAM_Memory[0x20000]      ALIGN(32) = {0};  // The Z80 Memory is 64K but the A
 u8 ROM_Memory[MAX_ROM_SIZE] ALIGN(32) = {0};  // This is where we keep the raw untouched file as read from the SD card (.DSK, .SNA)
 
 s16 temp_offset   __attribute__((section(".dtcm"))) = 0;
+s16 perm_offset   __attribute__((section(".dtcm"))) = 0;
 u16 slide_dampen  __attribute__((section(".dtcm"))) = 0;
 u8 JITTER[]       __attribute__((section(".dtcm"))) = {0, 64, 128};
 u8 debugger_pause __attribute__((section(".dtcm"))) = 0;
+u8 offset_allowed __attribute__((section(".dtcm"))) = 1;
+
 // ----------------------------------------------------------------------------
 // We track the most recent directory and file loaded... both the initial one
 // (for the CRC32) and subsequent additional tape loads (Side 2, Side B, etc)
@@ -116,10 +119,6 @@ u8 key_debounce = 0;           // A bit of key debounce to ensure the key is hel
 u8 last_special_key = 0;
 u8 last_special_key_dampen = 0;
 u8 last_kbd_key = 0;
-extern u8  mode2_offset;
-extern u16 mode2_scale;
-extern u8  mode1_offset;
-extern u16 mode1_scale;
 
 
 // The DS/DSi has 10 keys that can be mapped
@@ -186,31 +185,37 @@ u16 keyCoresp[MAX_KEY_OPTIONS] __attribute__((section(".dtcm"))) = {
     META_KBD_SLASH,
     META_KBD_SPACE,  //50
     META_KBD_RETURN,
+    META_KBD_BACKSLASH,
+    META_KBD_ESCAPE,
+    META_KBD_RESERVED1,
+    META_KBD_RESERVED2,// 55
 
     META_KBD_F1,
     META_KBD_F2,
     META_KBD_F3,
-    META_KBD_F4,      // 55
-    META_KBD_CURS_UP,
+    META_KBD_F4,
+    META_KBD_CURS_UP,  // 60
     META_KBD_CURS_DN,
     META_KBD_CURS_LF,
     META_KBD_CURS_RT,
-    META_KBD_CURS_CPY, // 60
-    
-    META_KBD_BACKSLASH,// 61
-    META_KBD_ESCAPE,   // 62
+    META_KBD_CURS_CPY,
 
-    META_KBD_PAN_UP16,
+    META_KBD_PAN_UP16, // 65
     META_KBD_PAN_UP24,
-    META_KBD_PAN_UP32, // 65
+    META_KBD_PAN_UP32,
     META_KBD_PAN_UP48,
     META_KBD_PAN_UP64,
-    
-    META_KBD_PAN_DN16,
+
+    META_KBD_PAN_DN16, // 70
     META_KBD_PAN_DN24,
-    META_KBD_PAN_DN32, // 70
+    META_KBD_PAN_DN32,
     META_KBD_PAN_DN48,
     META_KBD_PAN_DN64,
+
+    META_KBD_OFFSET16, // 75
+    META_KBD_OFFSET32,
+    META_KBD_OFFSET48,
+    META_KBD_OFFSET64, // 78
 };
 
 static char tmp[64];    // For various sprintf() calls
@@ -398,7 +403,7 @@ void sound_chip_reset()
   floppy_sound = 0;                  // For when we play the disk seek SFX
   floppy_action = 0;                 // Floppy read or write flag
 
-  memset(mixbufAY, 0x00, sizeof(mixbufAY)); 
+  memset(mixbufAY, 0x00, sizeof(mixbufAY));
 }
 
 // -----------------------------------------------------------------------
@@ -448,6 +453,9 @@ void ResetAmstrad(void)
   bStartIn = 0;
   bottom_screen = 0;
   debugger_pause = 0;
+  temp_offset = 0;
+  perm_offset = 0;
+  offset_allowed = 1;
 }
 
 //*********************************************************************************
@@ -581,7 +589,7 @@ void DisplayStatusLine(bool bForce)
             }
         }
     }
-    
+
     static u8 bClearWriteText = 0;
     if (bClearWriteText)
     {
@@ -648,7 +656,7 @@ void DisplayStatusLine(bool bForce)
         DSPrint(1, 19, 6, (char*)" ");
         DSPrint(2, 23, 6, (char*)" ");
     }
-    
+
     // Paste up the little left/right PAN/SCAN arrows
     if (mode2_scale || mode1_scale)
     {
@@ -678,11 +686,11 @@ void DiskInsert(char *filename, u8 bForceRead)
     }
 
     // If we were an SNA and we've loaded a new disk, setup track/motor
-    if (sna_last_motor || sna_last_track) 
+    if (sna_last_motor || sna_last_track)
     {
         fdc.Motor = 1;
         ChangeCurrTrack(sna_last_track);
-        
+
         sna_last_track = sna_last_motor = 0;
     }
 }
@@ -720,7 +728,7 @@ void MiniMenuShow(bool bClearScreen, u8 sel)
     DSPrint(8,9+mini_menu_items,(sel==mini_menu_items)?2:0,  " DEFINE KEYS   ");  mini_menu_items++;
     DSPrint(8,9+mini_menu_items,(sel==mini_menu_items)?2:0,  " SWAP   DISK   ");  mini_menu_items++;
     DSPrint(8,9+mini_menu_items,(sel==mini_menu_items)?2:0,  " EXIT   MENU   ");  mini_menu_items++;
-    
+
     DisplayFileName();
 }
 
@@ -893,9 +901,9 @@ u8 handle_cpc_numpad_press(u16 iTx, u16 iTy)  // Amstrad CPC keyboard
 
     if (iTy < 37)
     {
-             if (iTx < 90)  {if (mode2_offset > 0)  mode2_offset--;}
-        else if (iTx > 165) {if (mode2_offset < 48) mode2_offset++;}
-        else mode2_offset = 22;
+             if (iTx < 90)  {if (mode2_offset > 0)  mode2_offset--; if (mode1_offset > 0)  mode1_offset--;}
+        else if (iTx > 165) {if (mode2_offset < 48) mode2_offset++; if (mode1_offset < 16) mode1_offset++;}
+        else {mode2_offset = 22; mode1_offset = 8;}
         swiWaitForVBlank();
     }
     else
@@ -1172,7 +1180,7 @@ void SugarDS_main(void)
         {
             mode2_frames = 0;
         }
-        
+
         static u8 mode1_frames = 0;
         if (last_frame_mode1 > 128) // Did we draw than half the frames in mode1?
         {
@@ -1182,7 +1190,7 @@ void SugarDS_main(void)
         {
             mode1_frames = 0;
         }
-        
+
         if (myConfig.panAndScan)
         {
             if (mode1_frames > 25) // A half second of mode1 frames in a row is enough to switch...
@@ -1216,7 +1224,7 @@ void SugarDS_main(void)
                 mode1_scale = mode2_scale = 0;
             }
         }
-        
+
         if ((mode1_scale == 0) && (mode2_scale == 0))
         {
             if (myConfig.autoSize)
@@ -1316,10 +1324,10 @@ void SugarDS_main(void)
             }
         }
         emuActFrames++;
-        
+
         // Render the previous frame as we work on the next one...
         if (isDSiMode())
-        {        
+        {
             backgroundRender = 0x80 | (emuTotFrames & 1);
         }
         emuTotFrames++;
@@ -1621,6 +1629,11 @@ void SugarDS_main(void)
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN48)  {temp_offset =  48;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN64)  {temp_offset =  64;slide_dampen = 15;}
 
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_OFFSET16)  {if (offset_allowed) {perm_offset =  (perm_offset ? 0:-16); offset_allowed = 0;}}
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_OFFSET32)  {if (offset_allowed) {perm_offset =  (perm_offset ? 0:-32); offset_allowed = 0;}}
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_OFFSET48)  {if (offset_allowed) {perm_offset =  (perm_offset ? 0:-48); offset_allowed = 0;}}
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_OFFSET64)  {if (offset_allowed) {perm_offset =  (perm_offset ? 0:-64); offset_allowed = 0;}}
+
                       if (kbd_key != 0)
                       {
                           kbd_keys[kbd_keys_pressed++] = kbd_key;
@@ -1637,6 +1650,7 @@ void SugarDS_main(void)
           if (slide_n_glide_key_left)  slide_n_glide_key_left--;
           if (slide_n_glide_key_right) slide_n_glide_key_right--;
           last_mapped_key = 0;
+          offset_allowed = 1;
       }
 
       if (dampen) dampen--;
@@ -1835,31 +1849,31 @@ ITCM_CODE void irqVBlank(void)
 {
     // Manage time
     vusCptVBL++;
-    
+
     // --------------------------------------------------------------------------------------
     // Check if we are double-buffering and copy the buffered screen to the main LCD display
     // --------------------------------------------------------------------------------------
     if (backgroundRender)
-    {  
+    {
         dmaCopyWordsAsynch(3, (u16*)((backgroundRender & 1) ? PING_A:PING_B), (u16*)0x06000000, 512*256);
         backgroundRender = 0;
         VCOUNT = (VCOUNT - 50);  // Trickery! This will put the DSi back 50 scanlines and elongate the vBLANK period so it matches a 50Hz refresh rate (262 vs 312 scanlines)
     }
 
     int cxBG = ((s16)myConfig.offsetX << 8);
-    int cyBG = ((s16)myConfig.offsetY+temp_offset) << 8;
+    int cyBG = ((s16)myConfig.offsetY+temp_offset+perm_offset) << 8;
     int xdxBG = ((320 / myConfig.scaleX) << 8) | (320 % myConfig.scaleX) ;
     int ydyBG = ((200 / myConfig.scaleY) << 8) | (200 % myConfig.scaleY);
-    
+
     if (mode2_scale) // Special scaline for pan-and-scan
     {
         xdxBG = ((320 / mode2_scale) << 8) | (320 % mode2_scale) ;
     }
-    
+
     if (mode1_scale) // Special scaline for pan-and-scan
     {
         xdxBG = ((320 / mode1_scale) << 8) | (320 % mode1_scale);
-    }    
+    }
 
     REG_BG2X = cxBG;
     REG_BG2Y = cyBG;
@@ -1937,7 +1951,7 @@ int main(int argc, char **argv)
   // with the game that was selected later...
   // -----------------------------------------------------------------
   LoadConfig();
-  
+
   // Do an initial load of the Favorites file
   LoadFavorites();
 

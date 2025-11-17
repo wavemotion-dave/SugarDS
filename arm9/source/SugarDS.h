@@ -37,6 +37,10 @@ extern u8 ram_highwater;
 extern u8 sna_last_motor;
 extern u8 sna_last_track;
 extern u8 backgroundRender;
+extern u8  mode2_offset;
+extern u16 mode2_scale;
+extern u8  mode1_offset;
+extern u16 mode1_scale;
 
 // These are the various special icons/menu operations
 #define MENU_CHOICE_NONE        0x00
@@ -114,31 +118,39 @@ extern u8 backgroundRender;
 #define META_KBD_SLASH      0xF02B
 #define META_KBD_SPACE      0xF02C
 #define META_KBD_RETURN     0xF02D
-#define META_KBD_F1         0xF02E
-#define META_KBD_F2         0xF02F
-#define META_KBD_F3         0xF030
-#define META_KBD_F4         0xF031
-#define META_KBD_CURS_UP    0xF032
-#define META_KBD_CURS_DN    0xF033
-#define META_KBD_CURS_LF    0xF034
-#define META_KBD_CURS_RT    0xF035
-#define META_KBD_CURS_CPY   0xF036
-#define META_KBD_BACKSLASH  0xF037
-#define META_KBD_ESCAPE     0xF038
+#define META_KBD_BACKSLASH  0xF02E
+#define META_KBD_ESCAPE     0xF02F
+#define META_KBD_RESERVED1  0xF030
+#define META_KBD_RESERVED2  0xF031
 
-#define META_KBD_PAN_UP16   0xF039
-#define META_KBD_PAN_UP24   0xF03A
-#define META_KBD_PAN_UP32   0xF03B
-#define META_KBD_PAN_UP48   0xF03C
-#define META_KBD_PAN_UP64   0xF03D
+#define META_KBD_F1         0xF032
+#define META_KBD_F2         0xF033
+#define META_KBD_F3         0xF034
+#define META_KBD_F4         0xF035
+#define META_KBD_CURS_UP    0xF036
+#define META_KBD_CURS_DN    0xF037
+#define META_KBD_CURS_LF    0xF038
+#define META_KBD_CURS_RT    0xF039
+#define META_KBD_CURS_CPY   0xF03A
 
-#define META_KBD_PAN_DN16   0xF03E
-#define META_KBD_PAN_DN24   0xF03F
-#define META_KBD_PAN_DN32   0xF040
-#define META_KBD_PAN_DN48   0xF041
-#define META_KBD_PAN_DN64   0xF042
+#define META_KBD_PAN_UP16   0xF03B
+#define META_KBD_PAN_UP24   0xF03C
+#define META_KBD_PAN_UP32   0xF03D
+#define META_KBD_PAN_UP48   0xF03E
+#define META_KBD_PAN_UP64   0xF03F
 
-#define MAX_KEY_OPTIONS     73
+#define META_KBD_PAN_DN16   0xF040
+#define META_KBD_PAN_DN24   0xF041
+#define META_KBD_PAN_DN32   0xF042
+#define META_KBD_PAN_DN48   0xF043
+#define META_KBD_PAN_DN64   0xF044
+
+#define META_KBD_OFFSET16   0xF045
+#define META_KBD_OFFSET32   0xF046
+#define META_KBD_OFFSET48   0xF047
+#define META_KBD_OFFSET64   0xF048
+
+#define MAX_KEY_OPTIONS     79
 
 // -----------------------------
 // For the Full Keyboard...
@@ -220,6 +232,10 @@ extern u32 R52;
 extern u32 VTAC;
 extern u8  DISPEN;
 
+extern s16 temp_offset;
+extern s16 perm_offset;
+extern u16 slide_dampen;
+
 extern int current_ds_line;
 extern u32 vsync_plus_two;
 extern u32 r12_screen_offset;
@@ -241,8 +257,8 @@ extern u8 kbd_keys_pressed;
 extern u8 kbd_keys[12];
 extern u16 emuFps;
 extern u16 emuActFrames;
-extern u32 emuTotFrames;
 extern u16 timingFrames;
+extern u32 emuTotFrames;
 extern u16 nds_key;
 extern u8  kbd_key;
 extern u16 vusCptVBL;

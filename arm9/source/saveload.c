@@ -25,7 +25,7 @@
 #include "fdc.h"
 #include "lzav.h"
 
-#define SUGAR_SAVE_VER   0x0004     // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
+#define SUGAR_SAVE_VER   0x0005     // Change this if the basic format of the .SAV file changes. Invalidates older .sav files.
 
 /*********************************************************************************
  * Save the current state - save everything we need to a single .sav file.
@@ -73,7 +73,9 @@ void amstradSaveState()
     if (retVal) retVal = fwrite(&CPU, sizeof(CPU), 1, handle);
 
     // Write AY Chip info
-    if (retVal) retVal = fwrite(&myAY, sizeof(myAY), 1, handle);
+    u8 ay_save_buffer[64];  // The AY save state is only like 16 bytes... so this is more than enough...
+    ay38910SaveState(ay_save_buffer, &myAY);
+    retVal = fwrite(ay_save_buffer, sizeof(ay_save_buffer), 1, handle);
     
     // Write the FDC floppy struct
     if (retVal) retVal = fwrite(&fdc, sizeof(fdc), 1, handle);
@@ -108,6 +110,15 @@ void amstradSaveState()
     if (retVal) retVal = fwrite(&RMR,               sizeof(RMR),                1, handle);
     if (retVal) retVal = fwrite(&PENR,              sizeof(PENR),               1, handle);
     if (retVal) retVal = fwrite(&UROM,              sizeof(UROM),               1, handle);
+    
+    if (retVal) retVal = fwrite(&temp_offset,       sizeof(temp_offset),        1, handle);
+    if (retVal) retVal = fwrite(&perm_offset,       sizeof(perm_offset),        1, handle);
+    if (retVal) retVal = fwrite(&slide_dampen,      sizeof(slide_dampen),       1, handle);
+    
+    if (retVal) retVal = fwrite(&mode1_scale,       sizeof(mode1_scale),        1, handle);
+    if (retVal) retVal = fwrite(&mode1_offset,      sizeof(mode1_offset),       1, handle);
+    if (retVal) retVal = fwrite(&mode2_scale,       sizeof(mode1_scale),        1, handle);
+    if (retVal) retVal = fwrite(&mode2_offset,      sizeof(mode1_offset),       1, handle);    
     
     if (retVal) retVal = fwrite(&border_color,      sizeof(border_color),       1, handle);
     if (retVal) retVal = fwrite(INK,                sizeof(INK),                1, handle);
@@ -226,7 +237,9 @@ void amstradLoadState()
             if (retVal) retVal = fread(&CPU, sizeof(CPU), 1, handle);
 
             // Read AY Chip info
-            if (retVal) retVal = fread(&myAY, sizeof(myAY), 1, handle);
+            u8 ay_save_buffer[64];  // The AY save state is only like 16 bytes... so this is more than enough...
+            retVal = fread(ay_save_buffer, sizeof(ay_save_buffer), 1, handle);
+            ay38910LoadState(&myAY, ay_save_buffer);
             
             // Read the FDC floppy struct
             if (retVal) retVal = fread(&fdc, sizeof(fdc), 1, handle);
@@ -263,6 +276,15 @@ void amstradLoadState()
             if (retVal) retVal = fread(&PENR,              sizeof(PENR),               1, handle);
             if (retVal) retVal = fread(&UROM,              sizeof(UROM),               1, handle);
             
+            if (retVal) retVal = fread(&temp_offset,       sizeof(temp_offset),        1, handle);
+            if (retVal) retVal = fread(&perm_offset,       sizeof(perm_offset),        1, handle);
+            if (retVal) retVal = fread(&slide_dampen,      sizeof(slide_dampen),       1, handle);
+
+            if (retVal) retVal = fread(&mode1_scale,       sizeof(mode1_scale),        1, handle);
+            if (retVal) retVal = fread(&mode1_offset,      sizeof(mode1_offset),       1, handle);
+            if (retVal) retVal = fread(&mode2_scale,       sizeof(mode1_scale),        1, handle);
+            if (retVal) retVal = fread(&mode2_offset,      sizeof(mode1_offset),       1, handle);    
+
             if (retVal) retVal = fread(&border_color,      sizeof(border_color),       1, handle);
             if (retVal) retVal = fread(INK,                sizeof(INK),                1, handle);
             if (retVal) retVal = fread(ink_map,            sizeof(ink_map),            1, handle);
@@ -317,7 +339,6 @@ void amstradLoadState()
                     (void)lzav_decompress( CompressBuffer, upper_ram_block, comp_len, 0x10000 );
                 }
             }
-            
 
             // And put the memory pointers back in place...
             ConfigureMemory();

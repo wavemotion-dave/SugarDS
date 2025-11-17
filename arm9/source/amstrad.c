@@ -239,7 +239,7 @@ ITCM_CODE void ConfigureMemory(void)
     // so there is less chance of the two memory ends meeting and causing
     // a catastrophe of biblical proportions.
     // ------------------------------------------------------------------
-    if (((MMR >> 3) & 7) > ram_highwater) ram_highwater = ((MMR >> 3) & 7);    
+    if (((MMR >> 3) & 7) > ram_highwater) ram_highwater = ((MMR >> 3) & 7);
     switch ((MMR >> 3) & 7)
     {
         case 0: upper_ram_block = RAM_Memory+0x10000; break;
@@ -361,7 +361,7 @@ ITCM_CODE void ConfigureMemory(void)
 
     // ------------------------------------------------------------------------
     // And after all is said and done above, the last thing we do is check if
-    // any Dandanator Mini cart memory is mapped in which overrides everything 
+    // any Dandanator Mini cart memory is mapped in which overrides everything
     // else... but only for memory reads (writes always go to RAM).
     //
     // Registers B and C are read by the CPLD as follows:
@@ -450,7 +450,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
             else // Register
             {
                 u8 reg_val = 0x00;
-                
+
                 // Registers 12-17 can be read-back on CRTC 0
                 if (CRT_Idx == 12) reg_val = CRTC[CRT_Idx] & 0x3F;
                 if (CRT_Idx == 13) reg_val = CRTC[CRT_Idx] & 0xFF;
@@ -458,7 +458,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                 if (CRT_Idx == 15) reg_val = CRTC[CRT_Idx] & 0xFF;
                 if (CRT_Idx == 16) reg_val = CRTC[CRT_Idx] & 0x3F;
                 if (CRT_Idx == 17) reg_val = CRTC[CRT_Idx] & 0xFF;
-                
+
                 // For CRTC 0 all other registers return 0x00
                 return reg_val;
             }
@@ -629,7 +629,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
                 break;
         }
     }
-    
+
     return 0xFF;  // Unused port returns 0xFF
 }
 
@@ -656,7 +656,7 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                 if ((portC & 0xC0) == 0xC0) // AY Register Select
                 {
                     if (portA < 16) ay38910IndexW(portA & 0xF, &myAY);
-                }                
+                }
                 break;
 
             case 0x02:
@@ -698,7 +698,7 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
                 {
                     // CPC will clear the latch on a direction change of PortA
                     if ((portDIR & 0x10) != (Value & 0x10))
-                    {                    
+                    {
                         portC = 0x00;
                     }
                     portDIR = Value;
@@ -852,7 +852,7 @@ void amstrad_reset(void)
     crtc_reset();
 
     memset(RAM_Memory, 0x00, sizeof(RAM_Memory));
-    
+
     ram_highwater = 0;
 
     CPU.PC.W            = 0x0000;   // Z80 entry point
@@ -863,7 +863,7 @@ void amstrad_reset(void)
     portDIR             = 0x00;
 
     scanline_count = 1;
-   
+
     sna_last_motor = 0;
     sna_last_track = 0;
 
@@ -878,10 +878,14 @@ void amstrad_reset(void)
     compute_pre_inked(0);
     compute_pre_inked(1);
     compute_pre_inked(2);
-    
+
     if (amstrad_mode == MODE_DSK)
     {
+        // ---------------------------------------------------
         // Check if this is MEGABLASTERS 2020 Re-Release
+        // This needs a patch to get it past the CRCT checks
+        // since this emulation is not accurate enough...
+        // ---------------------------------------------------
         if (getCRC32(ROM_Memory+0x100, 0x1000) == 0xC7119924)
         {
             amstrad_mode = MODE_MEG;
@@ -891,8 +895,7 @@ void amstrad_reset(void)
             DiskInsert(initial_file, false);
         }
     }
-    
-    
+
     if (amstrad_mode == MODE_CPR)
     {
         CartLoad();
@@ -909,7 +912,7 @@ void amstrad_reset(void)
         {
             memcpy(ROM_Memory, MEGALOAD, sizeof(MEGALOAD));
         }
-        
+
         // ----------------------------------
         // The memory .SNA snapshot format.
         // ----------------------------------
@@ -993,7 +996,7 @@ void amstrad_reset(void)
         //portA = ROM_Memory[0x56];
         //portB = ROM_Memory[0x57];
         portC = ROM_Memory[0x58];
-        
+
         // Some disk status if available
         sna_last_motor = ROM_Memory[0x9C];
         sna_last_track = ROM_Memory[0x9D];
@@ -1006,7 +1009,7 @@ void amstrad_reset(void)
         ay38910IndexW(ROM_Memory[0x5A], &myAY);
 
         u32 dump_size = ROM_Memory[0x6B] * 1024;
-        
+
         if (dump_size > 0)
         {
             memcpy(RAM_Memory, ROM_Memory+0x100, dump_size);
@@ -1075,12 +1078,12 @@ void amstrad_reset(void)
                     }
                 }
             }
-            
+
             // ------------------------------------------------------------------------------------
             // Finally, check for any extended memory blocks 2-8... For possible 512K expanded SNA
             // ------------------------------------------------------------------------------------
             for (int ex_mem = 0; ex_mem < 7; ex_mem++)
-            {            
+            {
                 romPtr += comp_size;
                 if ((romPtr[0] == 'M') && (romPtr[1] == 'E') && (romPtr[2] == 'M') && (romPtr[3] == '2'+ex_mem))
                 {
@@ -1112,12 +1115,12 @@ void amstrad_reset(void)
                 }
             }
         }
-        
+
         // If MEGABLASTERS, switch back the original diskette
         if (amstrad_mode == MODE_MEG)
         {
             DiskInsert(initial_file, true);
-        }        
+        }
     }
 
     return;
@@ -1129,7 +1132,7 @@ void amstrad_reset(void)
 // the emulation has executed the last line of the frame.
 //
 // We also process 1 line worth of Audio and render one screen line for
-// the CRTC display controller. This is a carefully choreographed dance 
+// the CRTC display controller. This is a carefully choreographed dance
 // between the CRTC controller, audio processor and CPU - and as with most
 // emulation - it's not perfect. We have a few tweaks/tricks that can be
 // configured to help keep things in alignment and keep the game running.
@@ -1154,7 +1157,7 @@ ITCM_CODE u32 amstrad_run(void)
     // Finish the scanline plus any user-called for adjustment...
     CPU.Target += (128+CPU_ADJUST[myConfig.cpuAdjust]);
     ExecZ80(CPU.Target);
-    
+
     if (vsync) // Will return non-zero if VSYNC started
     {
         if (++refresh_tstates & 0x10) // Every 16 Frames, reset counters to prevent overflow
@@ -1162,13 +1165,13 @@ ITCM_CODE u32 amstrad_run(void)
             refresh_tstates = 0;
             CPU.TStates = CPU.TStates - CPU.Target;
             CPU.Target = 0;
-            
+
             // ---------------------------------------------------------------------------
             // If we came up significantly short we make an attempt to adjust the VCC to
-            // put the CPU and CRTC back into alignment. Due to the line-based emulation, 
+            // put the CPU and CRTC back into alignment. Due to the line-based emulation,
             // if things are not firing perfectly on games that have very tight timings,
-            // we can end up with a mess. This is a last ditch effort to get the system 
-            // running by skewing the CRTC VCC counter and the CPU line-based emulation. 
+            // we can end up with a mess. This is a last ditch effort to get the system
+            // running by skewing the CRTC VCC counter and the CPU line-based emulation.
             // The one game that definitely is improved by this is Galactic Tomb 128K.
             // ---------------------------------------------------------------------------
             if (scanline_count < (250 * 16))
@@ -1181,7 +1184,7 @@ ITCM_CODE u32 amstrad_run(void)
         }
     }
     scanline_count++;
-    
+
     return vsync; // Return '1' if end of frame.. '0' if not end of frame
 }
 

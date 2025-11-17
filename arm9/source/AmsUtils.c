@@ -132,31 +132,39 @@ const char szKeyName[MAX_KEY_OPTIONS][16] = {
   "KEYBOARD ATSIGN",
   "KEYBOARD SLASH",
   "KEYBOARD SPACE",  // 50
-  "KEYBOARD RETURN", // 51
+  "KEYBOARD RETURN",
+  "KEYBOARD BACKSL",
+  "KEYBOARD ESC",
+  "KEYBOARD RES1",
+  "KEYBOARD RES2",  // 55
   
   "KEYBOARD F1",
   "KEYBOARD F2",
   "KEYBOARD F3",
-  "KEYBOARD F4", // 55
+  "KEYBOARD F4",
   
-  "CURSOR UP",
+  "CURSOR UP",     // 60
   "CURSOR DOWN",
   "CURSOR LEFT",
   "CURSOR RIGHT",
-  "CURSOR COPY", // 60
-  "KEYBOARD BACKSL",
-  "KEYBOARD ESC",
+  "CURSOR COPY",
     
-  "PAN UP 16",
+  "PAN UP 16",   // 65
   "PAN UP 24",
-  "PAN UP 32",   // 65
+  "PAN UP 32",
   "PAN UP 48",
   "PAN UP 64",
-  "PAN DN 16",
+  
+  "PAN DN 16",   // 70
   "PAN DN 24",
-  "PAN DN 32",   // 70
+  "PAN DN 32",
   "PAN DN 48",
   "PAN DN 64",
+  
+  "OFFSET 16",  // 75
+  "OFFSET 32",
+  "OFFSET 48",
+  "OFFSET 64",  // 78
 };
 
 
