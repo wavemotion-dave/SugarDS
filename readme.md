@@ -166,6 +166,23 @@ The shoulder buttons are special:
 Shoulder button L + D-Pad for offset
 Shoulder button R + D-Pad for scale (turn off auto-scale)
 
+Pan/Scan and Offset Handling :
+-----------------------
+Sadly, the DS screen at 256x192 pixels is no match for the Amstrad CPC which utilizes one of three modes:
+
+Mode 0: 160x200 in 16 colors
+Mode 1: 320x200 in 4 colors
+Mode 1: 640x200 in 2 colors
+
+Further, the 200 vertical pixels is often extended via programming techniques that allow for even more vertical 
+resolution - I've seen some games like Bomb Jack Extra Sugar and the official Ocean Donkey Kong that utilize as
+much as 256 pixels of vertical resolution - and we simply can't display that many pixel rows on our poor DS.
+
+To that end, you will have to get creative and understand the Pan Up/Down, Offset and Pan-and-Scan features
+I've added to this emulator.
+
+![image](./png/scale1.png)  ![image](./png/scale2.png)
+
 It's critical that you use the L/R buttons to shift/scale the screen as the Amstrad
 CPC will often utilize more pixels than the DS has resolution (192 vertical pixels)
 so you will be forced to either compress (squash) the screen or else position the 
