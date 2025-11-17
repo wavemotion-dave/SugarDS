@@ -186,7 +186,11 @@ CPC will often utilize more pixels than the DS has resolution (192 vertical pixe
 so you will be forced to either compress (squash) the screen or else position the 
 screen carefully and map one of the buttons to PAN UP or PAN DOWN the screen briefly.
 This works really well for games that show status or score at the top or bottom of 
-the screen but otherwise doesn't really affect the main gameplay area. 
+the screen but otherwise doesn't really affect the main gameplay area. I tend to use the X button
+to PAN UP or PAN DOWN depending on where the score/status portion of the screen is displayed
+for a given game.  Some games you may want to map one button to PAN UP and another to PAN DOWN 
+and keep the central part of the game visible on the main display. Experiment and you should be able
+to find combinations that allow a great many Amstrad CPC games to play well enough to enjoy!
 
 ![image](./png/scale1.png)
 ![image](./png/scale2.png)
