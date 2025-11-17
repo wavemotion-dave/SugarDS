@@ -146,10 +146,6 @@ necessary to get games running as close as possible to real hardware.
 
 A number of commercial games will be auto-recognized and will have some tweaks automatically selected so they run as close to perfect as I can get them.
 
-Mode 2 (up to 640 horizontal pixels) is a bitch for the poor little DS with only 256 pixel resolution. To that end, we have a mode 2 setting called 
-'PAN+SCAN' which renders the screen much bigger but requires that you press the upper left/right (where the AMSTRAD logo is) of the touch screen to 
-scroll left/right. This will allow games like Orion Prime to be playable so you can actually read the emails you're getting in-game.
-
 One option that can be handy for certian ladder or maze games is the D-Pad "Slide-n-Glide" which was designed originally for my ZX Spectrum emulator and
 specifically for Chuckie Egg. Sometimes with climbing/maze games it's hard to make the exact turn onto a ladder. With 'Slide-n-Glide', the controls will be
 more forgiving by continuing to move in the Left/Right or Up/Down direction for a few more frames while another direction is pressed. This makes it much (much!)
@@ -204,7 +200,9 @@ This scales the screen 1:1 but that means some graphics will be off the left/rig
 DS display. touching the title bar anywhere near the arrows (the hit-box here is much larger than
 the arrow indicators) you can shift the screen left/right. This makes playing some adventure games
 easier as you can more cleanly read the text rendering and the panning left/right can be done at 
-lesiure. 
+lesiure. This will allow games like Orion Prime to be playable so you can actually read the emails 
+you're getting in-game.
+
 
 DISK Support :
 -----------------------
