@@ -112,7 +112,7 @@ than 1024 game files in a directory - but can have as many directories as you wa
 Loading Games :
 -----------------------
 When loading games, you can use the SELECT button on your DS to toggle a game between 'like' (yellow heart) 
-and 'love' (red heart). These will auto-persist so you can alawys come back and find your favorite games.
+and 'love' (red heart). These will auto-persist so you can always come back and find your favorite games.
 
 ![image](./png/loadgame.png)
 
