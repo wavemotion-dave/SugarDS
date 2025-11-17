@@ -195,6 +195,16 @@ to find combinations that allow a great many Amstrad CPC games to play well enou
 ![image](./png/scale1.png)
 ![image](./png/scale2.png)
 
+Another tool in the toolbox is Pan-and-Scan mode. When this is enabled in the main options for a
+given game, two little left/right arrow icons appear on the title bar in the touch-screen area.
+
+![image](./png/panscan.png)
+
+This scales the screen 1:1 but that means some graphics will be off the left/right sides of the 
+DS display. touching the title bar anywhere near the arrows (the hit-box here is much larger than
+the arrow indicators) you can shift the screen left/right. This makes playing some adventure games
+easier as you can more cleanly read the text rendering and the panning left/right can be done at 
+lesiure. 
 
 DISK Support :
 -----------------------
