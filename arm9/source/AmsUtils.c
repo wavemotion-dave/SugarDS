@@ -137,34 +137,40 @@ const char szKeyName[MAX_KEY_OPTIONS][16] = {
   "KEYBOARD ESC",
   "KEYBOARD RES1",
   "KEYBOARD RES2",  // 55
+  "KEYBOARD RES3",
+  "KEYBOARD RES4",
+  "KEYBOARD RES5",
+  "KEYBOARD RES6",
+  "KEYBOARD RES7",  // 60
+  "KEYBOARD RES8",
   
   "KEYBOARD F1",
   "KEYBOARD F2",
   "KEYBOARD F3",
-  "KEYBOARD F4",
+  "KEYBOARD F4",   // 65
   
-  "CURSOR UP",     // 60
+  "CURSOR UP",     // 66
   "CURSOR DOWN",
   "CURSOR LEFT",
   "CURSOR RIGHT",
-  "CURSOR COPY",
+  "CURSOR COPY",   // 70
     
-  "PAN UP 16",   // 65
+  "PAN UP 16",     // 71
   "PAN UP 24",
   "PAN UP 32",
   "PAN UP 48",
-  "PAN UP 64",
+  "PAN UP 64",     // 75
   
-  "PAN DN 16",   // 70
+  "PAN DN 16",     // 76
   "PAN DN 24",
   "PAN DN 32",
   "PAN DN 48",
-  "PAN DN 64",
+  "PAN DN 64",     // 80
   
-  "OFFSET 16",  // 75
+  "OFFSET 16",     // 81
   "OFFSET 32",
   "OFFSET 48",
-  "OFFSET 64",  // 78
+  "OFFSET 64",     // 84
 };
 
 

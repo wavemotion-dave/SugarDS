@@ -122,35 +122,41 @@ extern u16 mode1_scale;
 #define META_KBD_ESCAPE     0xF02F
 #define META_KBD_RESERVED1  0xF030
 #define META_KBD_RESERVED2  0xF031
+#define META_KBD_RESERVED3  0xF032
+#define META_KBD_RESERVED4  0xF033
+#define META_KBD_RESERVED5  0xF034
+#define META_KBD_RESERVED6  0xF035
+#define META_KBD_RESERVED7  0xF036
+#define META_KBD_RESERVED8  0xF037
 
-#define META_KBD_F1         0xF032
-#define META_KBD_F2         0xF033
-#define META_KBD_F3         0xF034
-#define META_KBD_F4         0xF035
-#define META_KBD_CURS_UP    0xF036
-#define META_KBD_CURS_DN    0xF037
-#define META_KBD_CURS_LF    0xF038
-#define META_KBD_CURS_RT    0xF039
-#define META_KBD_CURS_CPY   0xF03A
+#define META_KBD_F1         0xF038
+#define META_KBD_F2         0xF039
+#define META_KBD_F3         0xF03A
+#define META_KBD_F4         0xF03B
+#define META_KBD_CURS_UP    0xF03C
+#define META_KBD_CURS_DN    0xF03D
+#define META_KBD_CURS_LF    0xF03E
+#define META_KBD_CURS_RT    0xF03F
+#define META_KBD_CURS_CPY   0xF040
 
-#define META_KBD_PAN_UP16   0xF03B
-#define META_KBD_PAN_UP24   0xF03C
-#define META_KBD_PAN_UP32   0xF03D
-#define META_KBD_PAN_UP48   0xF03E
-#define META_KBD_PAN_UP64   0xF03F
+#define META_KBD_PAN_UP16   0xF041
+#define META_KBD_PAN_UP24   0xF042
+#define META_KBD_PAN_UP32   0xF043
+#define META_KBD_PAN_UP48   0xF044
+#define META_KBD_PAN_UP64   0xF045
 
-#define META_KBD_PAN_DN16   0xF040
-#define META_KBD_PAN_DN24   0xF041
-#define META_KBD_PAN_DN32   0xF042
-#define META_KBD_PAN_DN48   0xF043
-#define META_KBD_PAN_DN64   0xF044
+#define META_KBD_PAN_DN16   0xF046
+#define META_KBD_PAN_DN24   0xF047
+#define META_KBD_PAN_DN32   0xF048
+#define META_KBD_PAN_DN48   0xF049
+#define META_KBD_PAN_DN64   0xF04A
 
-#define META_KBD_OFFSET16   0xF045
-#define META_KBD_OFFSET32   0xF046
-#define META_KBD_OFFSET48   0xF047
-#define META_KBD_OFFSET64   0xF048
+#define META_KBD_OFFSET16   0xF04B
+#define META_KBD_OFFSET32   0xF04C
+#define META_KBD_OFFSET48   0xF04D
+#define META_KBD_OFFSET64   0xF04E
 
-#define MAX_KEY_OPTIONS     79
+#define MAX_KEY_OPTIONS     85
 
 // -----------------------------
 // For the Full Keyboard...
