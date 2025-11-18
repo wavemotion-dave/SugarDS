@@ -255,7 +255,7 @@ Known Issues :
 Version History :
 -----------------------
 Version 1.4 - ??-Nov-2025 by wavemotion-dave
-* DSi now double-buffers LCD rendering for smoother performance.
+* DSi now double-buffers LCD rendering for smoother performance and syncs to true 50Hz refresh.
 * Added Favorites system - use SELECT when loading games to toggle between like/love.
 * Added new 130% rendering speed as a per-game option.
 * Improved key map handling - all virtual Amstrad CPC keys are now mappable to the NDS keys.
