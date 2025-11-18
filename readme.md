@@ -258,6 +258,11 @@ Version 1.4 - ??-Nov-2025 by wavemotion-dave
 * DSi now double-buffers LCD rendering for smoother performance.
 * Added Favorites system - use SELECT when loading games to toggle between like/love.
 * Added new 130% rendering speed as a per-game option.
+* Improved key map handling - all virtual Amstrad CPC keys are now mappable to the NDS keys.
+* Added vertical jitter handling - improves look of vertical compression making games like Tempest look much improved when scaled.
+* Improved save state support - AY music is properly restored when loading an old save state.
+* Added instructions for use on first boot of the emulator.
+* Lots of other small improvements and cleanups under the hood as time permitted.
 
 Version 1.3 - 13-Sep-2025 by wavemotion-dave
 * Use [[CPM]] in title of .dsk file to launch game via |cpm
