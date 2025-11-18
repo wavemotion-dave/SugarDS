@@ -38,6 +38,7 @@ char        szName[256];
 char        szFile[256];
 u32         file_size = 0;
 char        strBuf[40];
+u8          bShowInstructions = 0;
 
 struct Config_t AllConfigs[MAX_CONFIGS];
 struct Config_t myConfig __attribute((aligned(4))) __attribute__((section(".dtcm")));
@@ -77,7 +78,7 @@ u16 JoyState   __attribute__((section(".dtcm"))) = 0;           // Joystick Stat
 
 u8 option_table=0;
 
-const char szKeyName[MAX_KEY_OPTIONS][16] = {
+const char szKeyName[MAX_KEY_OPTIONS][17] = {
   "JOY UP",
   "JOY DOWN",
   "JOY LEFT",
@@ -125,52 +126,59 @@ const char szKeyName[MAX_KEY_OPTIONS][16] = {
   "KEYBOARD 0", // 42
 
   "KEYBOARD SHIFT",
+  "KEYBOARD CONTROL",
+  "KEYBOARD CAPLOCK",
+  "KEYBOARD SPACE",
+  "KEYBOARD RETURN",
   "KEYBOARD PERIOD",
-  "KEYBOARD COMMA", // 45
+  "KEYBOARD COMMA",
   "KEYBOARD COLON",
   "KEYBOARD SEMI",
   "KEYBOARD ATSIGN",
   "KEYBOARD SLASH",
-  "KEYBOARD SPACE",  // 50
-  "KEYBOARD RETURN",
   "KEYBOARD BACKSL",
   "KEYBOARD ESC",
+  "KEYBOARD [",
+  "KEYBOARD ]",
+  "KEYBOARD -",
+  "KEYBOARD ^",
   "KEYBOARD RES1",
-  "KEYBOARD RES2",  // 55
-  "KEYBOARD RES3",
-  "KEYBOARD RES4",
-  "KEYBOARD RES5",
-  "KEYBOARD RES6",
-  "KEYBOARD RES7",  // 60
-  "KEYBOARD RES8",
-  
+  "KEYBOARD RES2",
+  "KEYBOARD F0",
   "KEYBOARD F1",
   "KEYBOARD F2",
   "KEYBOARD F3",
-  "KEYBOARD F4",   // 65
-  
-  "CURSOR UP",     // 66
+  "KEYBOARD F4",
+  "KEYBOARD F5",
+  "KEYBOARD F6",
+  "KEYBOARD F7",
+  "KEYBOARD F8",
+  "KEYBOARD F9",
+  "KEYBOARD F-DOT",
+  "KEYBOARD F-ENTER",
+
+  "CURSOR UP",
   "CURSOR DOWN",
   "CURSOR LEFT",
   "CURSOR RIGHT",
-  "CURSOR COPY",   // 70
-    
-  "PAN UP 16",     // 71
+  "CURSOR COPY",
+
+  "PAN UP 16",
   "PAN UP 24",
   "PAN UP 32",
   "PAN UP 48",
-  "PAN UP 64",     // 75
-  
-  "PAN DN 16",     // 76
+  "PAN UP 64",
+
+  "PAN DN 16",
   "PAN DN 24",
   "PAN DN 32",
   "PAN DN 48",
-  "PAN DN 64",     // 80
-  
-  "OFFSET 16",     // 81
+  "PAN DN 64",
+
+  "OFFSET 16",
   "OFFSET 32",
   "OFFSET 48",
-  "OFFSET 64",     // 84
+  "OFFSET 64",
 };
 
 
@@ -312,7 +320,7 @@ void SaveFavorites(void)
     {
         mkdir("/data", 0777);   // Doesn't exist - make it...
     }
-        
+
     FILE *fp = fopen("/data/SugarDS.fav", "wb");
     if (fp)
     {
@@ -324,7 +332,7 @@ void SaveFavorites(void)
 u8 IsFavorite(char *name)
 {
     u32 filename_crc32 = getCRC32((u8 *)name, strlen(name));
-    
+
     for (int i=0; i<MAX_FAVS; i++)
     {
         if ((myFavs[i].name_hash & 0xFFFFFFFE) == (filename_crc32 & 0xFFFFFFFE)) return (1 + (myFavs[i].name_hash&1));
@@ -336,7 +344,7 @@ void ToggleFavorite(char *name)
 {
     int firstZero = 0;
     u32 filename_crc32 = getCRC32((u8 *)name, strlen(name));
-    
+
     for (int i=0; i<MAX_FAVS; i++)
     {
         // We use the lower bit of the filename hash (CRC32) as the flag for 'like' vs 'love'
@@ -357,13 +365,13 @@ void ToggleFavorite(char *name)
                 return;
             }
         }
-        
+
         if (myFavs[i].name_hash == 0x00000000)
         {
             if (!firstZero) firstZero = i;
         }
     }
-    
+
     myFavs[firstZero].name_hash = (filename_crc32 & 0xFFFFFFFE);
 }
 
@@ -836,10 +844,10 @@ void MapPlayer1(void)
     myConfig.keymap[4]   = 4;    // NDS A Button mapped to Joystick Fire
 
     myConfig.keymap[5]   = 0;    // NDS B Button mapped to Joystick UP (jump)
-    myConfig.keymap[6]   = 50;   // NDS X Button mapped to SPACE
+    myConfig.keymap[6]   = 46;   // NDS X Button mapped to SPACE
     myConfig.keymap[7]   = 5;    // NDS Y Button mapped to Joystick Fire 2
-    myConfig.keymap[8]   = 51;   // NDS START mapped to RETURN
-    myConfig.keymap[9]   = 33;   // NDS SELECT mapped to '1'
+    myConfig.keymap[8]   = 47;   // NDS START mapped to RETURN
+    myConfig.keymap[9]   = 46;   // NDS SELECT mapped to SPACE
 }
 
 void MapAllJoy(void)
@@ -849,12 +857,12 @@ void MapAllJoy(void)
     myConfig.keymap[2]   = 2;    // NDS D-Pad mapped to Joystick LEFT
     myConfig.keymap[3]   = 3;    // NDS D-Pad mapped to Joystick RIGHT
     myConfig.keymap[4]   = 4;    // NDS A Button mapped to Joystick Fire 1
-    myConfig.keymap[5]   = 5;    // NDS B Button mapped to Joystick Fire 2
-    myConfig.keymap[6]   = 6;    // NDS X Button mapped to Joystick Fire 3
+    myConfig.keymap[5]   = 0;    // NDS B Button mapped to Joystick Up
+    myConfig.keymap[6]   = 5;    // NDS X Button mapped to Joystick Fire 2
+    myConfig.keymap[7]   = 6;    // NDS Y Button mapped to Joystick Fire 3
     
-    myConfig.keymap[7]   = 51;   // NDS Y Button mapped to RETURN
-    myConfig.keymap[8]   = 42;   // NDS START mapped to '0'
-    myConfig.keymap[9]   = 33;   // NDS SELECT mapped to '1'
+    myConfig.keymap[8]   = 47;   // NDS START mapped to RETURN
+    myConfig.keymap[9]   = 46;   // NDS SELECT mapped to SPACE
 }
 
 void MapQAOP(void)
@@ -863,39 +871,24 @@ void MapQAOP(void)
     myConfig.keymap[1]   =  7;   // A
     myConfig.keymap[2]   = 21;   // O
     myConfig.keymap[3]   = 22;   // P
-    myConfig.keymap[4]   = 50;   // Space
-    myConfig.keymap[5]   = 50;   // Space
-    myConfig.keymap[6]   = 32;   // Z
+    myConfig.keymap[4]   = 46;   // Space
+    myConfig.keymap[5]   = 23;   // Q (up)
+    myConfig.keymap[6]   = 19;   // M
     myConfig.keymap[7]   = 32;   // Z
-    myConfig.keymap[8]   = 42;   // NDS START mapped to '0'
-    myConfig.keymap[9]   = 33;   // NDS SELECT mapped to '1'
+    myConfig.keymap[8]   = 47;   // NDS START mapped to RETURN
+    myConfig.keymap[9]   = 46;   // NDS SELECT mapped to SPACE
 }
 
 void MapCursors(void)
 {
-    myConfig.keymap[0]   = 56;   // Cursor UP
-    myConfig.keymap[1]   = 57;   // Cursor DOWN
-    myConfig.keymap[2]   = 58;   // Cursor LEFT
-    myConfig.keymap[3]   = 59;   // Cursor RIGHT
-    myConfig.keymap[4]   = 50;   // Space
-    myConfig.keymap[5]   = 50;   // Space
-    myConfig.keymap[6]   = 60;   // Cursor Copy
-    myConfig.keymap[7]   = 32;   // Z
-    myConfig.keymap[8]   = 42;   // NDS START mapped to '0'
-    myConfig.keymap[9]   = 33;   // NDS SELECT mapped to '1'
-}
-
-
-void MapZXSpace(void)
-{
-    myConfig.keymap[0]   = 49;   // Space
-    myConfig.keymap[1]   = 20;   // N
-    myConfig.keymap[2]   = 32;   // Z
-    myConfig.keymap[3]   = 30;   // X
-    myConfig.keymap[4]   = 50;   // Space
-    myConfig.keymap[5]   = 50;   // Space
-    myConfig.keymap[6]   = 51;   // Return
-    myConfig.keymap[7]   = 51;   // Return
+    myConfig.keymap[0]   = 74;   // Cursor UP
+    myConfig.keymap[1]   = 75;   // Cursor DOWN
+    myConfig.keymap[2]   = 76;   // Cursor LEFT
+    myConfig.keymap[3]   = 77;   // Cursor RIGHT
+    myConfig.keymap[4]   = 46;   // Space
+    myConfig.keymap[5]   = 46;   // Space
+    myConfig.keymap[6]   = 47;   // RETURN
+    myConfig.keymap[7]   = 73;   // F-ENTER
     myConfig.keymap[8]   = 42;   // NDS START mapped to '0'
     myConfig.keymap[9]   = 33;   // NDS SELECT mapped to '1'
 }
@@ -914,7 +907,7 @@ void SetDefaultGameConfig(void)
 {
     myConfig.game_crc    = 0;    // No game in this slot yet
 
-    MapPlayer1();                // Default to Player 1 mapping
+    MapPlayer1();                // Default to Player 1 Joystick mapping
 
     myConfig.r52IntVsync = 0;                           // Normal Interrupt timing
     myConfig.autoFire    = 0;                           // Default to no auto-fire on either button
@@ -926,17 +919,17 @@ void SetDefaultGameConfig(void)
     myConfig.offsetY     = 0;                           // Push the top border off the main display
     myConfig.scaleX      = 256;                         // Scale the 320 pixels of display to the DS 256 pixels (squashed... booo!)
     myConfig.scaleY      = 200;                         // Scale the 200 pixels of display to the DS 200 (yes, there is only 192 so this will cut... use PAN UP/DN)
-    
+
     myConfig.autoSize    = 1;                           // Default to Auto-Size the screen
     myConfig.cpuAdjust   = 0;                           // No CPU adjustment by default
     myConfig.waveDirect  = 0;                           // Default is normal sound driver
     myConfig.screenTop   = 0;                           // Normal screen top position
-    myConfig.panAndScan   = 0;                           // Default to compressed 640
+    myConfig.panAndScan  = 0;                           // Default to compressed 320/640 to fit on LCD
     myConfig.diskWrite   = 1;                           // Default is to allow write back to SD
     myConfig.crtcDriver  = CRTC_DRV_STANDARD;           // Default is standard driver
-    myConfig.reserved7   = 0;
-    myConfig.reserved8   = 0;
-    myConfig.reserved9   = 0;
+    myConfig.reserved1   = 0;
+    myConfig.reserved2   = 0;
+    myConfig.reserved3   = 0;
 }
 
 // ----------------------------------------------------------
@@ -945,6 +938,8 @@ void SetDefaultGameConfig(void)
 // ----------------------------------------------------------
 void LoadConfig(void)
 {
+    u8 bWipeConfig = 0;
+    
     // -----------------------------------------------------------------
     // Start with defaults.. if we find a match in our config database
     // below, we will fill in the config with data read from the file.
@@ -957,18 +952,25 @@ void LoadConfig(void)
 
         if (myGlobalConfig.config_ver != CONFIG_VERSION)
         {
-            memset(&AllConfigs, 0x00, sizeof(AllConfigs));
-            SetDefaultGameConfig();
-            SetDefaultGlobalConfig();
-            SaveConfig(FALSE);
+            bWipeConfig = 1;
         }
     }
     else    // Not found... init the entire database...
+    {
+        bWipeConfig = 1;
+    }
+    
+    if (bWipeConfig)
     {
         memset(&AllConfigs, 0x00, sizeof(AllConfigs));
         SetDefaultGameConfig();
         SetDefaultGlobalConfig();
         SaveConfig(FALSE);
+        bShowInstructions = 1;
+    }
+    else
+    {
+        bShowInstructions = 0;
     }
 }
 
@@ -982,7 +984,7 @@ void FindConfig(char *filename)
     // below, we will fill in the config with data read from the file.
     // -----------------------------------------------------------------
     SetDefaultGameConfig();
-    
+
     // ---------------------------------------------------------------------
     // And now some special cases for games that require different settings
     // ---------------------------------------------------------------------
@@ -997,14 +999,14 @@ void FindConfig(char *filename)
     if (strstr(szName, "PREHISTORIK")   != 0)   myConfig.crtcDriver = CRTC_DRV_ADVANCED;    // Prehistorik II needs the Advanced Driver
     if (strstr(szName, "CHIPS")         != 0)   myConfig.crtcDriver = CRTC_DRV_ADVANCED;    // Chips Challenge works slightly better with the Advanced Driver
     if (strstr(szName, "ORION")         != 0)   myConfig.crtcDriver = CRTC_DRV_ADVANCED;    // Orion Prime is slightly better with the Advanced Driver
-    
+
     if (strstr(szName, "IANNA")         != 0)   myConfig.cpuAdjust   = 5;  // -2 CPU Adjust to remove graphical artifacts
     if (strstr(szName, "DIZZY3")        != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
     if (strstr(szName, "DIZZY 3")       != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
     if (strstr(szName, "DIZZY-III")     != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
     if (strstr(szName, "DIZZY III")     != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
     if (strstr(szName, "FANTASY WORLD") != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
-    
+
     if (strstr(szName, "ROBOCOP")       != 0)   myConfig.waveDirect  = 1;  // Robocop uses digitized voice
     if (strstr(szName, "CHASEH")        != 0)   myConfig.waveDirect  = 1;  // Chase HQ uses digitized voice
     if (strstr(szName, "CHASE H")       != 0)   myConfig.waveDirect  = 1;  // Chase HQ uses digitized voice
@@ -1041,7 +1043,7 @@ const struct options_t Option_Table[2][20] =
     // Game Specific Configuration
     {
         {"AUTO LOAD",      {"NO", "YES"},                                                       &myConfig.autoLoad,          2},
-        {"AUTO SIZE",      {"OFF", "ON"},                                                       &myConfig.autoSize,          2},        
+        {"AUTO SIZE",      {"OFF", "ON"},                                                       &myConfig.autoSize,          2},
         {"AUTO FIRE",      {"OFF", "ON"},                                                       &myConfig.autoFire,          2},
         {"LCD JITTER",     {"OFF", "LIGHT", "HEAVY"},                                           &myConfig.jitter,            3},
         {"SCREEN TOP",     {"+0","+1","+2","+3","+4","+5","+6","+7","+8","+9","+10",
@@ -1050,10 +1052,10 @@ const struct options_t Option_Table[2][20] =
         {"GAME SPEED",     {"100%", "110%", "120%", "130%", "90%", "80%"},                      &myConfig.gameSpeed,         6},
         {"MODE 1/2",       {"SCALE/COMPRESS", "320 PAN+SCAN"},                                  &myConfig.panAndScan,        2},
         {"R52  VSYNC",     {"NORMAL", "FORGIVING", "STRICT"},                                   &myConfig.r52IntVsync,       3},
-        {"CPU ADJUST",     {"+0 (NONE)", "+1 CYCLES", "+2 CYCLES", "-4 CYCLES", 
+        {"CPU ADJUST",     {"+0 (NONE)", "+1 CYCLES", "+2 CYCLES", "-4 CYCLES",
                             "-3 CYCLES", "-2 CYCLES", "-1 CYCLES"},                             &myConfig.cpuAdjust,         7},
-        {"SOUND DRV",      {"NORMAL", "WAVE DIRECT"},                                           &myConfig.waveDirect,        2},        
-        {"DISK WRITE",     {"OFF", "ALLOWED"},                                                  &myConfig.diskWrite,         2},        
+        {"SOUND DRV",      {"NORMAL", "WAVE DIRECT"},                                           &myConfig.waveDirect,        2},
+        {"DISK WRITE",     {"OFF", "ALLOWED"},                                                  &myConfig.diskWrite,         2},
         {"CRTC DRIVER",    {"STANDARD", "ADVANCED"},                                            &myConfig.crtcDriver,        2},
 
         {NULL,             {"",      ""},                                                       NULL,                        1},
@@ -1065,7 +1067,7 @@ const struct options_t Option_Table[2][20] =
         {"START DIR",      {"/ROMS/CPC", "/ROMS/AMSTRAD", "LAST USED DIR"},                     &myGlobalConfig.lastDir,     3},
         {"SPLASH SCR",     {"AMSTRAD CROC", "CPC KEYBOARD"},                                    &myGlobalConfig.splashType,  2},
         {"KEYBD BRIGHT",   {"MAX BRIGHT", "DIM", "DIMMER", "DIMMEST"},                          &myGlobalConfig.keyboardDim, 4},
-        
+
         {"DEBUGGER",       {"OFF", "BAD OPS", "DEBUG", "FULL DEBUG"},                           &myGlobalConfig.debugger,    4},
         {NULL,             {"",      ""},                                                       NULL,                        1},
     }
@@ -1226,18 +1228,14 @@ void DisplayKeymapName(u32 uY)
 u8 keyMapType = 0;
 void SwapKeymap(void)
 {
-    keyMapType = (keyMapType+1) % 5;
+    keyMapType = (keyMapType+1) % 4;
     switch (keyMapType)
     {
-        case 0: MapPlayer1();  DSPrint(7,18,0,("**  JOYSTICK 1  **")); break;
-        case 1: MapAllJoy();   DSPrint(7,18,0,("** JOY FIRE 123 **")); break;
-        case 2: MapQAOP();     DSPrint(7,18,0,("**     QAOP     **")); break;
-        case 3: MapZXSpace();  DSPrint(7,18,0,("**   ZX SPACE   **")); break;
-        case 4: MapCursors();  DSPrint(7,18,0,("** CURSOR KEYS  **")); break;
-        
+        case 0: MapPlayer1();  DSPrint(7,6,0,("**  JOYSTICK 1  **")); break;
+        case 1: MapAllJoy();   DSPrint(7,6,0,("** JOY FIRE 123 **")); break;
+        case 2: MapCursors();  DSPrint(7,6,0,("** CURSOR KEYS  **")); break;
+        case 3: MapQAOP();     DSPrint(7,6,0,("**  QAOP-SPACE  **")); break;
     }
-    WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-    DSPrint(7,18,0,("                  "));
 }
 
 
@@ -1263,7 +1261,7 @@ void SugarDSChangeKeymap(void)
   DSPrint(1 ,21,0,("       X : SWAP KEYMAP TYPE  "));
   DSPrint(1 ,22,0,("   START : SAVE KEYMAP       "));
   DisplayKeymapName(ucY);
-  
+
   bIndTch = myConfig.keymap[0];
 
   // -----------------------------------------------------------------------
@@ -1275,7 +1273,7 @@ void SugarDSChangeKeymap(void)
       ;
   WAITVBL;
 
-  while (!bOK) 
+  while (!bOK)
   {
     MaxBrightness();
     if (keysCurrent() & KEY_UP) {
@@ -1294,7 +1292,7 @@ void SugarDSChangeKeymap(void)
     else {
       ucHaut = 0;
     }
-    if (keysCurrent() & KEY_DOWN) 
+    if (keysCurrent() & KEY_DOWN)
     {
       if (!ucBas) {
         DisplayKeymapName(32);
@@ -1366,6 +1364,8 @@ void SugarDSChangeKeymap(void)
         SwapKeymap();
         bIndTch = myConfig.keymap[ucY-7];
         DisplayKeymapName(ucY);
+        WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
+        DSPrint(7,6,0,("                  "));
         while (keysCurrent() & KEY_X)
             ;
         WAITVBL
@@ -1500,7 +1500,7 @@ u32 ReadFileCarefully(char *filename, u8 *buf, u32 buf_size, u32 buf_offset)
             fclose(file2);
         }
    } while (crc1 != crc2); // If the file couldn't be read, file_size will be 0 and the CRCs will both be 0xFFFFFFFF
-   
+
    return fileSize;
 }
 
@@ -1510,10 +1510,10 @@ u32 ReadFileCarefully(char *filename, u8 *buf, u32 buf_size, u32 buf_offset)
 void sugarDSChangeOptions(void)
 {
   u16 ucHaut=0x00, ucBas=0x00,ucA=0x00,ucY=7, bOK=0;
-  
+
   // Lower Screen Background
   BottomScreenOptions();
-  
+
   dispInfoOptions(ucY);
 
   if (ucGameChoice != -1)
@@ -1521,7 +1521,7 @@ void sugarDSChangeOptions(void)
       DisplayFileName();
   }
 
-  while (!bOK) 
+  while (!bOK)
   {
     MaxBrightness();
     if (keysCurrent()  & KEY_UP) {
@@ -1730,7 +1730,7 @@ void ProcessBufferedKeys(void)
     static u8 buf_held = 0;
 
     if (BufferedKeysReadIdx == BufferedKeysWriteIdx) return;
-    
+
     if (++dampen >= next_dampen_time) // Roughly 50ms... experimentally good enough for all systems.
     {
         if (BufferedKeysReadIdx != BufferedKeysWriteIdx)
@@ -1740,7 +1740,7 @@ void ProcessBufferedKeys(void)
             buf_held = BufferedKeys[BufferedKeysReadIdx];
             BufferedKeysReadIdx = (BufferedKeysReadIdx+1) % 32;
             if (buf_held == 255) {buf_held = 0; next_dampen_time=20;}
-            else if (buf_held == 254) {buf_held = 0; next_dampen_time=15;} 
+            else if (buf_held == 254) {buf_held = 0; next_dampen_time=15;}
             else next_dampen_time = 10;
         } else buf_held = 0;
         dampen = 0;
@@ -1831,7 +1831,7 @@ void ProcessBufferedKeys(void)
         buf_held = 0;
         last_special_key = 0;
     }
-    
+
     if (buf_held) {kbd_keys[kbd_keys_pressed++] = buf_held;}
 }
 
@@ -1860,9 +1860,9 @@ u8 AmstradInit(char *szGame)
 
     REG_BLDCNT = BLEND_ALPHA | BLEND_SRC_BG2 | BLEND_DST_BG3;
     REG_BLDALPHA = (8 << 8) | 8; // 50% / 50%
-    
+
     vramSetPrimaryBanks(VRAM_A_MAIN_BG_0x06000000, VRAM_B_MAIN_BG_0x06020000, VRAM_C_SUB_BG , VRAM_D_LCD);
-  
+
     REG_BG3CNT = BG_BMP8_512x512;
 
     int cxBG = (myConfig.offsetX << 8);
@@ -1879,14 +1879,14 @@ u8 AmstradInit(char *szGame)
     REG_BG2PD = ydyBG;
     REG_BG3PA = xdxBG;
     REG_BG3PD = ydyBG;
-    
+
     vramSetBankD(VRAM_D_LCD);        // Not using this for video but 128K of faster RAM always useful!  Mapped at 0x06860000 -   Unused - reserved for future use
     vramSetBankE(VRAM_E_LCD);        // Not using this for video but 64K of faster RAM always useful!   Mapped at 0x06880000 -   ..
     vramSetBankF(VRAM_F_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x06890000 -   ..
     vramSetBankG(VRAM_G_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x06894000 -   ..
     vramSetBankH(VRAM_H_LCD);        // Not using this for video but 32K of faster RAM always useful!   Mapped at 0x06898000 -   ..
     vramSetBankI(VRAM_I_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x068A0000 -   16K used for SID waveform table cache
-    
+
     RetFct = loadgame(szGame);       // Load up the CPC Disk game
 
     ResetAmstrad();
@@ -1927,13 +1927,13 @@ u8 CPC_palette[32*3] = {
   0x00,0xFF,0x00,   // Bright Green
   0x00,0xFF,0x80,   // Sea Green
   0x00,0xFF,0xFF,   // Bright Cyan
-  0x80,0xFF,0x00,   // Lime  
+  0x80,0xFF,0x00,   // Lime
   0x80,0xFF,0x80,   // Pastel Green
   0x80,0xFF,0xFF,   // Pastel Cyan
   0xFF,0xFF,0x00,   // Bright Yellow
-  0xFF,0xFF,0x80,   // Pastel Yellow  
+  0xFF,0xFF,0x80,   // Pastel Yellow
   0xFF,0xFF,0xFF,   // Bright White
-  
+
   0x00,0x00,0x80,   // Almost Blue
   0xFF,0x00,0x80,   // Almost Purple
   0x80,0x80,0x80,   // Almost White
@@ -1973,7 +1973,7 @@ void getfile_crc(const char *filename)
     // The CRC is used as a unique ID to save out configuration data.
     // ---------------------------------------------------------------
     file_crc = getFileCrc(filename);
-    
+
     // --------------------------------------------------------------------
     // Since we are a disk-based system that might write back to the disk,
     // we have to base the master file CRC on the name of the .dsk file.
@@ -1982,7 +1982,7 @@ void getfile_crc(const char *filename)
     {
         file_crc = getCRC32((u8*)filename, strlen(filename));
     }
-    
+
     DSPrint(11,13,6, "          ");
 }
 
@@ -2078,7 +2078,7 @@ void intro_logo(void)
 }
 
 // -------------------------------------------
-// Not needed presently for the Amstrad CPC 
+// Not needed presently for the Amstrad CPC
 // -------------------------------------------
 void PatchZ80(register Z80 *r)
 {

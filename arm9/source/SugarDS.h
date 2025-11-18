@@ -110,53 +110,62 @@ extern u16 mode1_scale;
 #define META_KBD_9          0xF024
 
 #define META_KBD_SHIFT      0xF025
-#define META_KBD_PERIOD     0xF026
-#define META_KBD_COMMA      0xF027
-#define META_KBD_COLON      0xF028
-#define META_KBD_SEMI       0xF029
-#define META_KBD_ATSIGN     0xF02A
-#define META_KBD_SLASH      0xF02B
-#define META_KBD_SPACE      0xF02C
-#define META_KBD_RETURN     0xF02D
-#define META_KBD_BACKSLASH  0xF02E
-#define META_KBD_ESCAPE     0xF02F
-#define META_KBD_RESERVED1  0xF030
-#define META_KBD_RESERVED2  0xF031
-#define META_KBD_RESERVED3  0xF032
-#define META_KBD_RESERVED4  0xF033
-#define META_KBD_RESERVED5  0xF034
-#define META_KBD_RESERVED6  0xF035
-#define META_KBD_RESERVED7  0xF036
-#define META_KBD_RESERVED8  0xF037
+#define META_KBD_CONTROL    0xF026
+#define META_KBD_CAPSLOCK   0xF027
+#define META_KBD_PERIOD     0xF028
+#define META_KBD_COMMA      0xF029
+#define META_KBD_COLON      0xF02A
+#define META_KBD_SEMI       0xF02B
+#define META_KBD_ATSIGN     0xF02C
+#define META_KBD_SLASH      0xF02D
+#define META_KBD_SPACE      0xF02E
+#define META_KBD_RETURN     0xF02F
+#define META_KBD_BACKSLASH  0xF030
+#define META_KBD_ESCAPE     0xF031
+#define META_KBD_LBRACKET   0xF032
+#define META_KBD_RBRACKET   0xF033
+#define META_KBD_DASH       0xF034
+#define META_KBD_CARRET     0xF035
+#define META_KBD_RESERVED1  0xF036
+#define META_KBD_RESERVED2  0xF037
 
-#define META_KBD_F1         0xF038
-#define META_KBD_F2         0xF039
-#define META_KBD_F3         0xF03A
-#define META_KBD_F4         0xF03B
-#define META_KBD_CURS_UP    0xF03C
-#define META_KBD_CURS_DN    0xF03D
-#define META_KBD_CURS_LF    0xF03E
-#define META_KBD_CURS_RT    0xF03F
-#define META_KBD_CURS_CPY   0xF040
+#define META_KBD_F0         0xF038
+#define META_KBD_F1         0xF039
+#define META_KBD_F2         0xF03A
+#define META_KBD_F3         0xF03B
+#define META_KBD_F4         0xF03C
+#define META_KBD_F5         0xF03D
+#define META_KBD_F6         0xF03E
+#define META_KBD_F7         0xF03F
+#define META_KBD_F8         0xF040
+#define META_KBD_F9         0xF041
+#define META_KBD_FDOT       0xF042
+#define META_KBD_FENT       0xF043
 
-#define META_KBD_PAN_UP16   0xF041
-#define META_KBD_PAN_UP24   0xF042
-#define META_KBD_PAN_UP32   0xF043
-#define META_KBD_PAN_UP48   0xF044
-#define META_KBD_PAN_UP64   0xF045
+#define META_KBD_CURS_UP    0xF044
+#define META_KBD_CURS_DN    0xF045
+#define META_KBD_CURS_LF    0xF046
+#define META_KBD_CURS_RT    0xF047
+#define META_KBD_CURS_CPY   0xF048
 
-#define META_KBD_PAN_DN16   0xF046
-#define META_KBD_PAN_DN24   0xF047
-#define META_KBD_PAN_DN32   0xF048
-#define META_KBD_PAN_DN48   0xF049
-#define META_KBD_PAN_DN64   0xF04A
+#define META_KBD_PAN_UP16   0xF049
+#define META_KBD_PAN_UP24   0xF04A
+#define META_KBD_PAN_UP32   0xF04B
+#define META_KBD_PAN_UP48   0xF04C
+#define META_KBD_PAN_UP64   0xF04D
 
-#define META_KBD_OFFSET16   0xF04B
-#define META_KBD_OFFSET32   0xF04C
-#define META_KBD_OFFSET48   0xF04D
-#define META_KBD_OFFSET64   0xF04E
+#define META_KBD_PAN_DN16   0xF04E
+#define META_KBD_PAN_DN24   0xF04F
+#define META_KBD_PAN_DN32   0xF050
+#define META_KBD_PAN_DN48   0xF051
+#define META_KBD_PAN_DN64   0xF052
 
-#define MAX_KEY_OPTIONS     85
+#define META_KBD_OFFSET16   0xF053
+#define META_KBD_OFFSET32   0xF054
+#define META_KBD_OFFSET48   0xF055
+#define META_KBD_OFFSET64   0xF056
+
+#define MAX_KEY_OPTIONS     93
 
 // -----------------------------
 // For the Full Keyboard...

@@ -127,7 +127,7 @@ u16 NDS_keyMap[10] __attribute__((section(".dtcm"))) = {KEY_UP, KEY_DOWN, KEY_LE
 // ----------------------------------------------------------------------
 // The key map for the Amstrad CPC... mapped into the NDS controller
 // We allow mapping of the 5 joystick 'presses' (up, down, left, right
-// and fire) along with most of the possible CPC keyboard keys.
+// and fire) along with all of the possible CPC keyboard keys.
 // ----------------------------------------------------------------------
 u16 keyCoresp[MAX_KEY_OPTIONS] __attribute__((section(".dtcm"))) = {
     JST_UP,     //0
@@ -135,7 +135,7 @@ u16 keyCoresp[MAX_KEY_OPTIONS] __attribute__((section(".dtcm"))) = {
     JST_LEFT,
     JST_RIGHT,
     JST_FIRE,
-    JST_FIRE2,  //5 (alternate fire... not sure if used)
+    JST_FIRE2,  //5 (alternate fire... a few homebrew games use this)
     JST_FIRE3,  //  (another alternate fire... not sure if used)
 
     META_KBD_A, //7
@@ -176,52 +176,62 @@ u16 keyCoresp[MAX_KEY_OPTIONS] __attribute__((section(".dtcm"))) = {
     META_KBD_9,
     META_KBD_0, //42
 
-    META_KBD_SHIFT,
-    META_KBD_PERIOD,
-    META_KBD_COMMA, //45
-    META_KBD_COLON,
-    META_KBD_SEMI,
-    META_KBD_ATSIGN,
-    META_KBD_SLASH,
-    META_KBD_SPACE,  //50
-    META_KBD_RETURN,
-    META_KBD_BACKSLASH,
-    META_KBD_ESCAPE,
-    META_KBD_RESERVED1,
-    META_KBD_RESERVED2,// 55
-    META_KBD_RESERVED3,
-    META_KBD_RESERVED4,
-    META_KBD_RESERVED5,
-    META_KBD_RESERVED6,
-    META_KBD_RESERVED7,// 60
-    META_KBD_RESERVED8,
+    META_KBD_SHIFT,     //43
+    META_KBD_CONTROL,   //44
+    META_KBD_CAPSLOCK,  //45
+    META_KBD_SPACE,     //46
+    META_KBD_RETURN,    //47
+    META_KBD_PERIOD,    //48
+    META_KBD_COMMA,     //49
+    META_KBD_COLON,     //50
+    META_KBD_SEMI,      //51
+    META_KBD_ATSIGN,    //52
+    META_KBD_SLASH,     //53
+    META_KBD_BACKSLASH, //54
+    META_KBD_ESCAPE,    //55
+    META_KBD_LBRACKET,  //56
+    META_KBD_RBRACKET,  //57
+    META_KBD_DASH,      //58
+    META_KBD_CARRET,    //59
 
-    META_KBD_F1,
-    META_KBD_F2,
-    META_KBD_F3,
-    META_KBD_F4,       // 65 
-    META_KBD_CURS_UP,
-    META_KBD_CURS_DN,
-    META_KBD_CURS_LF,
-    META_KBD_CURS_RT,
-    META_KBD_CURS_CPY, // 70
+    META_KBD_RESERVED1, //60
+    META_KBD_RESERVED2, //61
 
-    META_KBD_PAN_UP16, // 71
-    META_KBD_PAN_UP24,
-    META_KBD_PAN_UP32,
-    META_KBD_PAN_UP48,
-    META_KBD_PAN_UP64, // 75
+    META_KBD_F0,        //62
+    META_KBD_F1,        //63
+    META_KBD_F2,        //64
+    META_KBD_F3,        //65
+    META_KBD_F4,        //66
+    META_KBD_F5,        //67
+    META_KBD_F6,        //68
+    META_KBD_F7,        //69
+    META_KBD_F8,        //70
+    META_KBD_F9,        //71
+    META_KBD_FDOT,      //72
+    META_KBD_FENT,      //73
+    
+    META_KBD_CURS_UP,   //74
+    META_KBD_CURS_DN,   //75
+    META_KBD_CURS_LF,   //76
+    META_KBD_CURS_RT,   //77
+    META_KBD_CURS_CPY,  //78
 
-    META_KBD_PAN_DN16, // 76
-    META_KBD_PAN_DN24,
-    META_KBD_PAN_DN32,
-    META_KBD_PAN_DN48,
-    META_KBD_PAN_DN64, // 80
+    META_KBD_PAN_UP16,  //79
+    META_KBD_PAN_UP24,  //80
+    META_KBD_PAN_UP32,  //81
+    META_KBD_PAN_UP48,  //82
+    META_KBD_PAN_UP64,  //83
 
-    META_KBD_OFFSET16, // 81
-    META_KBD_OFFSET32,
-    META_KBD_OFFSET48,
-    META_KBD_OFFSET64, // 84
+    META_KBD_PAN_DN16,  //84
+    META_KBD_PAN_DN24,  //85
+    META_KBD_PAN_DN32,  //86
+    META_KBD_PAN_DN48,  //87
+    META_KBD_PAN_DN64,  //88
+
+    META_KBD_OFFSET16,  //89
+    META_KBD_OFFSET32,  //90
+    META_KBD_OFFSET48,  //91
+    META_KBD_OFFSET64,  //92
 };
 
 static char tmp[64];    // For various sprintf() calls
@@ -1609,26 +1619,41 @@ void SugarDS_main(void)
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_SEMI)      kbd_key  = ';';
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_ATSIGN)    kbd_key  = '@';
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_SLASH)     kbd_key  = '/';
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_LBRACKET)  kbd_key  = '[';
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_RBRACKET)  kbd_key  = ']';
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_DASH)      kbd_key  = '-';
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CARRET)    kbd_key  = '^';
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F0)        kbd_key  = KBD_KEY_F0;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F1)        kbd_key  = KBD_KEY_F1;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F2)        kbd_key  = KBD_KEY_F2;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F3)        kbd_key  = KBD_KEY_F3;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F4)        kbd_key  = KBD_KEY_F4;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F5)        kbd_key  = KBD_KEY_F5;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F6)        kbd_key  = KBD_KEY_F6;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F7)        kbd_key  = KBD_KEY_F7;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F8)        kbd_key  = KBD_KEY_F8;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_F9)        kbd_key  = KBD_KEY_F9;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_FDOT)      kbd_key  = KBD_KEY_FDOT;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_FENT)      kbd_key  = KBD_KEY_FENT;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_SHIFT)     kbd_key  = KBD_KEY_SFT;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CONTROL)   kbd_key  = KBD_KEY_CTL;                      
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_RETURN)    kbd_key  = KBD_KEY_RET;
-
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_UP)   kbd_key  = KBD_KEY_CUP;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_DN)   kbd_key  = KBD_KEY_CDN;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_LF)   kbd_key  = KBD_KEY_CLT;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_RT)   kbd_key  = KBD_KEY_CRT;
-
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_CPY)  kbd_key  = KBD_KEY_CPY;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_ESCAPE)    kbd_key  = KBD_KEY_ESC;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_BACKSLASH) kbd_key  = KBD_KEY_BSL;
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CAPSLOCK)  kbd_key  = KBD_KEY_CAPS;
+                      
+                      
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP16)  {temp_offset = -16;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP24)  {temp_offset = -24;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP32)  {temp_offset = -32;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP48)  {temp_offset = -48;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP64)  {temp_offset = -64;slide_dampen = 15;}
+                      
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN16)  {temp_offset =  16;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN24)  {temp_offset =  24;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN32)  {temp_offset =  32;slide_dampen = 15;}
@@ -1816,6 +1841,36 @@ void BottomScreenKeyboard(void)
 }
 
 
+void ShowInstructions(void)
+{
+    BottomScreenOptions();
+    DSPrint(0,8,0,"      WELCOME TO SUGAR-DS!      ");
+    DSPrint(0,11,0,"THIS EMULATOR REQUIRES THAT YOU ");
+    DSPrint(0,12,0,"UNDERSTAND THE COMPLEXITIES IN  ");
+    DSPrint(0,13,0,"MAPPING THE AMSTRAD CPC SCREEN  ");
+    DSPrint(0,14,0,"TO THE DS LCD SCREEN. PLEASE BE ");
+    DSPrint(0,15,0,"SURE TO READ THE ENTIRE README  ");
+    DSPrint(0,16,0,"AT MY GITHUB PAGE FOR SUGAR-DS. ");
+    
+    DSPrint(0,18,0,"FAILURE TO DO SO WILL RESULT IN ");
+    DSPrint(0,19,0,"A SUB-OPTIMAL GAMING EXPERIENCE ");
+        
+    DSPrint(0,22,0,"THIS NOTICE WILL NOT SHOW AGAIN ");
+    
+    WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
+    WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
+    WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
+    WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
+    while (keysCurrent() == 0)
+    {
+        WAITVBL;
+    }    
+    WAITVBL;WAITVBL;WAITVBL;
+    while (keysCurrent() != 0)
+    {
+        WAITVBL;
+    }    
+}
 
 /*********************************************************************************
  * Init CPU for the current game
@@ -2000,13 +2055,20 @@ int main(int argc, char **argv)
   SoundPause();
 
   srand(time(NULL));
-
+  
   //  ------------------------------------------------------------
   //  We run this loop forever until game exit is selected...
   //  ------------------------------------------------------------
   while(1)
   {
     SugarDSInit();
+
+    extern u8 bShowInstructions;
+    if (bShowInstructions)
+    {
+        ShowInstructions();
+        bShowInstructions = 0;
+    }
 
     while(1)
     {

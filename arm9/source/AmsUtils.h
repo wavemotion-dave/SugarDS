@@ -20,7 +20,7 @@
 #define MAX_ROM_SIZE               (1024*1024) // 1024K is big enough for any disk / cart / snapshot
 
 #define MAX_CONFIGS                 890
-#define CONFIG_VERSION              0x0008
+#define CONFIG_VERSION              0x0009
 
 #define AMSTRAD_FILE                0x01
 #define DIRECTORY                   0x02
@@ -97,9 +97,9 @@ struct __attribute__((__packed__)) Config_t
     u8  panAndScan;
     u8  diskWrite;
     u8  crtcDriver;
-    u8  reserved7;
-    u8  reserved8;
-    u8  reserved9;
+    u8  reserved1;
+    u8  reserved2;
+    u8  reserved3;
     s8  offsetX;
     s8  offsetY;
     s16 scaleX;
