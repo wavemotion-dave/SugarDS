@@ -61,7 +61,7 @@ u8  *cpc_ScreenPage      __attribute__((section(".dtcm"))) = 0;    // Screen Mem
 u16 escapeClause         __attribute__((section(".dtcm"))) = 0;    // To ensure we never let the DS get stuck
 u32 raster_counter       __attribute__((section(".dtcm"))) = 0;    // This is where we are in the CPC graphics memory
 
-int R52_INT_ON_VSYNC[]   __attribute__((section(".dtcm"))) = {28, 16, 32};
+int R52_INT_ON_VSYNC[]   __attribute__((section(".dtcm"))) = {28, 16, 32}; // To allow a bit of unofficial wiggle room for imperfect emulation
 u8 vSyncSeen             __attribute__((section(".dtcm"))) = 0;    // Set to '1' when we've seen a CRTC VSYNC
 u8 display_disable_in    __attribute__((section(".dtcm"))) = 0;    // Number of scanlines before we disable the output
 u8 b32K_Mode             __attribute__((section(".dtcm"))) = 0;    // Set to '1' if we are in 32K CRTC mode (wrap into next block of RAM)
@@ -115,7 +115,7 @@ void crtc_reset(void)
     CRTC[16] = 0;
     CRTC[17] = 0;
     CRTC[31] = 0; // CRTC v0
-    
+
     // Clear the screen
     memset((u8*)(0x06000000), 0x00, 0x20000);
 }
@@ -360,9 +360,9 @@ ITCM_CODE u8 crtc_render_screen_line(void)
 
     // ----------------------------------------------------------
     // Video buffer... write 32-bits at a time for maximum speed
-    // and render directly to the video memory. This can cause
-    // some slight tearing effects as we're dealing with 50Hz
-    // emulation on a 60Hz DSi LCD refresh... but good enough!
+    // and render directly to the video memory for the DS-Lite
+    // but for the DSi we can double-buffer and sync to a 50Hz
+    // refresh rate - see irqBlank() for details.
     // ----------------------------------------------------------
     if (isDSiMode())
     {
@@ -371,9 +371,10 @@ ITCM_CODE u8 crtc_render_screen_line(void)
     }
     else
     {
+        // For the DS-Lite/Phat we draw directly to the screen for max speed.
         vidBufDS = (u32*)(0x06000000 + (current_ds_line * 512));
     }
-    
+
 
     // ------------------------------------------------------------------------
     // This is a poor-mans horizontal sync "scroll trick". Some CPC games
@@ -467,7 +468,7 @@ ITCM_CODE u8 crtc_render_screen_line(void)
                         offset &= 0x47FF;                                  // Wrap is always at the 2K boundary
                     }
                 }
-                
+
                 last_frame_crtc1 = CRTC[1];
                 for (int x=0; x<(CRTC[1]); x++)
                 {

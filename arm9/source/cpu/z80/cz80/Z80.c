@@ -57,7 +57,7 @@ extern unsigned char cpu_readport_ams(register unsigned short Port);
 extern void cpu_writeport_ams(register unsigned short Port,register unsigned char Value);
 
 // ------------------------------------------------------------------------------
-// This is how we access the Z80 memory. We indirect through the MemoryMapR[] to 
+// This is how we access the Z80 memory. We indirect through the MemoryMapR[] to
 // allow for easy mapping by the 128K machines. It's slightly slower than direct
 // RAM access but much faster than having to move around chunks of bank memory.
 // ------------------------------------------------------------------------------
@@ -388,7 +388,7 @@ ITCM_CODE void IntZ80(Z80 *R,word Vector)
 
     if((CPU.IFF&IFF_1)||(Vector==INT_NMI))
     {
-      CPU.TStates += (CPU.IFF&IFF_IM2 ? 20:8); // Time to acknowledge interrupt. 
+      CPU.TStates += (CPU.IFF&IFF_IM2 ? 20:8); // Time to acknowledge interrupt.
 
       /* Save PC on stack */
       M_PUSH(PC);
@@ -419,7 +419,7 @@ ITCM_CODE void IntZ80(Z80 *R,word Vector)
           /* Read the vector */
           CPU.PC.B.l=RdZ80(Vector++);
           CPU.PC.B.h=RdZ80(Vector);
-          
+
           JumpZ80(CPU.PC.W);
 
           /* Done */
@@ -454,7 +454,7 @@ static void CodesCB(void)
   /* Read opcode and count cycles */
   I=OpZ80(CPU.PC.W++);
   CPU.TStates += CyclesCB[I];
-  
+
   /* R register incremented on each M1 cycle */
   INCR(1);
 
@@ -569,7 +569,7 @@ static void CodesFD(void)
 
   /* R register incremented on each M1 cycle */
   INCR(1);
-  
+
   switch(I)
   {
 #include "CodesXX.h"
@@ -579,12 +579,12 @@ static void CodesFD(void)
         {
             DAN_Zone0 = CPU.BC.B.h;
             ConfigureMemory();
-        }        
+        }
         if (RdZ80(CPU.PC.W) == 0x71) // LD (IY+nn),C - Zone 1 command
         {
             DAN_Zone1 = CPU.BC.B.l;
             ConfigureMemory();
-        }        
+        }
         if (RdZ80(CPU.PC.W) == 0x77) // LD (IY+nn),A - Config command
         {
             if (CPU.AF.B.h & 0x80) // High bit is the Dandanator Configuration
@@ -592,7 +592,7 @@ static void CodesFD(void)
                 DAN_Config = CPU.AF.B.h;
                 ConfigureMemory();
             }
-        }        
+        }
         CPU.PC.W--;break;
     case PFX_DD:
       CPU.TStates += 4;
@@ -609,7 +609,7 @@ static void CodesFD(void)
 // Almost 15K wasted space... but needed so we can keep the Enable Interrupt
 // instruction out of the main fast Z80 instruction loop. When the EI instruction
 // is issued, the interrupts are not enabled until one instruction later. This
-// function let's us execute that one instruction - somewhat more slowly but 
+// function let's us execute that one instruction - somewhat more slowly but
 // interrupts are enabled very infrequently (often enabled and left that way).
 // ------------------------------------------------------------------------------
 void ExecOneInstruction(void)
@@ -633,14 +633,14 @@ void ExecOneInstruction(void)
     case PFX_DD: CodesDD();break;
   }
 }
-  
+
 // ------------------------------------------------------------------------
 // The Enable Interrupt is delayed 1 M1 instruction. The Amstrad CPC Gate
 // Array will hold onto the interrupt indefinitely so we can fire it here...
 // ------------------------------------------------------------------------
 void EI_Enable(void)
 {
-   ExecOneInstruction(); 
+   ExecOneInstruction();
    CPU.IFF=(CPU.IFF&~IFF_EI)|IFF_1;
    if (CPU.IRequest != INT_NONE)
    {

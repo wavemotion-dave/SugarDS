@@ -56,7 +56,8 @@ u8 ROM_Memory[MAX_ROM_SIZE] ALIGN(32) = {0};  // This is where we keep the raw u
 s16 temp_offset   __attribute__((section(".dtcm"))) = 0;
 s16 perm_offset   __attribute__((section(".dtcm"))) = 0;
 u16 slide_dampen  __attribute__((section(".dtcm"))) = 0;
-u8 JITTER[]       __attribute__((section(".dtcm"))) = {0, 64, 128};
+u8 JITTER_X[]     __attribute__((section(".dtcm"))) = {0, 64, 128};
+u8 JITTER_Y[]     __attribute__((section(".dtcm"))) = {0, 64, 96};
 u8 debugger_pause __attribute__((section(".dtcm"))) = 0;
 u8 offset_allowed __attribute__((section(".dtcm"))) = 1;
 
@@ -323,8 +324,6 @@ ITCM_CODE mm_word OurSoundMixer(mm_word len, mm_addr dest, mm_stream_formats for
 // will be played back by the mixer routine directly above...
 // --------------------------------------------------------------------------------------------
 s16 mixbufAY[4]  __attribute__((section(".dtcm")));
-s16 beeper_vol[4] __attribute__((section(".dtcm"))) = { 0x000, 0x200, 0x600, 0xA00 };
-u32 vol __attribute__((section(".dtcm"))) = 0;
 ITCM_CODE void processDirectAudio(void)
 {
     ay38910Mixer(4, mixbufAY, &myAY);
@@ -339,12 +338,12 @@ ITCM_CODE void processDirectAudio(void)
 }
 
 // -----------------------------------------------------------------------------------------------
-// The user can override the core emulation speed from 80% to 120% to make games play faster/slow
+// The user can override the core emulation speed from 80% to 130% to make games play faster/slow
 // than normal. We must adjust the MaxMode sample frequency to match or else we will not have the
 // proper number of samples in our sound buffer... this isn't perfect but it's reasonably good!
 // -----------------------------------------------------------------------------------------------
 static u8 last_game_speed = 0;
-static u32 sample_rate_adjust[] = {100, 110, 120, 90, 80};
+static u32 sample_rate_adjust[] = {100, 110, 120, 130, 90, 80};
 void newStreamSampleRate(void)
 {
     if (last_game_speed != myConfig.gameSpeed)
@@ -352,7 +351,7 @@ void newStreamSampleRate(void)
         last_game_speed = myConfig.gameSpeed;
         mmStreamClose();
 
-        // Adjust the sample rate to match the core emulation speed... user can override from 80% to 120%
+        // Adjust the sample rate to match the core emulation speed... user can override from 80% to 130%
         int new_sample_rate     = (sample_rate * sample_rate_adjust[myConfig.gameSpeed]) / 100;
         myStream.sampling_rate  = new_sample_rate;        // sample_rate for the CPC to match the AY/Beeper drivers
         myStream.buffer_length  = buffer_size;            // buffer length = (512+16)
@@ -1938,8 +1937,8 @@ ITCM_CODE void irqVBlank(void)
 
     REG_BG2X = cxBG;
     REG_BG2Y = cyBG;
-    REG_BG3X = cxBG+JITTER[myConfig.jitter];
-    REG_BG3Y = cyBG;
+    REG_BG3X = cxBG+JITTER_X[myConfig.jitter];
+    REG_BG3Y = cyBG+JITTER_Y[myConfig.jitter];
 
     REG_BG2PA = xdxBG;
     REG_BG2PD = ydyBG;
