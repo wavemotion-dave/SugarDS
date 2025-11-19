@@ -250,6 +250,7 @@ Known Issues :
 * Megablasters has issues with the emulated CRTC type detection and won't start except for one version which I've added a patch for: The 2020 ENGLISH Re-Release version (4 disks).
 * Enlightenment (aka Druid 2) has major graphical glitching. Cause is likely inaccurate CRTC emulation.
 * Imperial Mahjongg does not run. Cause is likely inaccurate CRTC emulation.
+* Sugar City has graphical glitches top/sides. You can position and stretch the screen to largely push these off the LCD so they aren't as distracting. Cause is likely inaccurate CRTC emulation.
 * Turrican 128K works fine with the two disk version but the single disk version has issues. 
 
 Version History :
