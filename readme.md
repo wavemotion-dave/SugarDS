@@ -259,7 +259,7 @@ Known Issues :
 
 Version History :
 -----------------------
-Version 1.4 - ??-Nov-2025 by wavemotion-dave
+Version 1.4 - 19-Nov-2025 by wavemotion-dave
 * DSi now double-buffers LCD rendering for smoother performance and syncs to true 50Hz refresh.
 * Added Favorites system - use SELECT when loading games to toggle between like/love.
 * Added new 130% rendering speed as a per-game option.
@@ -267,6 +267,7 @@ Version 1.4 - ??-Nov-2025 by wavemotion-dave
 * Added vertical jitter handling - improves look of vertical compression making games like Tempest look much improved when scaled.
 * Improved save state support - AY music is properly restored when loading an old save state.
 * Added instructions for use on first boot of the emulator.
+* Switched to O3 optimization for a few more frames of performance.
 * Lots of other small improvements and cleanups under the hood as time permitted.
 
 Version 1.3 - 13-Sep-2025 by wavemotion-dave
