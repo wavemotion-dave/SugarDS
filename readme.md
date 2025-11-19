@@ -174,13 +174,17 @@ Further, the 200 vertical pixels is often extended via programming techniques th
 resolution - I've seen some games like Bomb Jack Extra Sugar and the official Ocean Donkey Kong that utilize as
 much as 256 pixels of vertical resolution - and we simply can't display that many pixel rows on our poor DS.
 
-To that end, you will have to get creative and understand the Pan Up/Down, Offset and Pan-and-Scan features
-I've added to this emulator.
+And, if that wasn't complicated enough... the Amstrad CRTC chip can be programmed to vary the horizontal rendering
+as well... so the poor DS really has a lot to cope with!
 
-It's critical that you use the L/R buttons to shift/scale the screen as the Amstrad
+To that end, you will have to get creative and understand the tools available in the emulator to help you get the
+game running as best we can. This includes Pan Up/Down, Offset and Pan-and-Scan features I've added to this emulator.
+
+Of primary importance is the L/R buttons to shift/scale the screen as the Amstrad
 CPC will often utilize more pixels than the DS has resolution (192 vertical pixels)
 so you will be forced to either compress (squash) the screen or else position the 
 screen carefully and map one of the buttons to PAN UP or PAN DOWN the screen briefly.
+
 This works really well for games that show status or score at the top or bottom of 
 the screen but otherwise doesn't really affect the main gameplay area. I tend to use the X button
 to PAN UP or PAN DOWN depending on where the score/status portion of the screen is displayed
