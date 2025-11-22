@@ -1011,6 +1011,8 @@ void FindConfig(char *filename)
     if (strstr(szName, "CHASEH")        != 0)   myConfig.waveDirect  = 1;  // Chase HQ uses digitized voice
     if (strstr(szName, "CHASE H")       != 0)   myConfig.waveDirect  = 1;  // Chase HQ uses digitized voice
     if (strstr(szName, "MANIC")         != 0)   myConfig.waveDirect  = 1;  // Manic Miner uses digitized sounds
+    if (strstr(szName, "BATMAN FOR")    != 0)   myConfig.waveDirect  = 1;  // Batman Forever uses digitized sounds
+    if (strstr(szName, "BATMANFOR")     != 0)   myConfig.waveDirect  = 1;  // Batman Forever uses digitized sounds
 
     for (u16 slot=0; slot<MAX_CONFIGS; slot++)
     {
@@ -1231,10 +1233,10 @@ void SwapKeymap(void)
     keyMapType = (keyMapType+1) % 4;
     switch (keyMapType)
     {
-        case 0: MapPlayer1();  DSPrint(7,6,0,("**  JOYSTICK 1  **")); break;
-        case 1: MapAllJoy();   DSPrint(7,6,0,("** JOY FIRE 123 **")); break;
-        case 2: MapCursors();  DSPrint(7,6,0,("** CURSOR KEYS  **")); break;
-        case 3: MapQAOP();     DSPrint(7,6,0,("**  QAOP-SPACE  **")); break;
+        case 0: MapPlayer1();  break;
+        case 1: MapAllJoy();   break;
+        case 2: MapCursors();  break;
+        case 3: MapQAOP();     break;
     }
 }
 
@@ -1364,10 +1366,10 @@ void SugarDSChangeKeymap(void)
         SwapKeymap();
         bIndTch = myConfig.keymap[ucY-7];
         DisplayKeymapName(ucY);
-        WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
-        DSPrint(7,6,0,("                  "));
         while (keysCurrent() & KEY_X)
-            ;
+        {
+            asm("nop");
+        }
         WAITVBL
     }
     swiWaitForVBlank();
@@ -1880,12 +1882,12 @@ u8 AmstradInit(char *szGame)
     REG_BG3PA = xdxBG;
     REG_BG3PD = ydyBG;
 
-    vramSetBankD(VRAM_D_LCD);        // Not using this for video but 128K of faster RAM always useful!  Mapped at 0x06860000 -   Unused - reserved for future use
+    vramSetBankD(VRAM_D_LCD);        // Not using this for video but 128K of faster RAM always useful!  Mapped at 0x06860000 -   We are using 256K on the DSi for a double-buffered LCD
     vramSetBankE(VRAM_E_LCD);        // Not using this for video but 64K of faster RAM always useful!   Mapped at 0x06880000 -   ..
     vramSetBankF(VRAM_F_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x06890000 -   ..
     vramSetBankG(VRAM_G_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x06894000 -   ..
     vramSetBankH(VRAM_H_LCD);        // Not using this for video but 32K of faster RAM always useful!   Mapped at 0x06898000 -   ..
-    vramSetBankI(VRAM_I_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x068A0000 -   16K used for SID waveform table cache
+    vramSetBankI(VRAM_I_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x068A0000 -   16K unused
 
     RetFct = loadgame(szGame);       // Load up the CPC Disk game
 

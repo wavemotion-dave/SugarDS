@@ -255,7 +255,8 @@ Known Issues :
 * Enlightenment (aka Druid 2) has major graphical glitching. Cause is likely inaccurate CRTC emulation.
 * Imperial Mahjongg does not run. Cause is likely inaccurate CRTC emulation.
 * Sugar City has graphical glitches top/sides. You can position and stretch the screen to largely push these off the LCD so they aren't as distracting. Cause is likely inaccurate CRTC emulation.
-* Turrican 128K works fine with the two disk version but the single disk 'PARADOS' version has issues. 
+* Out of This World has graphical glitches and frame sync issues. Likely inaccurate CRTC emulation.
+* Turrican 128K works fine with the two disk version but the single disk 'PARADOS' version won't load.
 
 Version History :
 -----------------------

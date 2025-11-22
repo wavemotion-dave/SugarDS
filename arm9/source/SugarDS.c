@@ -1208,7 +1208,7 @@ void SugarDS_main(void)
 
         if (myConfig.panAndScan)
         {
-            if (mode1_frames > 25) // A half second of mode1 frames in a row is enough to switch...
+            if (mode1_frames >= 15) // A a third of mode1 frames in a row is enough to switch...
             {
                 mode2_scale = 0;
                 if (myConfig.panAndScan) // Pan-and-Scan overrides normal autosize rules
@@ -1221,7 +1221,7 @@ void SugarDS_main(void)
                     myConfig.scaleX = 256;  // Max compression is best we can do
                 }
             }
-            else if (mode2_frames > 25) // A half second of mode2 frames in a row is enough to switch...
+            else if (mode2_frames > 15) // A half second of mode2 frames in a row is enough to switch...
             {
                 mode1_scale = 0;
                 if (myConfig.panAndScan) // Pan-and-Scan overrides normal autosize rules
@@ -1545,9 +1545,11 @@ void SugarDS_main(void)
       {
           if (myConfig.dpad == DPAD_DIAGONALS) // Diagonals... map standard Left/Right/Up/Down to combinations
           {
-              // TODO: add diagonal dpad support... not sure how often this is needed
+                   if (nds_key & KEY_UP)    nds_key |= KEY_RIGHT;  // UP-RIGHT
+              else if (nds_key & KEY_DOWN)  nds_key |= KEY_LEFT;   // DOWN-LEFT
+              else if (nds_key & KEY_LEFT)  nds_key |= KEY_UP;     // UP-LEFT
+              else if (nds_key & KEY_RIGHT) nds_key |= KEY_DOWN;   // DOWN-RIGHT
           }
-
           if (myConfig.dpad == DPAD_SLIDE_N_GLIDE) // CHUCKIE-EGG Style... hold left/right or up/down for a few frames
           {
                 if (nds_key & KEY_UP)

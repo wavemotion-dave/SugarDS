@@ -15,8 +15,8 @@
 #include <string.h>
 #include "printf.h"
 
-#define PING_A (0x06860000)
-#define PING_B (0x06880000)
+#define PING_A (0x06860000)     // For DSi this is LCD buffer A for double-buffer action
+#define PING_B (0x06880000)     // For DSi this is LCD buffer B for double-buffer action
 
 extern u32 debug[0x10];
 extern u32 DX, DY;
@@ -43,21 +43,22 @@ extern u8  mode1_offset;
 extern u16 mode1_scale;
 
 // These are the various special icons/menu operations
-#define MENU_CHOICE_NONE        0x00
-#define MENU_CHOICE_RESET_GAME  0x01
-#define MENU_CHOICE_END_GAME    0x02
-#define MENU_CHOICE_SAVE_GAME   0x03
-#define MENU_CHOICE_LOAD_GAME   0x04
-#define MENU_CHOICE_DEFINE_KEYS 0x05
-#define MENU_CHOICE_CONFIG_GAME 0x06
-#define MENU_CHOICE_SWAP_DISK   0x07
+#define MENU_CHOICE_NONE        0x00        // No menu choice
+#define MENU_CHOICE_RESET_GAME  0x01        // Reset current game (will prompt YES/NO)
+#define MENU_CHOICE_END_GAME    0x02        // Quit current game (will prompt YES/NO)
+#define MENU_CHOICE_SAVE_GAME   0x03        // Save Game state
+#define MENU_CHOICE_LOAD_GAME   0x04        // Load Game state
+#define MENU_CHOICE_DEFINE_KEYS 0x05        // Define Key sub-menu
+#define MENU_CHOICE_CONFIG_GAME 0x06        // Config Game sub-menu
+#define MENU_CHOICE_SWAP_DISK   0x07        // Swap Disk sub-menu
 #define MENU_CHOICE_TOGGLE_KBD  0xFE        // Toggle Keyboard for Keypad
 #define MENU_CHOICE_MENU        0xFF        // Special brings up a mini-menu of choices
 
 // ------------------------------------------------------------------------------
-// Joystick UP, RIGHT, LEFT, DOWN and FIRE 1+2 buttons for the Amstrad Joystick.
+// Joystick UP, RIGHT, LEFT, DOWN and FIRE 1+2+3 buttons for the Amstrad Joystick.
 // Designed specifically so each has its own bit so we can press more than one
 // direction/fire at the same time.  Keyboard keys are grafted onto this below.
+// Most games only use Fire button #1 but some of the later homebrews use more.
 // ------------------------------------------------------------------------------
 #define JST_UP              0x0001
 #define JST_RIGHT           0x0002

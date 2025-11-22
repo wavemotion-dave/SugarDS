@@ -437,7 +437,7 @@ ITCM_CODE unsigned char cpu_readport_ams(register unsigned short Port)
     }
 
     // -------------------------------------
-    // We are loosely emulating CRTC Type 0
+    // We are loosely emulating CRTC Type 3
     // -------------------------------------
     if ((Port & 0x4200) == 0x0200) // CRTC Read
     {
