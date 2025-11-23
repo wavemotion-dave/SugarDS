@@ -14,7 +14,7 @@ playable on the tiny handheld so you can get your Amstrad gaming on-the-go!
 
 Features :
 -----------------------
-* Emulates CPC 464 (64K) and CPC 6128 (128K) with 512K of extended RAM available.
+* Emulates CPC 464 (64K) and CPC 6128 (128K) with 512K of extended RAM available (1024K extended RAM for DSi).
 * Loads .SNA and .DSK files up to 1024K total length (single and double sided).
 * Plus2CPC Cartridge Support to load .CPR files up to 512K (note, this is not a plus/GX4000 emulator but will handle cart files provided they don't require plus-features).
 * Partial Dandanator Cartridge Support - Enough for Sword of Ianna and Los Amores de Brunilda. Rename files to .dan to load into the emulator properly.
@@ -222,6 +222,8 @@ of the Amstrad CPC file you wish to run in double brackets like this:
 This when that .dsk file is loaded, the emulator will sense what's between the double
 brackets and issue the proper RUN "ORION" command
 
+For CPM based games, you can use [[CPM]] in the title to automatically run the |CPM command.
+
 Note that sometimes one disk version of a game won't load properly but a different version will.
 Keep looking - you're very likely to find a version that will load and play correctly. Such is
 life with emulation and potentially dodgy disk dumps.
@@ -234,11 +236,11 @@ utilize the GX4000 or Amstrad CPC+ (plus) graphics capabilities.
 
 Dandanator Support :
 -----------------------
-Mainly to run two games - Sword of Ianna and Los Amores de Brunilda. Rename those .rom
-files as .dan files so that they will be loaded as Dandanator files within the SugarDS
-emulator. Note that we do not support Flash writes on these carts - but the games
-themselves should be playable and you can use the normal emulator save/load states
-to save your progress.
+Mainly to run three games - Sword of Ianna, Gomilandia and Los Amores de Brunilda. 
+Rename those .rom files as .dan files so that they will be loaded as Dandanator 
+files within the SugarDS emulator. Note that we do not support Flash writes on these
+carts - but the games themselves should be playable and you can use the normal 
+emulator save/load states to save your progress.
 
 SNA Support :
 -----------------------
@@ -256,10 +258,17 @@ Known Issues :
 * Imperial Mahjongg does not run. Cause is likely inaccurate CRTC emulation.
 * Sugar City has graphical glitches top/sides. You can position and stretch the screen to largely push these off the LCD so they aren't as distracting. Cause is likely inaccurate CRTC emulation.
 * Out of This World has graphical glitches and frame sync issues. Likely inaccurate CRTC emulation.
+* Chips Challenge has graphical glitches. Likely inaccurate CRTC emulation.
 * Turrican 128K works fine with the two disk version but the single disk 'PARADOS' version won't load.
+* SymbOS will run but you should prefer to use the 512K .CPR which contains the full Operating System and doesn't have quirky load issues due to FDC emulation inaccuracies.
 
 Version History :
 -----------------------
+Version 1.4a - ??-Nov-2025 by wavemotion-dave
+* DSi now had a full 1024K of extra CPC emulated RAM that does not interfere with the Disk/ROM memory area. DS-Lite still only has 512K of expanded CPC RAM.
+* Added DIAGONALS as a d-pad option in configuration.
+* Improved disk swap so the 'ready' signal is delayed a bit which seems to improve Infocom games when swapping in/out the save disk.
+
 Version 1.4 - 19-Nov-2025 by wavemotion-dave
 * DSi now double-buffers LCD rendering for smoother performance and syncs to true 50Hz refresh.
 * Added Favorites system - use SELECT when loading games to toggle between like/love.

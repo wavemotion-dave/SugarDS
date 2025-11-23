@@ -37,6 +37,8 @@ static char tmpStr[32];             // For various screen status strings
 
 u8 CompressBuffer[150*1024];        // Big enough to handle compression of even full 128K games
 
+extern u8 DSi_ExpandedRAM[];
+
 void amstradSaveState()
 {
   size_t retVal;
@@ -76,14 +78,14 @@ void amstradSaveState()
     u8 ay_save_buffer[64];  // The AY save state is only like 16 bytes... so this is more than enough...
     ay38910SaveState(ay_save_buffer, &myAY);
     retVal = fwrite(ay_save_buffer, sizeof(ay_save_buffer), 1, handle);
-    
+
     // Write the FDC floppy struct
     if (retVal) retVal = fwrite(&fdc, sizeof(fdc), 1, handle);
-    
+
     // Write CRTC info
     if (retVal) retVal = fwrite(CRTC,  sizeof(CRTC), 1, handle);
     if (retVal) retVal = fwrite(&CRT_Idx, sizeof(CRT_Idx), 1, handle);
-    
+
     // And a bunch more CRTC and Amstrad misc stuff...
     if (retVal) retVal = fwrite(&HCC,               sizeof(HCC),                1, handle);
     if (retVal) retVal = fwrite(&HSC,               sizeof(HSC),                1, handle);
@@ -105,21 +107,21 @@ void amstradSaveState()
     if (retVal) retVal = fwrite(&display_disable_in,sizeof(display_disable_in), 1, handle);
     if (retVal) retVal = fwrite(&scanline_count,    sizeof(scanline_count),     1, handle);
     if (retVal) retVal = fwrite(&b32K_Mode,         sizeof(b32K_Mode),          1, handle);
-    
+
     if (retVal) retVal = fwrite(&MMR,               sizeof(MMR),                1, handle);
     if (retVal) retVal = fwrite(&RMR,               sizeof(RMR),                1, handle);
     if (retVal) retVal = fwrite(&PENR,              sizeof(PENR),               1, handle);
     if (retVal) retVal = fwrite(&UROM,              sizeof(UROM),               1, handle);
-    
+
     if (retVal) retVal = fwrite(&temp_offset,       sizeof(temp_offset),        1, handle);
     if (retVal) retVal = fwrite(&perm_offset,       sizeof(perm_offset),        1, handle);
     if (retVal) retVal = fwrite(&slide_dampen,      sizeof(slide_dampen),       1, handle);
-    
+
     if (retVal) retVal = fwrite(&mode1_scale,       sizeof(mode1_scale),        1, handle);
     if (retVal) retVal = fwrite(&mode1_offset,      sizeof(mode1_offset),       1, handle);
     if (retVal) retVal = fwrite(&mode2_scale,       sizeof(mode1_scale),        1, handle);
-    if (retVal) retVal = fwrite(&mode2_offset,      sizeof(mode1_offset),       1, handle);    
-    
+    if (retVal) retVal = fwrite(&mode2_offset,      sizeof(mode1_offset),       1, handle);
+
     if (retVal) retVal = fwrite(&border_color,      sizeof(border_color),       1, handle);
     if (retVal) retVal = fwrite(INK,                sizeof(INK),                1, handle);
     if (retVal) retVal = fwrite(ink_map,            sizeof(ink_map),            1, handle);
@@ -129,13 +131,15 @@ void amstradSaveState()
     if (retVal) retVal = fwrite(&portA,             sizeof(portA),              1, handle);
     if (retVal) retVal = fwrite(&portB,             sizeof(portB),              1, handle);
     if (retVal) retVal = fwrite(&portC,             sizeof(portC),              1, handle);
-    
+
     if (retVal) retVal = fwrite(&DAN_Zone0,         sizeof(DAN_Zone0),          1, handle);
     if (retVal) retVal = fwrite(&DAN_Zone1,         sizeof(DAN_Zone1),          1, handle);
     if (retVal) retVal = fwrite(&DAN_Config,        sizeof(DAN_Config),         1, handle);
 
     if (retVal) retVal = fwrite(&portDIR,           sizeof(portDIR),            1, handle);
-    if (retVal) retVal = fwrite(spare,              255,                        1, handle);
+    if (retVal) retVal = fwrite(&RAM_512k_bank,     sizeof(RAM_512k_bank),      1, handle);
+
+    if (retVal) retVal = fwrite(spare,              254,                        1, handle);
 
     // The RAM highwater tells us how many extra RAM banks were utilized
     if (retVal) retVal = fwrite(&ram_highwater,     sizeof(ram_highwater),      1, handle);
@@ -152,24 +156,48 @@ void amstradSaveState()
 
     if (retVal) retVal = fwrite(&comp_len,          sizeof(comp_len), 1, handle);
     if (retVal) retVal = fwrite(&CompressBuffer,    comp_len,         1, handle);
-    
+
     if (ram_highwater) // If we used more than one extra 64K bank... we need to save those
     {
         u8 *upper_ram_block = 0;
         for (u8 block=1; block<=ram_highwater; block++)
         {
-            switch (block)
+            if (isDSiMode())
             {
-                case 1: upper_ram_block = ROM_Memory+0xF0000; break;
-                case 2: upper_ram_block = ROM_Memory+0xE0000; break;
-                case 3: upper_ram_block = ROM_Memory+0xD0000; break;
-                case 4: upper_ram_block = ROM_Memory+0xC0000; break;
-                case 5: upper_ram_block = ROM_Memory+0xB0000; break;
-                case 6: upper_ram_block = ROM_Memory+0xA0000; break;
-                case 7: upper_ram_block = ROM_Memory+0x90000; break;
+                switch (block)
+                {
+                    case 1:  upper_ram_block = DSi_ExpandedRAM+0x00000; break;
+                    case 2:  upper_ram_block = DSi_ExpandedRAM+0x10000; break;
+                    case 3:  upper_ram_block = DSi_ExpandedRAM+0x20000; break;
+                    case 4:  upper_ram_block = DSi_ExpandedRAM+0x30000; break;
+                    case 5:  upper_ram_block = DSi_ExpandedRAM+0x40000; break;
+                    case 6:  upper_ram_block = DSi_ExpandedRAM+0x50000; break;
+                    case 7:  upper_ram_block = DSi_ExpandedRAM+0x60000; break;
+                    case 8:  upper_ram_block = DSi_ExpandedRAM+0x70000; break;
+                    case 9:  upper_ram_block = DSi_ExpandedRAM+0x80000; break;
+                    case 10: upper_ram_block = DSi_ExpandedRAM+0x90000; break;
+                    case 11: upper_ram_block = DSi_ExpandedRAM+0xA0000; break;
+                    case 12: upper_ram_block = DSi_ExpandedRAM+0xB0000; break;
+                    case 13: upper_ram_block = DSi_ExpandedRAM+0xC0000; break;
+                    case 14: upper_ram_block = DSi_ExpandedRAM+0xD0000; break;
+                    case 15: upper_ram_block = DSi_ExpandedRAM+0xE0000; break;
+                }
             }
-    
-            int max_len = lzav_compress_bound_hi( 0x10000 );        
+            else
+            {
+                switch (block)
+                {
+                    case 1: upper_ram_block = ROM_Memory+0xF0000; break;
+                    case 2: upper_ram_block = ROM_Memory+0xE0000; break;
+                    case 3: upper_ram_block = ROM_Memory+0xD0000; break;
+                    case 4: upper_ram_block = ROM_Memory+0xC0000; break;
+                    case 5: upper_ram_block = ROM_Memory+0xB0000; break;
+                    case 6: upper_ram_block = ROM_Memory+0xA0000; break;
+                    case 7: upper_ram_block = ROM_Memory+0x90000; break;
+                }
+            }
+
+            int max_len = lzav_compress_bound_hi( 0x10000 );
             int comp_len = lzav_compress_hi( upper_ram_block, CompressBuffer, 0x10000, max_len );
 
             if (retVal) retVal = fwrite(&comp_len,          sizeof(comp_len), 1, handle);
@@ -223,7 +251,7 @@ void amstradLoadState()
             // Read Last Directory Path / Disk File
             if (retVal) retVal = fread(last_path, sizeof(last_path), 1, handle);
             if (retVal) retVal = fread(last_file, sizeof(last_file), 1, handle);
-            
+
             // ----------------------------------------------------------------
             // If the last known file was a disk file we want to reload it.
             // ----------------------------------------------------------------
@@ -240,15 +268,15 @@ void amstradLoadState()
             u8 ay_save_buffer[64];  // The AY save state is only like 16 bytes... so this is more than enough...
             retVal = fread(ay_save_buffer, sizeof(ay_save_buffer), 1, handle);
             ay38910LoadState(&myAY, ay_save_buffer);
-            
+
             // Read the FDC floppy struct
             if (retVal) retVal = fread(&fdc, sizeof(fdc), 1, handle);
             if (fdc.ImgDsk) fdc.ImgDsk = DISK_IMAGE_BUFFER;
-            
+
             // Read CRTC info
             if (retVal) retVal = fread(CRTC,  sizeof(CRTC), 1, handle);
             if (retVal) retVal = fread(&CRT_Idx, sizeof(CRT_Idx), 1, handle);
-            
+
             // And a bunch more CRTC and Amstrad misc stuff...
             if (retVal) retVal = fread(&HCC,               sizeof(HCC),                1, handle);
             if (retVal) retVal = fread(&HSC,               sizeof(HSC),                1, handle);
@@ -269,13 +297,13 @@ void amstradLoadState()
             if (retVal) retVal = fread(&vSyncSeen,         sizeof(vSyncSeen),          1, handle);
             if (retVal) retVal = fread(&display_disable_in,sizeof(display_disable_in), 1, handle);
             if (retVal) retVal = fread(&scanline_count,    sizeof(scanline_count),     1, handle);
-            if (retVal) retVal = fread(&b32K_Mode,         sizeof(b32K_Mode),          1, handle);            
-            
+            if (retVal) retVal = fread(&b32K_Mode,         sizeof(b32K_Mode),          1, handle);
+
             if (retVal) retVal = fread(&MMR,               sizeof(MMR),                1, handle);
             if (retVal) retVal = fread(&RMR,               sizeof(RMR),                1, handle);
             if (retVal) retVal = fread(&PENR,              sizeof(PENR),               1, handle);
             if (retVal) retVal = fread(&UROM,              sizeof(UROM),               1, handle);
-            
+
             if (retVal) retVal = fread(&temp_offset,       sizeof(temp_offset),        1, handle);
             if (retVal) retVal = fread(&perm_offset,       sizeof(perm_offset),        1, handle);
             if (retVal) retVal = fread(&slide_dampen,      sizeof(slide_dampen),       1, handle);
@@ -283,7 +311,7 @@ void amstradLoadState()
             if (retVal) retVal = fread(&mode1_scale,       sizeof(mode1_scale),        1, handle);
             if (retVal) retVal = fread(&mode1_offset,      sizeof(mode1_offset),       1, handle);
             if (retVal) retVal = fread(&mode2_scale,       sizeof(mode1_scale),        1, handle);
-            if (retVal) retVal = fread(&mode2_offset,      sizeof(mode1_offset),       1, handle);    
+            if (retVal) retVal = fread(&mode2_offset,      sizeof(mode1_offset),       1, handle);
 
             if (retVal) retVal = fread(&border_color,      sizeof(border_color),       1, handle);
             if (retVal) retVal = fread(INK,                sizeof(INK),                1, handle);
@@ -294,28 +322,30 @@ void amstradLoadState()
             if (retVal) retVal = fread(&portA,             sizeof(portA),              1, handle);
             if (retVal) retVal = fread(&portB,             sizeof(portB),              1, handle);
             if (retVal) retVal = fread(&portC,             sizeof(portC),              1, handle);
-            
+
             if (retVal) retVal = fread(&DAN_Zone0,         sizeof(DAN_Zone0),          1, handle);
             if (retVal) retVal = fread(&DAN_Zone1,         sizeof(DAN_Zone1),          1, handle);
-            if (retVal) retVal = fread(&DAN_Config,        sizeof(DAN_Config),         1, handle);            
-            
+            if (retVal) retVal = fread(&DAN_Config,        sizeof(DAN_Config),         1, handle);
+
             if (retVal) retVal = fread(&portDIR,           sizeof(portDIR),            1, handle);
-            if (retVal) retVal = fread(spare,              255,                        1, handle);
-            
+            if (retVal) retVal = fread(&RAM_512k_bank,     sizeof(RAM_512k_bank),      1, handle);
+
+            if (retVal) retVal = fread(spare,              254,                        1, handle);
+
             // The RAM highwater tells us how many extra RAM banks were utilized
-            if (retVal) retVal = fread(&ram_highwater,     sizeof(ram_highwater),      1, handle);            
-    
+            if (retVal) retVal = fread(&ram_highwater,     sizeof(ram_highwater),      1, handle);
+
             // Load Z80 Memory Map... all 128K of it!
             int comp_len = 0;
             if (retVal) retVal = fread(&comp_len,          sizeof(comp_len), 1, handle);
             if (retVal) retVal = fread(&CompressBuffer,    comp_len,         1, handle);
-            
+
             // ------------------------------------------------------------------
             // Decompress the previously compressed RAM and put it back into the
             // right memory location... this is quite fast all things considered.
             // ------------------------------------------------------------------
             (void)lzav_decompress( CompressBuffer, RAM_Memory, comp_len, 0x20000 );
-            
+
             if (ram_highwater) // If we used more than one extra 64K bank... we need to save those
             {
                 u8 *upper_ram_block = 0;
@@ -324,18 +354,42 @@ void amstradLoadState()
                     int comp_len = 0;
                     if (retVal) retVal = fread(&comp_len,          sizeof(comp_len), 1, handle);
                     if (retVal) retVal = fread(&CompressBuffer,    comp_len,         1, handle);
-                    
-                    switch (block)
+
+                    if (isDSiMode())
                     {
-                        case 1: upper_ram_block = ROM_Memory+0xF0000; break;
-                        case 2: upper_ram_block = ROM_Memory+0xE0000; break;
-                        case 3: upper_ram_block = ROM_Memory+0xD0000; break;
-                        case 4: upper_ram_block = ROM_Memory+0xC0000; break;
-                        case 5: upper_ram_block = ROM_Memory+0xB0000; break;
-                        case 6: upper_ram_block = ROM_Memory+0xA0000; break;
-                        case 7: upper_ram_block = ROM_Memory+0x90000; break;
+                        switch (block)
+                        {
+                            case 1:  upper_ram_block = DSi_ExpandedRAM+0x00000; break;
+                            case 2:  upper_ram_block = DSi_ExpandedRAM+0x10000; break;
+                            case 3:  upper_ram_block = DSi_ExpandedRAM+0x20000; break;
+                            case 4:  upper_ram_block = DSi_ExpandedRAM+0x30000; break;
+                            case 5:  upper_ram_block = DSi_ExpandedRAM+0x40000; break;
+                            case 6:  upper_ram_block = DSi_ExpandedRAM+0x50000; break;
+                            case 7:  upper_ram_block = DSi_ExpandedRAM+0x60000; break;
+                            case 8:  upper_ram_block = DSi_ExpandedRAM+0x70000; break;
+                            case 9:  upper_ram_block = DSi_ExpandedRAM+0x80000; break;
+                            case 10: upper_ram_block = DSi_ExpandedRAM+0x90000; break;
+                            case 11: upper_ram_block = DSi_ExpandedRAM+0xA0000; break;
+                            case 12: upper_ram_block = DSi_ExpandedRAM+0xB0000; break;
+                            case 13: upper_ram_block = DSi_ExpandedRAM+0xC0000; break;
+                            case 14: upper_ram_block = DSi_ExpandedRAM+0xD0000; break;
+                            case 15: upper_ram_block = DSi_ExpandedRAM+0xE0000; break;
+                        }
                     }
-                    
+                    else
+                    {
+                        switch (block)
+                        {
+                            case 1: upper_ram_block = ROM_Memory+0xF0000; break;
+                            case 2: upper_ram_block = ROM_Memory+0xE0000; break;
+                            case 3: upper_ram_block = ROM_Memory+0xD0000; break;
+                            case 4: upper_ram_block = ROM_Memory+0xC0000; break;
+                            case 5: upper_ram_block = ROM_Memory+0xB0000; break;
+                            case 6: upper_ram_block = ROM_Memory+0xA0000; break;
+                            case 7: upper_ram_block = ROM_Memory+0x90000; break;
+                        }
+                    }
+
                     (void)lzav_decompress( CompressBuffer, upper_ram_block, comp_len, 0x10000 );
                 }
             }
@@ -353,7 +407,7 @@ void amstradLoadState()
             DSPrint(18,0,0,"             ");
             DisplayStatusLine(true);
         }
-        
+
         fclose(handle);
       }
       else

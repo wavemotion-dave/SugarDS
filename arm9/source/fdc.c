@@ -647,22 +647,9 @@ void FDC_frame(void)
         if (--fdc.ReadyIn == 0) 
         {
             fdc.Image=1;
-        }
-
-        if (fdc.Motor && fdc.Image && !fdc.Drive)
-        {
             fdc.ST0 &= ~ST0_NR;
             fdc.ST0 &= ~ST0_IC1 & ~ST0_IC2;
         }
-        else
-        {
-            fdc.ST0 |= ST0_NR;
-            if ( !fdc.Image )
-            {
-                fdc.ST0 |= ( ST0_IC1 | ST0_IC2 );
-            }
-        }
-        
     }
 }
 
@@ -797,12 +784,15 @@ void ReadDiskMem(u8 *rom, u32 romsize)
     memcpy(fdc.ImgDsk, rom+sizeof(fdc.DiskInfo), fdc.disk_size);
 
     // ---------------------------------------------------------------------------
-    // Setting ReadyIn here will mark the status as 'Not Ready' for 12 frames
+    // Setting ReadyIn here will mark the status as 'Not Ready' for 25 frames
     // as there are some games that monitor the status to see if the disk has
     // actually been ejected and swapped for another disk. Orion Prime does this.
     // ---------------------------------------------------------------------------
-    fdc.ReadyIn = 12;
+    fdc.ReadyIn = 25;
     fdc.FlagWrite=0;
+    
+    fdc.ST0 |= ST0_NR;
+    fdc.ST0 |= ( ST0_IC1 | ST0_IC2 );    
 
     // --------------------------------------------------------------------------------------------
     // Note: there is some confusion as to whether two sides should have the bit set or reset.

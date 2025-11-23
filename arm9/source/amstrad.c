@@ -1,4 +1,5 @@
 // =====================================================================================
+// =====================================================================================
 // Copyright (c) 2025 Dave Bernazzani (wavemotion-dave)
 //
 // Copying and distribution of this emulator, its source code and associated
@@ -46,12 +47,14 @@ u8 inks_changed         __attribute__((section(".dtcm"))) = 0;
 u16 refresh_tstates     __attribute__((section(".dtcm"))) = 0;
 u8 ink_map[256]         __attribute__((section(".dtcm"))) = {0};
 
-
 u32  pre_inked_mode0[256] __attribute__((section(".dtcm"))) = {0};
 u32  pre_inked_mode1[256] __attribute__((section(".dtcm"))) = {0};
 u32  pre_inked_mode2a[256]  = {0};  // Not used often enough to soak up fast memory
 u32  pre_inked_mode2b[256]  = {0};  // Not used often enough to soak up fast memory
 u32  pre_inked_mode2c[256]  = {0};  // Not used often enough to soak up fast memory
+
+u8  RAM_512k_bank = 0;      // Can be set to 1 on DSi for an additional 512K addressing
+u8 *DSi_ExpandedRAM = 0;    // The DSi will malloc 1024K for extra emulated CPC memory
 
 u8 CRTC_MASKS[0x20] = {0xFF, 0xFF, 0xFF, 0xFF,
                        0x7F, 0x1F, 0x7F, 0x7F,
@@ -230,26 +233,53 @@ ITCM_CODE void ConfigureMemory(void)
     u8 *upper_ram_block = RAM_Memory+0x10000;
 
     // ------------------------------------------------------------------
-    // If a game calls for more than the standard 128K of RAM found
-    // in a CPC 6128, we start to steal blocks of 64K from the back-end
-    // of the ROM_Memory[] buffer. The hope is that we would not need
-    // to use both that much ROM_Memory[] and extended RAM_Memory[] at
-    // the same time... but this is a compromise as we have limited RAM.
-    // Steal the 64K blocks starting at the far (back) end of the buffer
-    // so there is less chance of the two memory ends meeting and causing
-    // a catastrophe of biblical proportions.
+    // For the DS-Lite/Phat, if a game calls for more than the standard
+    // 128K of RAM found in a CPC 6128, we start to steal blocks of 64K
+    // from the back-end of the ROM_Memory[] buffer. The hope is that
+    // we would not need to use both that much ROM_Memory[] and extended
+    // RAM_Memory[] at the same time... but this is a compromise as we
+    // have limited RAM. Steal the 64K blocks starting at the far (back)
+    // end of the buffer so there is less chance of the two memory ends
+    // meeting and causing a catastrophe of biblical proportions.
     // ------------------------------------------------------------------
-    if (((MMR >> 3) & 7) > ram_highwater) ram_highwater = ((MMR >> 3) & 7);
-    switch ((MMR >> 3) & 7)
+    u8 bank = RAM_512k_bank | ((MMR >> 3) & 0x7);
+    if (bank > ram_highwater) ram_highwater = bank;
+
+    if (isDSiMode()) // DSi has plenty of memory so we don't need to steal from the ROM_Memory[]
     {
-        case 0: upper_ram_block = RAM_Memory+0x10000; break;
-        case 1: upper_ram_block = ROM_Memory+0xF0000; break;
-        case 2: upper_ram_block = ROM_Memory+0xE0000; break;
-        case 3: upper_ram_block = ROM_Memory+0xD0000; break;
-        case 4: upper_ram_block = ROM_Memory+0xC0000; break;
-        case 5: upper_ram_block = ROM_Memory+0xB0000; break;
-        case 6: upper_ram_block = ROM_Memory+0xA0000; break;
-        case 7: upper_ram_block = ROM_Memory+0x90000; break;
+        switch (bank)
+        {
+            case 0:  upper_ram_block = RAM_Memory+0x10000; break;
+            case 1:  upper_ram_block = DSi_ExpandedRAM+0x00000; break;
+            case 2:  upper_ram_block = DSi_ExpandedRAM+0x10000; break;
+            case 3:  upper_ram_block = DSi_ExpandedRAM+0x20000; break;
+            case 4:  upper_ram_block = DSi_ExpandedRAM+0x30000; break;
+            case 5:  upper_ram_block = DSi_ExpandedRAM+0x40000; break;
+            case 6:  upper_ram_block = DSi_ExpandedRAM+0x50000; break;
+            case 7:  upper_ram_block = DSi_ExpandedRAM+0x60000; break;
+            case 8:  upper_ram_block = DSi_ExpandedRAM+0x70000; break;
+            case 9:  upper_ram_block = DSi_ExpandedRAM+0x80000; break;
+            case 10: upper_ram_block = DSi_ExpandedRAM+0x90000; break;
+            case 11: upper_ram_block = DSi_ExpandedRAM+0xA0000; break;
+            case 12: upper_ram_block = DSi_ExpandedRAM+0xB0000; break;
+            case 13: upper_ram_block = DSi_ExpandedRAM+0xC0000; break;
+            case 14: upper_ram_block = DSi_ExpandedRAM+0xD0000; break;
+            case 15: upper_ram_block = DSi_ExpandedRAM+0xE0000; break;
+        }
+    }
+    else // DS-Lite/Phat we steal memory from the ROM_Memory[]
+    {
+        switch (bank & 7)
+        {
+            case 0: upper_ram_block = RAM_Memory+0x10000; break;
+            case 1: upper_ram_block = ROM_Memory+0xF0000; break;
+            case 2: upper_ram_block = ROM_Memory+0xE0000; break;
+            case 3: upper_ram_block = ROM_Memory+0xD0000; break;
+            case 4: upper_ram_block = ROM_Memory+0xC0000; break;
+            case 5: upper_ram_block = ROM_Memory+0xB0000; break;
+            case 6: upper_ram_block = ROM_Memory+0xA0000; break;
+            case 7: upper_ram_block = ROM_Memory+0x90000; break;
+        }
     }
 
     // ----------------------------------------------------------------------
@@ -767,6 +797,16 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
 
             case 0x03:  // MMR - RAM Memory Mapping
                 MMR = Value;
+                if (isDSiMode()) // DS-Lite/Phat only supports the 512K expansion
+                {
+                    // -----------------------------------------------------------------------------
+                    // For memory above 512K, we follow the "RAM7/Yarek-style" of expansion which
+                    // uses the Port address bit 8 as the selector for which 512K chunk is mapped
+                    // in. Basically if the programmer hits port &7Fxx they are using the standard
+                    // lower 512K chunk and if they hit port &7Exx they map in the upper 512k bank.
+                    // -----------------------------------------------------------------------------
+                    RAM_512k_bank = (Port & 0x100) ? 0x00:0x08; // Bit 8 is inverted here
+                }
                 ConfigureMemory();
                 break;
         }
@@ -796,11 +836,17 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
 // ----------------------------------------------------------------------
 void amstrad_reset(void)
 {
+    if (!DSi_ExpandedRAM && isDSiMode())
+    {
+        DSi_ExpandedRAM = malloc(1024*1024); // Grab an extra 1024K of RAM for the DSi which will support 1024K+64K of emulated CPC memory
+    }
+
     ResetFDC();
 
     MMR = 0x00;
     RMR = 0x00;
     UROM = 0x00;
+    RAM_512k_bank = 0;
     ConfigureMemory();
 
     memset(INK, 0x00, sizeof(INK));

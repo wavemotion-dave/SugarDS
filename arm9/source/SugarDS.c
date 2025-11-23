@@ -210,7 +210,7 @@ u16 keyCoresp[MAX_KEY_OPTIONS] __attribute__((section(".dtcm"))) = {
     META_KBD_F9,        //71
     META_KBD_FDOT,      //72
     META_KBD_FENT,      //73
-    
+
     META_KBD_CURS_UP,   //74
     META_KBD_CURS_DN,   //75
     META_KBD_CURS_LF,   //76
@@ -1637,7 +1637,7 @@ void SugarDS_main(void)
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_FDOT)      kbd_key  = KBD_KEY_FDOT;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_FENT)      kbd_key  = KBD_KEY_FENT;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_SHIFT)     kbd_key  = KBD_KEY_SFT;
-                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CONTROL)   kbd_key  = KBD_KEY_CTL;                      
+                      else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CONTROL)   kbd_key  = KBD_KEY_CTL;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_RETURN)    kbd_key  = KBD_KEY_RET;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_UP)   kbd_key  = KBD_KEY_CUP;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CURS_DN)   kbd_key  = KBD_KEY_CDN;
@@ -1647,14 +1647,14 @@ void SugarDS_main(void)
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_ESCAPE)    kbd_key  = KBD_KEY_ESC;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_BACKSLASH) kbd_key  = KBD_KEY_BSL;
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_CAPSLOCK)  kbd_key  = KBD_KEY_CAPS;
-                      
-                      
+
+
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP16)  {temp_offset = -16;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP24)  {temp_offset = -24;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP32)  {temp_offset = -32;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP48)  {temp_offset = -48;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_UP64)  {temp_offset = -64;slide_dampen = 15;}
-                      
+
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN16)  {temp_offset =  16;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN24)  {temp_offset =  24;slide_dampen = 15;}
                       else if (keyCoresp[myConfig.keymap[i]] == META_KBD_PAN_DN32)  {temp_offset =  32;slide_dampen = 15;}
@@ -1852,12 +1852,12 @@ void ShowInstructions(void)
     DSPrint(0,14,0,"TO THE DS LCD SCREEN. PLEASE BE ");
     DSPrint(0,15,0,"SURE TO READ THE ENTIRE README  ");
     DSPrint(0,16,0,"AT MY GITHUB PAGE FOR SUGAR-DS. ");
-    
+
     DSPrint(0,18,0,"FAILURE TO DO SO WILL RESULT IN ");
     DSPrint(0,19,0,"A SUB-OPTIMAL GAMING EXPERIENCE ");
-        
+
     DSPrint(0,22,0,"THIS NOTICE WILL NOT SHOW AGAIN ");
-    
+
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
     WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;WAITVBL;
@@ -1865,12 +1865,12 @@ void ShowInstructions(void)
     while (keysCurrent() == 0)
     {
         WAITVBL;
-    }    
+    }
     WAITVBL;WAITVBL;WAITVBL;
     while (keysCurrent() != 0)
     {
         WAITVBL;
-    }    
+    }
 }
 
 /*********************************************************************************
@@ -2056,7 +2056,7 @@ int main(int argc, char **argv)
   SoundPause();
 
   srand(time(NULL));
-  
+
   //  ------------------------------------------------------------
   //  We run this loop forever until game exit is selected...
   //  ------------------------------------------------------------
