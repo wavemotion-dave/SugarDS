@@ -80,6 +80,7 @@ that may exist. If you are in an official capacity as the copyright owner of the
 BIOS files and wish these stripped from the emulator, please contact me and I'm 
 happy to do so!  Otherwise - many thanks for the indirect permission to use them.
 
+ParaDOS 1.2 is Copyright (c) 2015 by BitWise Systems and was created by Richard Wilson of WinAPE fame.
 
 ## Original Copyright Notice for the Software (not BIOS files)
 ```
@@ -264,9 +265,10 @@ Known Issues :
 
 Version History :
 -----------------------
-Version 1.4a - ??-Nov-2025 by wavemotion-dave
+Version 1.4a - 23-Nov-2025 by wavemotion-dave
 * DSi now had a full 1024K of extra CPC emulated RAM that does not interfere with the Disk/ROM memory area. DS-Lite still only has 512K of expanded CPC RAM.
 * Added DIAGONALS as a d-pad option in configuration.
+* Switched to ParaDOS 1.2 (was using v1.1)
 * Improved disk swap so the 'ready' signal is delayed a bit which seems to improve Infocom games when swapping in/out the save disk.
 
 Version 1.4 - 19-Nov-2025 by wavemotion-dave
