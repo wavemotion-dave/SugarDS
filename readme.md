@@ -265,11 +265,12 @@ Known Issues :
 
 Version History :
 -----------------------
-Version 1.4a - 23-Nov-2025 by wavemotion-dave
+Version 1.5 - ??-???-2025 by wavemotion-dave
 * DSi now had a full 1024K of extra CPC emulated RAM that does not interfere with the Disk/ROM memory area. DS-Lite still only has 512K of expanded CPC RAM.
 * Added DIAGONALS as a d-pad option in configuration.
 * Switched to ParaDOS 1.2 (was using v1.1)
 * Improved disk swap so the 'ready' signal is delayed a bit which seems to improve Infocom games when swapping in/out the save disk.
+* Improved Dandanator support for poor-man 'ROMBOX' functionality. Most game compilation packs now work.
 
 Version 1.4 - 19-Nov-2025 by wavemotion-dave
 * DSi now double-buffers LCD rendering for smoother performance and syncs to true 50Hz refresh.

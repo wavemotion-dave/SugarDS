@@ -37,6 +37,8 @@ extern void EI_Enable(void);
 extern u8  DAN_Zone0;
 extern u8  DAN_Zone1;
 extern u16 DAN_Config;
+extern u8  DAN_Follow;
+extern u8  DAN_WaitRET;
 
 extern void ConfigureMemory(void);
 
@@ -590,7 +592,12 @@ static void CodesFD(void)
             if (CPU.AF.B.h & 0x80) // High bit is the Dandanator Configuration
             {
                 DAN_Config = CPU.AF.B.h;
-                ConfigureMemory();
+                if (DAN_Config & 0x40) DAN_WaitRET = 1;
+                else {DAN_WaitRET = 0; ConfigureMemory();}
+            }
+            else // FollowRomEn bank set
+            {
+                DAN_Follow = 28 + ((CPU.AF.B.h >> 3) & 0x03);
             }
         }
         CPU.PC.W--;break;

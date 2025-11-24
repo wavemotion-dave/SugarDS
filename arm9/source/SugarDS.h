@@ -230,6 +230,8 @@ extern u8 UROM;
 extern u8  DAN_Zone0;
 extern u8  DAN_Zone1;
 extern u16 DAN_Config;
+extern u8  DAN_Follow;
+extern u8  DAN_WaitRET;
 
 extern u8 INK[17];
 extern u32 border_color;

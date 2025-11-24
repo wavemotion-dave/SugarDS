@@ -80,6 +80,8 @@ u8 sna_last_track = 0;
 u8  DAN_Zone0     = 0x00;   // Zone 0 enabled on slot0
 u8  DAN_Zone1     = 0x20;   // Zone 1 disabled on slot0
 u16 DAN_Config    = 0x00;   // Zones 0 and 1 high address bit
+u8  DAN_Follow    = 28;     // FollowRomEn bank for zone 0
+u8  DAN_WaitRET   = 0;      // Set to '1' if we wait for a RET to configure memory
 
 ITCM_CODE void compute_pre_inked(u8 mode)
 {
@@ -173,9 +175,9 @@ void CartLoad(void)
 
 // -------------------------------------------------------------------
 // Dandanator support is limited to cart banking into zones only.
-// There is no writing back of the EEPROM for games that might
-// make use of save states. For that, we can just use our Save/Load
-// state handling for the emulator.
+// There is no writing back of the EEPROM (really it's Flash) for
+// games that might make use of save states. For that, we can just
+// use our Save/Load state handling for the emulator.
 // -------------------------------------------------------------------
 void DandanatorLoad(void)
 {
@@ -187,6 +189,8 @@ void DandanatorLoad(void)
     DAN_Zone0     = 0x00;   // Zone 0 enabled on slot0
     DAN_Zone1     = 0x20;   // Zone 1 disabled on slot0
     DAN_Config    = 0x00;   // Zones 0 and 1 high address bit
+    DAN_Follow    = 28;     // FollowRomEn bank for zone 0
+    DAN_WaitRET   = 0;
 }
 
 
@@ -407,29 +411,37 @@ ITCM_CODE void ConfigureMemory(void)
     // ------------------------------------------------------------------------
     if (amstrad_mode == MODE_DAN)
     {
-        if ((DAN_Zone0 & 0x20) == 0) // Is Zone 0 Enabled?
+        if (!(DAN_Config & 0x20)) // Is the Dandanator mapped in?
         {
-            if (DAN_Config & 0x04) // High bit A15 enabled for Zone 0?
+            if ((DAN_Zone0 & 0x20) == 0) // Is Zone 0 Enabled?
             {
-                MemoryMapR[2] = &ROM_Memory[(DAN_Zone0 & 0x1F) * 0x4000];
+                if (DAN_Config & 0x04) // High bit A15 enabled for Zone 0?
+                {
+                    MemoryMapR[2] = &ROM_Memory[(DAN_Zone0 & 0x1F) * 0x4000];
+                }
+                else if (!(DAN_Config & 0x01)) // Make sure the Flash is CE (Chip Enabled) for Zone 0
+                {
+                    MemoryMapR[0] = &ROM_Memory[(DAN_Zone0 & 0x1F) * 0x4000];
+                }
             }
-            else
-            {
-                MemoryMapR[0] = &ROM_Memory[(DAN_Zone0 & 0x1F) * 0x4000];
-            }
-        }
 
-        if ((DAN_Zone1 & 0x20) == 0) // Is Zone 1 Enabled?
-        {
-            if (DAN_Config & 0x08) // High bit A15 enabled for Zone 1?
+            if ((DAN_Zone1 & 0x20) == 0) // Is Zone 1 Enabled?
             {
-                MemoryMapR[3] = &ROM_Memory[(DAN_Zone1 & 0x1F) * 0x4000];
-            }
-            else
-            {
-                MemoryMapR[1] = &ROM_Memory[(DAN_Zone1 & 0x1F) * 0x4000];
+                if (DAN_Config & 0x08) // High bit A15 enabled for Zone 1?
+                {
+                    MemoryMapR[3] = &ROM_Memory[(DAN_Zone1 & 0x1F) * 0x4000];
+                }
+                else if (!(DAN_Config & 0x02)) // Make sure the Flash is CE (Chip Enabled) for Zone 1
+                {
+                    MemoryMapR[1] = &ROM_Memory[(DAN_Zone1 & 0x1F) * 0x4000];
+                }
             }
         }
+        else if (DAN_Config & 0x10) // RollowRomEn: This is the "poor mans" ROMBOX support
+		{
+            if (!(RMR & 0x04)) MemoryMapR[0] = &ROM_Memory[DAN_Follow * 0x4000];
+            if (!(RMR & 0x08)) MemoryMapR[3] = &ROM_Memory[(DAN_Zone1 & 0x1F) * 0x4000];
+		}
     }
 
     // -------------------------------------------------------------------------------
