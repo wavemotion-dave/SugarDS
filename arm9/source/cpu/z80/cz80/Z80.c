@@ -39,6 +39,7 @@ extern u8  DAN_Zone1;
 extern u16 DAN_Config;
 extern u8  DAN_Follow;
 extern u8  DAN_WaitRET;
+extern u16 DAN_WaitCFG;
 
 extern void ConfigureMemory(void);
 
@@ -580,20 +581,19 @@ static void CodesFD(void)
         if (RdZ80(CPU.PC.W) == 0x70) // LD (IY+nn),B - Zone 0 command
         {
             DAN_Zone0 = CPU.BC.B.h;
-            ConfigureMemory();
+            if (!DAN_WaitRET) ConfigureMemory();
         }
         if (RdZ80(CPU.PC.W) == 0x71) // LD (IY+nn),C - Zone 1 command
         {
             DAN_Zone1 = CPU.BC.B.l;
-            ConfigureMemory();
+            if (!DAN_WaitRET) ConfigureMemory();
         }
         if (RdZ80(CPU.PC.W) == 0x77) // LD (IY+nn),A - Config command
         {
             if (CPU.AF.B.h & 0x80) // High bit is the Dandanator Configuration
             {
-                DAN_Config = CPU.AF.B.h;
-                if (DAN_Config & 0x40) DAN_WaitRET = 1;
-                else {DAN_WaitRET = 0; ConfigureMemory();}
+                if (CPU.AF.B.h & 0x40) {DAN_WaitRET = 1; DAN_WaitCFG = CPU.AF.B.h;}
+                else {DAN_WaitRET = 0; DAN_Config = CPU.AF.B.h; ConfigureMemory();}
             }
             else // FollowRomEn bank set
             {

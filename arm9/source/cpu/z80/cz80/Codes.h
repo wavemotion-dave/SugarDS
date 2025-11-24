@@ -230,7 +230,7 @@ case DJNZ:
 case JP:   M_JP;break;
 case JR:   M_JR;break;
 case CALL: M_CALL;break;
-case RET:  if (DAN_WaitRET) {DAN_WaitRET = 0; ConfigureMemory();} M_RET;break;
+case RET:  if (DAN_WaitRET) {DAN_WaitRET = 0; DAN_Config = DAN_WaitCFG; ConfigureMemory();} M_RET;break;
 case SCF:  S(C_FLAG);R(N_FLAG|H_FLAG);break;
 case CPL:  CPU.AF.B.h=~CPU.AF.B.h;S(N_FLAG|H_FLAG);break;
 case NOP:  break;

@@ -17,7 +17,7 @@ Features :
 * Emulates CPC 464 (64K) and CPC 6128 (128K) with 512K of extended RAM available (1024K extended RAM for DSi).
 * Loads .SNA and .DSK files up to 1024K total length (single and double sided).
 * Plus2CPC Cartridge Support to load .CPR files up to 512K (note, this is not a plus/GX4000 emulator but will handle cart files provided they don't require plus-features).
-* Partial Dandanator Cartridge Support - Enough for Sword of Ianna and Los Amores de Brunilda. Rename files to .dan to load into the emulator properly.
+* Dandanator Cartridge Support - Enough for Sword of Ianna and Los Amores de Brunilda and most compilation packs. Rename files to .dan to load into the emulator properly.
 * Emulates CRTC Type 3 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll.
 * Full button mapping - supporting all 3 possible joystick buttons of the Amstrad as well as mapping buttons to keyboard keys.
 * Full touch-screen Amstrad keyboard styled after the colorful CPC 464.
@@ -42,6 +42,7 @@ contact me and I'll put it right.
 * Win-CPC: Amstrad CPC Emulator - Copyright (c) 2012 Ludovic Deplanque.
 * Caprice32: Amstrad CPC Emulator - Copyright (c) 1997-2004 Ulrich Doewich.
 * Arnold: Amstrad CPC Emulator - Copyright (c) 1995-2002, 2007 Andreas Micklei and Kevin Thacker
+* CPCEC: Amstrad CPC Emulator - Copyright (c) 2020-2025 CNGSOFT
 
 As far as I'm concerned, you can use this code in whatever way suits you provided you 
 continue to release the sources under the original copyright notice (see below) which
@@ -239,7 +240,8 @@ Dandanator Support :
 -----------------------
 Mainly to run three games - Sword of Ianna, Gomilandia and Los Amores de Brunilda. 
 Rename those .rom files as .dan files so that they will be loaded as Dandanator 
-files within the SugarDS emulator. Note that we do not support Flash writes on these
+files within the SugarDS emulator. Most compilation packs should also run but there
+are a couple that don't yet work. Note that we do not support Flash writes on these
 carts - but the games themselves should be playable and you can use the normal 
 emulator save/load states to save your progress.
 
@@ -267,10 +269,10 @@ Version History :
 -----------------------
 Version 1.5 - ??-???-2025 by wavemotion-dave
 * DSi now had a full 1024K of extra CPC emulated RAM that does not interfere with the Disk/ROM memory area. DS-Lite still only has 512K of expanded CPC RAM.
-* Added DIAGONALS as a d-pad option in configuration.
-* Switched to ParaDOS 1.2 (was using v1.1)
 * Improved disk swap so the 'ready' signal is delayed a bit which seems to improve Infocom games when swapping in/out the save disk.
 * Improved Dandanator support for poor-man 'ROMBOX' functionality. Most game compilation packs now work.
+* Added DIAGONALS as a d-pad option in configuration.
+* Switched to ParaDOS 1.2 (was using v1.1)
 
 Version 1.4 - 19-Nov-2025 by wavemotion-dave
 * DSi now double-buffers LCD rendering for smoother performance and syncs to true 50Hz refresh.

@@ -67,8 +67,6 @@ u8 CRTC_MASKS[0x20] = {0xFF, 0xFF, 0xFF, 0xFF,
 
 s16 CPU_ADJUST[] __attribute__((section(".dtcm"))) = {0, 1, 2, -4, -3, -2, -1};
 
-extern u8 last_special_key;
-
 u8 sna_last_motor = 0;
 u8 sna_last_track = 0;
 
@@ -77,11 +75,12 @@ u8 sna_last_track = 0;
 // Dandanator Mini support - mostly for Sword of IANNA
 // and Los Amores de Brunilda.
 // ----------------------------------------------------
-u8  DAN_Zone0     = 0x00;   // Zone 0 enabled on slot0
-u8  DAN_Zone1     = 0x20;   // Zone 1 disabled on slot0
-u16 DAN_Config    = 0x00;   // Zones 0 and 1 high address bit
-u8  DAN_Follow    = 28;     // FollowRomEn bank for zone 0
-u8  DAN_WaitRET   = 0;      // Set to '1' if we wait for a RET to configure memory
+u8  DAN_Zone0     __attribute__((section(".dtcm"))) = 0x00;   // Zone 0 enabled on slot0
+u8  DAN_Zone1     __attribute__((section(".dtcm"))) = 0x20;   // Zone 1 disabled on slot0
+u16 DAN_Config    __attribute__((section(".dtcm"))) = 0x00;   // Zones 0 and 1 high address bit and CE
+u16 DAN_WaitCFG   __attribute__((section(".dtcm"))) = 0x00;   // When waiting for a RET to update configuration
+u8  DAN_Follow    __attribute__((section(".dtcm"))) = 28;     // FollowRomEn bank for zone 0 (poor man 'ROMBOX')
+u8  DAN_WaitRET   __attribute__((section(".dtcm"))) = 0;      // Set to '1' if we wait for a RET to configure memory
 
 ITCM_CODE void compute_pre_inked(u8 mode)
 {
@@ -189,8 +188,9 @@ void DandanatorLoad(void)
     DAN_Zone0     = 0x00;   // Zone 0 enabled on slot0
     DAN_Zone1     = 0x20;   // Zone 1 disabled on slot0
     DAN_Config    = 0x00;   // Zones 0 and 1 high address bit
+    DAN_WaitCFG   = 0x00;   // When waiting for a RET opcode
     DAN_Follow    = 28;     // FollowRomEn bank for zone 0
-    DAN_WaitRET   = 0;
+    DAN_WaitRET   = 0;      // Flag for when we wait to configure memory
 }
 
 
@@ -401,13 +401,33 @@ ITCM_CODE void ConfigureMemory(void)
     // Registers B and C are read by the CPLD as follows:
     // Bits 4-0:  Slot to assign to zone 0-31
     // Bit  5:    ‘0’ zone enabled, ‘1’ zone disabled
+    // Other bits unused
     //
     // Dandanator Configuration Register:
+    //   bit 7: Config Function 1 vs Function 0
+    //
+    //   Function 1:
+    //   bit 6: Delay configuration until RET instruction seen
     //   bit 5: Disable Further Dandanator commands until reset
     //   bit 4: Enable FollowRomEn on RET (only read if bit 6 = 1)
     //   b3-b2: A15 values for zone 1 and zone 0.
     //   Zone 0 Can be at 0x0000 or 0x8000, zone 1 can be at 0x4000 or 0xC000
     //   b1-b0: EEPROM_CE for zone 1 and zone 0. “0”: Enabled, “1” Disabled.
+    //
+    //   Function 0:
+    //   b5-b6: Unused
+    //   b4-b3: Slot to use for Zone 0 in 'RollowRomEn' mode... 28 + these bits
+    //   bit 2: Bit bang output to USB Serial Port (not emulated)
+    //   bit 1: EEPROM Write Enable/Disable (not emulated)
+    //   bit 0: Serial Port Enable/Disable (not emulated)
+    //
+    // Note: I found the Dandanator Programmer Guide a little confusing and
+    // it's not at all clear how the CE for Zone0/1 should be utilized. In
+    // the end, I mostly followed the way CPCEC emulator handles it (and if
+    // you look at that codebase, you can see they had trouble getting all of
+    // the various Dandanator carts to run and had to revert to doing checks
+    // in very specific orders or omitting checks to get some compilation packs
+    // to run). Until more exact details can be found, this will do...
     // ------------------------------------------------------------------------
     if (amstrad_mode == MODE_DAN)
     {
@@ -438,10 +458,10 @@ ITCM_CODE void ConfigureMemory(void)
             }
         }
         else if (DAN_Config & 0x10) // RollowRomEn: This is the "poor mans" ROMBOX support
-		{
+        {
             if (!(RMR & 0x04)) MemoryMapR[0] = &ROM_Memory[DAN_Follow * 0x4000];
             if (!(RMR & 0x08)) MemoryMapR[3] = &ROM_Memory[(DAN_Zone1 & 0x1F) * 0x4000];
-		}
+        }
     }
 
     // -------------------------------------------------------------------------------
@@ -852,6 +872,7 @@ void amstrad_reset(void)
     {
         DSi_ExpandedRAM = malloc(1024*1024); // Grab an extra 1024K of RAM for the DSi which will support 1024K+64K of emulated CPC memory
     }
+    memset(DSi_ExpandedRAM, 0x00, 1024*1024); // Clear all expanded RAM
 
     ResetFDC();
 

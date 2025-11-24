@@ -230,6 +230,7 @@ extern u8 UROM;
 extern u8  DAN_Zone0;
 extern u8  DAN_Zone1;
 extern u16 DAN_Config;
+extern u16 DAN_WaitCFG;
 extern u8  DAN_Follow;
 extern u8  DAN_WaitRET;
 
