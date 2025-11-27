@@ -1,10 +1,10 @@
 /******************************************************************************
-*  SugarDS Z80 CPU 
+*  SugarDS Z80 CPU
 *
 * Note: Most of this file is from the ColEm emulator core by Marat Fayzullin
 *       but heavily modified for specific NDS use. If you want to use this
 *       code, you are advised to seek out the much more portable ColEm core
-*       and contact Marat.       
+*       and contact Marat.
 *
 ******************************************************************************/
 
@@ -140,7 +140,7 @@ case CP_L:     M_CP(CPU.HL.B.l);break;
 case CP_A:     CPU.AF.B.l=N_FLAG|Z_FLAG;break;
 case CP_xHL:   I=RdZ80(CPU.HL.W);M_CP(I);break;
 case CP_BYTE:  I=OpZ80(CPU.PC.W++);M_CP(I);break;
-               
+
 case LD_BC_WORD: M_LDWORD(BC);break;
 case LD_DE_WORD: M_LDWORD(DE);break;
 case LD_HL_WORD: M_LDWORD(HL);break;
@@ -197,7 +197,7 @@ case RLA:
 case RRCA:
   I=CPU.AF.B.h&0x01;
   CPU.AF.B.h=(CPU.AF.B.h>>1)|(I? 0x80:0);
-  CPU.AF.B.l=(CPU.AF.B.l&~(C_FLAG|N_FLAG|H_FLAG))|I; 
+  CPU.AF.B.l=(CPU.AF.B.l&~(C_FLAG|N_FLAG|H_FLAG))|I;
   break;
 case RRA:
   I=CPU.AF.B.h&0x01;
@@ -224,7 +224,7 @@ case POP_DE:   M_POP(DE);break;
 case POP_HL:   M_POP(HL);break;
 case POP_AF:   M_POP(AF);break;
 
-case DJNZ: 
+case DJNZ:
   if(--CPU.BC.B.h) { M_JR; } else {CPU.TStates-=4; CPU.PC.W++;} break;
 
 case JP:   M_JP;break;
@@ -266,8 +266,8 @@ case EXX:
   break;
 
 case EX_DE_HL: J.W=CPU.DE.W;CPU.DE.W=CPU.HL.W;CPU.HL.W=J.W;break;
-case EX_AF_AF: J.W=CPU.AF.W;CPU.AF.W=CPU.AF1.W;CPU.AF1.W=J.W;break;  
-  
+case EX_AF_AF: J.W=CPU.AF.W;CPU.AF.W=CPU.AF1.W;CPU.AF1.W=J.W;break;
+
 case LD_B_B:   CPU.BC.B.h=CPU.BC.B.h;break;
 case LD_C_B:   CPU.BC.B.l=CPU.BC.B.h;break;
 case LD_D_B:   CPU.DE.B.h=CPU.BC.B.h;break;
@@ -370,7 +370,7 @@ case LD_HL_xWORD:
 
 case LD_A_xWORD:
   J.B.l=OpZ80(CPU.PC.W++);
-  J.B.h=OpZ80(CPU.PC.W++); 
+  J.B.h=OpZ80(CPU.PC.W++);
   CPU.AF.B.h=RdZ80(J.W);
   break;
 

@@ -332,7 +332,7 @@ void amstradLoadState()
 
             if (retVal) retVal = fread(&portDIR,           sizeof(portDIR),            1, handle);
             if (retVal) retVal = fread(&RAM_512k_bank,     sizeof(RAM_512k_bank),      1, handle);
-            
+
             if (retVal) retVal = fread(&DAN_Follow,        sizeof(DAN_Follow),         1, handle);
             if (retVal) retVal = fread(&DAN_WaitRET,       sizeof(DAN_WaitRET),        1, handle);
 

@@ -15,7 +15,7 @@ playable on the tiny handheld so you can get your Amstrad gaming on-the-go!
 Features :
 -----------------------
 * Emulates CPC 464 (64K) and CPC 6128 (128K) with 512K of extended RAM available (1024K extended RAM for DSi).
-* Loads .SNA and .DSK files up to 1024K total length (single and double sided).
+* Loads .SNA and .DSK files up to 800K total length (single and double sided).
 * Plus2CPC Cartridge Support to load .CPR files up to 512K (note, this is not a plus/GX4000 emulator but will handle cart files provided they don't require plus-features).
 * Dandanator Cartridge Support - Enough for Sword of Ianna and Los Amores de Brunilda and most compilation packs. Rename files to .dan to load into the emulator properly.
 * Emulates CRTC Type 3 roughly - with provisions to handle split screen, rupture, smooth vertical scroll and a reasonable facsimile of smooth horizontal scroll.

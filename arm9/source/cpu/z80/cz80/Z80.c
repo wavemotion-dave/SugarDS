@@ -27,6 +27,7 @@
 #include "Tables.h"
 #include <stdio.h>
 #include "../../../printf.h"
+#include "../../../AmsUtils.h"
 
 extern Z80 CPU;
 
@@ -391,7 +392,9 @@ ITCM_CODE void IntZ80(Z80 *R,word Vector)
 
     if((CPU.IFF&IFF_1)||(Vector==INT_NMI))
     {
-      CPU.TStates += (CPU.IFF&IFF_IM2 ? 20:8); // Time to acknowledge interrupt.
+      CPU.TStates += (CPU.IFF&IFF_IM2 ? 24:16); // Time to acknowledge interrupt (IM2=6 NOP equivalent, IM1=4 NOP equivalent)
+      
+      if (myConfig.cpuAdjust==3) CPU.TStates-=8;
 
       /* Save PC on stack */
       M_PUSH(PC);
@@ -590,14 +593,18 @@ static void CodesFD(void)
         }
         if (RdZ80(CPU.PC.W) == 0x77) // LD (IY+nn),A - Config command
         {
-            if (CPU.AF.B.h & 0x80) // High bit is the Dandanator Configuration
+            if (!(DAN_Config & 0x20)) // Is the Dandanator mapped in?
             {
-                if (CPU.AF.B.h & 0x40) {DAN_WaitRET = 1; DAN_WaitCFG = CPU.AF.B.h;}
-                else {DAN_WaitRET = 0; DAN_Config = CPU.AF.B.h; ConfigureMemory();}
-            }
-            else // FollowRomEn bank set
-            {
-                DAN_Follow = 28 + ((CPU.AF.B.h >> 3) & 0x03);
+                if (CPU.AF.B.h & 0x80) // High bit is the Dandanator Configuration
+                {
+                    if (CPU.AF.B.h & 0x40) {DAN_WaitRET = 1; DAN_WaitCFG = CPU.AF.B.h;}
+                    else {DAN_WaitRET = 0; DAN_Config = CPU.AF.B.h; ConfigureMemory();}
+                }
+                else // FollowRomEn bank set
+                {
+                    DAN_Follow = 28 + ((CPU.AF.B.h >> 3) & 0x03);
+                    if (!DAN_WaitRET) ConfigureMemory();
+                }
             }
         }
         CPU.PC.W--;break;

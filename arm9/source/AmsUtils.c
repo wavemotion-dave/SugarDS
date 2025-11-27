@@ -40,10 +40,9 @@ u32         file_size = 0;
 char        strBuf[40];
 u8          bShowInstructions = 0;
 
-struct Config_t AllConfigs[MAX_CONFIGS];
-struct Config_t myConfig __attribute((aligned(4))) __attribute__((section(".dtcm")));
-struct GlobalConfig_t myGlobalConfig;
-extern u32 file_crc;
+struct Config_t         AllConfigs[MAX_CONFIGS];
+struct Config_t         myConfig __attribute((aligned(4))) __attribute__((section(".dtcm")));
+struct GlobalConfig_t   myGlobalConfig;
 
 #define MAX_FAVS  1024
 
@@ -860,7 +859,7 @@ void MapAllJoy(void)
     myConfig.keymap[5]   = 0;    // NDS B Button mapped to Joystick Up
     myConfig.keymap[6]   = 5;    // NDS X Button mapped to Joystick Fire 2
     myConfig.keymap[7]   = 6;    // NDS Y Button mapped to Joystick Fire 3
-    
+
     myConfig.keymap[8]   = 47;   // NDS START mapped to RETURN
     myConfig.keymap[9]   = 46;   // NDS SELECT mapped to SPACE
 }
@@ -939,7 +938,7 @@ void SetDefaultGameConfig(void)
 void LoadConfig(void)
 {
     u8 bWipeConfig = 0;
-    
+
     // -----------------------------------------------------------------
     // Start with defaults.. if we find a match in our config database
     // below, we will fill in the config with data read from the file.
@@ -959,7 +958,7 @@ void LoadConfig(void)
     {
         bWipeConfig = 1;
     }
-    
+
     if (bWipeConfig)
     {
         memset(&AllConfigs, 0x00, sizeof(AllConfigs));
@@ -1000,7 +999,8 @@ void FindConfig(char *filename)
     if (strstr(szName, "CHIPS")         != 0)   myConfig.crtcDriver = CRTC_DRV_ADVANCED;    // Chips Challenge works slightly better with the Advanced Driver
     if (strstr(szName, "ORION")         != 0)   myConfig.crtcDriver = CRTC_DRV_ADVANCED;    // Orion Prime is slightly better with the Advanced Driver
 
-    if (strstr(szName, "IANNA")         != 0)   myConfig.cpuAdjust   = 5;  // -2 CPU Adjust to remove graphical artifacts
+    if (strstr(szName, "IANNA")         != 0)   myConfig.cpuAdjust   = 5;  // -1 CPU Adjust to remove graphical artifacts
+    if (strstr(szName, "DOH")           != 0)   myConfig.cpuAdjust   = 3;  // "FAST ACK" needed on Arkanoid II - Revenge of Doh
     if (strstr(szName, "DIZZY3")        != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
     if (strstr(szName, "DIZZY 3")       != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
     if (strstr(szName, "DIZZY-III")     != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
@@ -1028,8 +1028,8 @@ void FindConfig(char *filename)
 // ------------------------------------------------------------------------------
 // Options are handled here... we have a number of things the user can tweak
 // and these options are applied immediately. The user can also save off
-// their option choices for the currently running game into the NINTV-DS.DAT
-// configuration database. When games are loaded back up, NINTV-DS.DAT is read
+// their option choices for the currently running game into the SugarDS.DAT
+// configuration database. When games are loaded back up, SugarDS.DAT is read
 // to see if we have a match and the user settings can be restored for the game.
 // ------------------------------------------------------------------------------
 struct options_t
@@ -1054,8 +1054,8 @@ const struct options_t Option_Table[2][20] =
         {"GAME SPEED",     {"100%", "110%", "120%", "130%", "90%", "80%"},                      &myConfig.gameSpeed,         6},
         {"MODE 1/2",       {"SCALE/COMPRESS", "320 PAN+SCAN"},                                  &myConfig.panAndScan,        2},
         {"R52  VSYNC",     {"NORMAL", "FORGIVING", "STRICT"},                                   &myConfig.r52IntVsync,       3},
-        {"CPU ADJUST",     {"+0 (NONE)", "+1 CYCLES", "+2 CYCLES", "-4 CYCLES",
-                            "-3 CYCLES", "-2 CYCLES", "-1 CYCLES"},                             &myConfig.cpuAdjust,         7},
+        {"CPU ADJUST",     {"+0 (NONE)", "+1 CYCLES", "+2 CYCLES",
+                            "FAST ACK", "-2 CYCLES", "-1 CYCLES"},                              &myConfig.cpuAdjust,         6},
         {"SOUND DRV",      {"NORMAL", "WAVE DIRECT"},                                           &myConfig.waveDirect,        2},
         {"DISK WRITE",     {"OFF", "ALLOWED"},                                                  &myConfig.diskWrite,         2},
         {"CRTC DRIVER",    {"STANDARD", "ADVANCED"},                                            &myConfig.crtcDriver,        2},

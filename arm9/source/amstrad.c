@@ -65,7 +65,7 @@ u8 CRTC_MASKS[0x20] = {0xFF, 0xFF, 0xFF, 0xFF,
                        0x00, 0x00, 0x00, 0x00,
                        0x00, 0x00, 0x00, 0x00};
 
-s16 CPU_ADJUST[] __attribute__((section(".dtcm"))) = {0, 1, 2, -4, -3, -2, -1};
+s16 CPU_ADJUST[] __attribute__((section(".dtcm"))) = {0, 1, 2, 0, -2, -1, 0}; // Extra 0 here for old configs...
 
 u8 sna_last_motor = 0;
 u8 sna_last_track = 0;
