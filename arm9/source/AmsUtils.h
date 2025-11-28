@@ -91,7 +91,7 @@ struct __attribute__((__packed__)) Config_t
     u8  autoLoad;
     u8  gameSpeed;
     u8  autoSize;
-    u8  cpuAdjust;
+    u8  reserved0;
     u8  waveDirect;
     u8  screenTop;
     u8  panAndScan;
@@ -111,6 +111,7 @@ extern struct GlobalConfig_t myGlobalConfig;
 
 extern u8 last_special_key;
 extern u8 last_special_key_dampen;
+extern u8 hack_int_acknoledge;
 
 extern u16 JoyState;                    // Joystick / Paddle management
 

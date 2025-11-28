@@ -39,6 +39,7 @@ char        szFile[256];
 u32         file_size = 0;
 char        strBuf[40];
 u8          bShowInstructions = 0;
+u8          hack_int_acknoledge = 0;
 
 struct Config_t         AllConfigs[MAX_CONFIGS];
 struct Config_t         myConfig __attribute((aligned(4))) __attribute__((section(".dtcm")));
@@ -849,21 +850,6 @@ void MapPlayer1(void)
     myConfig.keymap[9]   = 46;   // NDS SELECT mapped to SPACE
 }
 
-void MapAllJoy(void)
-{
-    myConfig.keymap[0]   = 0;    // NDS D-Pad mapped to Joystick UP
-    myConfig.keymap[1]   = 1;    // NDS D-Pad mapped to Joystick DOWN
-    myConfig.keymap[2]   = 2;    // NDS D-Pad mapped to Joystick LEFT
-    myConfig.keymap[3]   = 3;    // NDS D-Pad mapped to Joystick RIGHT
-    myConfig.keymap[4]   = 4;    // NDS A Button mapped to Joystick Fire 1
-    myConfig.keymap[5]   = 0;    // NDS B Button mapped to Joystick Up
-    myConfig.keymap[6]   = 5;    // NDS X Button mapped to Joystick Fire 2
-    myConfig.keymap[7]   = 6;    // NDS Y Button mapped to Joystick Fire 3
-
-    myConfig.keymap[8]   = 47;   // NDS START mapped to RETURN
-    myConfig.keymap[9]   = 46;   // NDS SELECT mapped to SPACE
-}
-
 void MapQAOP(void)
 {
     myConfig.keymap[0]   = 23;   // Q
@@ -920,12 +906,12 @@ void SetDefaultGameConfig(void)
     myConfig.scaleY      = 200;                         // Scale the 200 pixels of display to the DS 200 (yes, there is only 192 so this will cut... use PAN UP/DN)
 
     myConfig.autoSize    = 1;                           // Default to Auto-Size the screen
-    myConfig.cpuAdjust   = 0;                           // No CPU adjustment by default
     myConfig.waveDirect  = 0;                           // Default is normal sound driver
     myConfig.screenTop   = 0;                           // Normal screen top position
     myConfig.panAndScan  = 0;                           // Default to compressed 320/640 to fit on LCD
     myConfig.diskWrite   = 1;                           // Default is to allow write back to SD
     myConfig.crtcDriver  = CRTC_DRV_STANDARD;           // Default is standard driver
+    myConfig.reserved0   = 0;
     myConfig.reserved1   = 0;
     myConfig.reserved2   = 0;
     myConfig.reserved3   = 0;
@@ -999,8 +985,6 @@ void FindConfig(char *filename)
     if (strstr(szName, "CHIPS")         != 0)   myConfig.crtcDriver = CRTC_DRV_ADVANCED;    // Chips Challenge works slightly better with the Advanced Driver
     if (strstr(szName, "ORION")         != 0)   myConfig.crtcDriver = CRTC_DRV_ADVANCED;    // Orion Prime is slightly better with the Advanced Driver
 
-    if (strstr(szName, "IANNA")         != 0)   myConfig.cpuAdjust   = 5;  // -1 CPU Adjust to remove graphical artifacts
-    if (strstr(szName, "DOH")           != 0)   myConfig.cpuAdjust   = 3;  // "FAST ACK" needed on Arkanoid II - Revenge of Doh
     if (strstr(szName, "DIZZY3")        != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
     if (strstr(szName, "DIZZY 3")       != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
     if (strstr(szName, "DIZZY-III")     != 0)   myConfig.r52IntVsync = 1;  // Dizzy 3 - R52 Interrupt Forgiving to remove slowdown
@@ -1013,6 +997,12 @@ void FindConfig(char *filename)
     if (strstr(szName, "MANIC")         != 0)   myConfig.waveDirect  = 1;  // Manic Miner uses digitized sounds
     if (strstr(szName, "BATMAN FOR")    != 0)   myConfig.waveDirect  = 1;  // Batman Forever uses digitized sounds
     if (strstr(szName, "BATMANFOR")     != 0)   myConfig.waveDirect  = 1;  // Batman Forever uses digitized sounds
+    
+    hack_int_acknoledge = 0;
+    if (strstr(szName, "OF DOH")        != 0)   hack_int_acknoledge  = 1;  // Arkanoid II - Revenge of Doh hack
+    if (strstr(szName, "OFDOH")         != 0)   hack_int_acknoledge  = 1;  // Arkanoid II - Revenge of Doh hack
+    if (strstr(szName, "OF_DOH")        != 0)   hack_int_acknoledge  = 1;  // Arkanoid II - Revenge of Doh hack
+    if (strstr(szName, "OF-DOH")        != 0)   hack_int_acknoledge  = 1;  // Arkanoid II - Revenge of Doh hack
 
     for (u16 slot=0; slot<MAX_CONFIGS; slot++)
     {
@@ -1054,8 +1044,6 @@ const struct options_t Option_Table[2][20] =
         {"GAME SPEED",     {"100%", "110%", "120%", "130%", "90%", "80%"},                      &myConfig.gameSpeed,         6},
         {"MODE 1/2",       {"SCALE/COMPRESS", "320 PAN+SCAN"},                                  &myConfig.panAndScan,        2},
         {"R52  VSYNC",     {"NORMAL", "FORGIVING", "STRICT"},                                   &myConfig.r52IntVsync,       3},
-        {"CPU ADJUST",     {"+0 (NONE)", "+1 CYCLES", "+2 CYCLES",
-                            "FAST ACK", "-2 CYCLES", "-1 CYCLES"},                              &myConfig.cpuAdjust,         6},
         {"SOUND DRV",      {"NORMAL", "WAVE DIRECT"},                                           &myConfig.waveDirect,        2},
         {"DISK WRITE",     {"OFF", "ALLOWED"},                                                  &myConfig.diskWrite,         2},
         {"CRTC DRIVER",    {"STANDARD", "ADVANCED"},                                            &myConfig.crtcDriver,        2},
@@ -1230,13 +1218,12 @@ void DisplayKeymapName(u32 uY)
 u8 keyMapType = 0;
 void SwapKeymap(void)
 {
-    keyMapType = (keyMapType+1) % 4;
+    keyMapType = (keyMapType+1) % 3;
     switch (keyMapType)
     {
         case 0: MapPlayer1();  break;
-        case 1: MapAllJoy();   break;
-        case 2: MapCursors();  break;
-        case 3: MapQAOP();     break;
+        case 1: MapCursors();  break;
+        case 2: MapQAOP();     break;
     }
 }
 

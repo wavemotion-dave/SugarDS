@@ -1234,7 +1234,7 @@ ITCM_CODE u32 amstrad_run(void)
     u8 vsync = crtc_render_screen_line();
 
     // Finish the scanline plus any user-called for adjustment...
-    CPU.Target += (128+CPU_ADJUST[myConfig.cpuAdjust]);
+    CPU.Target += 128;
     ExecZ80(CPU.Target);
 
     if (vsync) // Will return non-zero if VSYNC started

@@ -136,19 +136,10 @@ If you are playing a game like Robocop, Chase HQ or Manic Miner which hits the A
 similar digitizied effects, you should set the **Sound Driver** to 'WAVE DIRECT'. This is a bit more taxing on the emulator
 but it will render speech and other digitized effects quite well.
 
-Of primary importance to gameplay are these two: **R52 vSync** and **CPU Adjust**.
-
-Normally you shouldn't touch either adjustment... unless the game is not running correctly. In that case, try the following:
-
-* If the game is running slower than on real hardware (e.g. Dizzy III which slows down when you move) then adjust the R52 vSync to 'Forgiving'.
-* If the game has minor graphical glitches - say a stray line (e.g. Sword of Ianna on screen transitions) then try a CPU Adjust of -1 or -2 at most.
-
-Because the emulator is doing line-based (vs cycle-based) emulation, the accuracy is only to that of a scanline and sometimes these small tweaks are 
+Because the emulator is doing line-based (vs cycle-based) emulation, the accuracy is only to that of a scanline and sometimes small tweaks are 
 necessary to get games running as close as possible to real hardware.
 
-A number of commercial games will be auto-recognized and will have some tweaks automatically selected so they run as close to perfect as I can get them.
-
-One option that can be handy for certian ladder or maze games is the D-Pad "Slide-n-Glide" which was designed originally for my ZX Spectrum emulator and
+One option that can be handy for certain ladder or maze games is the D-Pad "Slide-n-Glide" which was designed originally for my ZX Spectrum emulator and
 specifically for Chuckie Egg. Sometimes with climbing/maze games it's hard to make the exact turn onto a ladder. With 'Slide-n-Glide', the controls will be
 more forgiving by continuing to move in the Left/Right or Up/Down direction for a few more frames while another direction is pressed. This makes it much (much!)
 easier to navigate onto and off of ladders in games like Chuckie Egg... Maze Games (pacman, etc) also benefit.
@@ -271,6 +262,7 @@ Version 1.5 - ??-???-2025 by wavemotion-dave
 * DSi now had a full 1024K of extra CPC emulated RAM that does not interfere with the Disk/ROM memory area. DS-Lite still only has 512K of expanded CPC RAM.
 * Improved disk swap so the 'ready' signal is delayed a bit which seems to improve Infocom games when swapping in/out the save disk.
 * Improved Dandanator support for poor-man 'ROMBOX' functionality. Most game compilation packs now work.
+* Improved Z80 CPU timing - good enough now that I no longer need the old 'CPU Adjust' configuration option which has been removed.
 * Added DIAGONALS as a d-pad option in configuration.
 * Switched to ParaDOS 1.2 (was using v1.1)
 
