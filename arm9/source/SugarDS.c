@@ -1721,7 +1721,7 @@ void useVRAM(void)
   vramSetBankF(VRAM_F_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x06890000 -   ..
   vramSetBankG(VRAM_G_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x06894000 -   ..
   vramSetBankH(VRAM_H_LCD);        // Not using this for video but 32K of faster RAM always useful!   Mapped at 0x06898000 -   ..
-  vramSetBankI(VRAM_I_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x068A0000 -   Unused - reserved for future use
+  vramSetBankI(VRAM_I_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x068A0000 -   Used for 'ROMBOX' extended ROM
 }
 
 void TopScreenOptions(void)
@@ -1967,10 +1967,18 @@ ITCM_CODE void irqVBlank(void)
 }
 
 // ----------------------------------------------------------------------
-// Look for the 48.rom and 128.rom bios in several possible locations...
+// We support a single Extended ROM that will go into slot 6. This is
+// optional and allow for something like Utopia or a Diagnostics ROM.
 // ----------------------------------------------------------------------
 void LoadBIOSFiles(void)
 {
+    int size = 0;
+
+    memset(SLOT6_ROM, 0xFF, 0x4000);
+    size            = ReadFileCarefully("Sugar06.rom",            SLOT6_ROM, 0x4000, 0);
+    if (!size) size = ReadFileCarefully("/roms/bios/Sugar06.rom", SLOT6_ROM, 0x4000, 0);
+    if (!size) size = ReadFileCarefully("/data/bios/Sugar06.rom", SLOT6_ROM, 0x4000, 0);
+        
     // We are using internal BIOS roms for now...
 }
 

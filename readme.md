@@ -243,6 +243,14 @@ You should strongly prefer to use .DSK or .CPR (or .DAN) files as snapshots cann
 and the .dsk emulation is fast enough that the difference between a disk load and a snapshot load is just a few
 extra seconds. Think about how long it took to load stuff from cassette/disk when we were kids ... we're so spoiled now!
 
+Extended ROM Support :
+-----------------------
+The Amstard CPC was designed to be extensible - to that end, a number of 16K ROM slots are available that can be utilized
+by the system. The first and last slots are already spoken for - this contains the Locomotive BASIC and the AMDOS/PARADOS
+operating system.  SugarDS supports a single additional ROM extension that is placed in Slot 6 - this can be used to have
+an extension like Utopia or the Diagnostics ROM available. Name your 16K file as Sugar06.rom and place in /roms/bios or
+else place in the same directory as the emulator itself. Most users will never use this - but it's there!
+
 Known Issues :
 -----------------------
 * Pinball Dreams has graphical glitches on the opening lead-in screens... gameplay is better.
@@ -258,12 +266,13 @@ Known Issues :
 
 Version History :
 -----------------------
-Version 1.5 - ??-???-2025 by wavemotion-dave
-* DSi now had a full 1024K of extra CPC emulated RAM that does not interfere with the Disk/ROM memory area. DS-Lite still only has 512K of expanded CPC RAM.
-* Improved disk swap so the 'ready' signal is delayed a bit which seems to improve Infocom games when swapping in/out the save disk.
-* Improved Dandanator support for poor-man 'ROMBOX' functionality. Most game compilation packs now work.
+Version 1.5 - 29-Nov-2025 by wavemotion-dave
+* DSi now has a full 1024K of extra CPC emulated RAM that does not interfere with the Disk/ROM memory area. DS-Lite still only has 512K of expanded CPC RAM.
 * Improved Z80 CPU timing - good enough now that I no longer need the old 'CPU Adjust' configuration option which has been removed.
-* Added DIAGONALS as a d-pad option in configuration.
+* Improved Dandanator support for poor-man 'ROMBOX' functionality. Most game compilation packs now work.
+* Improved disk swap so the 'ready' signal is delayed a bit which seems to improve Infocom games when swapping in/out the save disk.
+* Support for a single 16K Extended Upper ROM - name as Sugar06.ROM and place in /roms/bios or in the same directory as the emulator.
+* Added DIAGONALS as a d-pad option in configuration. General configuration cleanup.
 * Switched to ParaDOS 1.2 (was using v1.1)
 
 Version 1.4 - 19-Nov-2025 by wavemotion-dave

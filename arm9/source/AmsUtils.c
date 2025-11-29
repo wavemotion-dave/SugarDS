@@ -882,6 +882,7 @@ void SetDefaultGlobalConfig(void)
 {
     // A few global defaults...
     memset(&myGlobalConfig, 0x00, sizeof(myGlobalConfig));
+    myGlobalConfig.diskROM        = 1;    // ParaDOS is the default OS
     myGlobalConfig.showFPS        = 0;    // Don't show FPS counter by default
     myGlobalConfig.lastDir        = 0;    // Default is to start in /roms/cpc
     myGlobalConfig.debugger       = 0;    // Debugger is not shown by default
@@ -1868,13 +1869,9 @@ u8 AmstradInit(char *szGame)
     REG_BG2PD = ydyBG;
     REG_BG3PA = xdxBG;
     REG_BG3PD = ydyBG;
-
-    vramSetBankD(VRAM_D_LCD);        // Not using this for video but 128K of faster RAM always useful!  Mapped at 0x06860000 -   We are using 256K on the DSi for a double-buffered LCD
-    vramSetBankE(VRAM_E_LCD);        // Not using this for video but 64K of faster RAM always useful!   Mapped at 0x06880000 -   ..
-    vramSetBankF(VRAM_F_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x06890000 -   ..
-    vramSetBankG(VRAM_G_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x06894000 -   ..
-    vramSetBankH(VRAM_H_LCD);        // Not using this for video but 32K of faster RAM always useful!   Mapped at 0x06898000 -   ..
-    vramSetBankI(VRAM_I_LCD);        // Not using this for video but 16K of faster RAM always useful!   Mapped at 0x068A0000 -   16K unused
+    
+    extern void useVRAM(void);
+    useVRAM();
 
     RetFct = loadgame(szGame);       // Load up the CPC Disk game
 
