@@ -36,6 +36,8 @@
 #define CRTC_DRV_STANDARD           0
 #define CRTC_DRV_ADVANCED           1
 
+#define SLOT6_ROM   ((u8*)0x068A0000)
+
 extern char last_path[MAX_FILENAME_LEN];
 extern char last_file[MAX_FILENAME_LEN];
 

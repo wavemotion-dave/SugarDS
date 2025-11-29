@@ -210,6 +210,11 @@ ITCM_CODE void ConfigureMemory(void)
         else
             UROM_Ptr = (u8 *)AMSDOS;
     }
+    
+    if (UROM == 6) // External ROM - read from Sugar06.ROM
+    {
+        UROM_Ptr = SLOT6_ROM;
+    }
 
     // ------------------------------------------------------------
     // Cartridge Support... This is not a full CPC+ implementation
