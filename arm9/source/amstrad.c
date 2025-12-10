@@ -873,11 +873,14 @@ ITCM_CODE void cpu_writeport_ams(register unsigned short Port,register unsigned 
 // ----------------------------------------------------------------------
 void amstrad_reset(void)
 {
-    if (!DSi_ExpandedRAM && isDSiMode())
+    if (isDSiMode())
     {
-        DSi_ExpandedRAM = malloc(1024*1024); // Grab an extra 1024K of RAM for the DSi which will support 1024K+64K of emulated CPC memory
+        if (!DSi_ExpandedRAM)
+        {
+            DSi_ExpandedRAM = malloc(1024*1024); // Grab an extra 1024K of RAM for the DSi which will support 1024K+64K of emulated CPC memory
+        }
+        memset(DSi_ExpandedRAM, 0x00, 1024*1024); // Clear all expanded RAM
     }
-    memset(DSi_ExpandedRAM, 0x00, 1024*1024); // Clear all expanded RAM
 
     ResetFDC();
 
