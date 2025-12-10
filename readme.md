@@ -266,6 +266,9 @@ Known Issues :
 
 Version History :
 -----------------------
+Version 1.5a - 10-Dec-2025 by wavemotion-dave
+* Hotfix for DS-Lite/Phat build so it doesn't crash on loading a new game!
+
 Version 1.5 - 29-Nov-2025 by wavemotion-dave
 * DSi now has a full 1024K of extra CPC emulated RAM that does not interfere with the Disk/ROM memory area. DS-Lite still only has 512K of expanded CPC RAM.
 * Improved Z80 CPU timing - good enough now that I no longer need the old 'CPU Adjust' configuration option which has been removed.
