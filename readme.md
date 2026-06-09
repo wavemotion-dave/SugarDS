@@ -12,6 +12,8 @@ and plenty of great homebrew games that fully take advantage of the system stren
 This emulator is not perfect - but it should be capable enough to render most games
 playable on the tiny handheld so you can get your Amstrad gaming on-the-go!
 
+SugarDS is free to download and use... but if you have found anything I've done to be useful, buy me a virtual coffee here: https://ko-fi.com/wavemotiondave 
+
 Features :
 -----------------------
 * Emulates CPC 464 (64K) and CPC 6128 (128K) with 512K of extended RAM available (1024K extended RAM for DSi).
